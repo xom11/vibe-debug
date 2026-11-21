@@ -3,16 +3,45 @@
     <string name="app_name">USB Debug Switch</string>
     <string name="app_subtitle">Quick USB Debugging monitor &amp; shortcut</string>
 
-    <!-- Quick Settings Tile & Home Widget -->
+    <!-- Quick Settings Tiles, Home Widget & App Shortcuts -->
     <string name="tile_label">USB Debug</string>
+    <string name="tile_wireless_label">Wireless Debug</string>
     <string name="tile_subtitle_on">ON</string>
     <string name="tile_subtitle_off">OFF</string>
+    <string name="tile_subtitle_unsupported">Android 11+</string>
+
     <string name="widget_label">USB Debug</string>
     <string name="widget_description">Check and switch USB Debugging from your home screen.</string>
     <string name="widget_state_on">ON</string>
     <string name="widget_state_off">OFF</string>
     <string name="widget_hint_one_tap">Tap to switch</string>
     <string name="widget_hint_open">Tap to open</string>
+
+    <string name="shortcut_usb_short">USB Debug</string>
+    <string name="shortcut_usb_long">Open USB Debugging</string>
+    <string name="shortcut_wireless_short">Wireless Debug</string>
+    <string name="shortcut_wireless_long">Open Wireless Debugging</string>
+    <string name="shortcut_dev_off_short">Dev Mode Off</string>
+    <string name="shortcut_dev_off_long">Turn off Developer Options</string>
+
+    <!-- In-App Quick Surfaces Card -->
+    <string name="quick_surfaces_title">Quick Shortcuts (Quick Settings &amp; Home)</string>
+    <string name="quick_surfaces_subtitle">Add a toggle next to Wi-Fi / Flashlight in your top shade or pin a widget to your home screen in 1 tap.</string>
+    <string name="btn_add_qs_usb">Add USB Debug to Quick Settings (Wi-Fi bar)</string>
+    <string name="btn_add_qs_wireless">Add Wireless Debug to Quick Settings</string>
+    <string name="btn_pin_home_widget">Add Widget (2×1)</string>
+    <string name="btn_pin_home_shortcut">Pin Shortcut (1×1)</string>
+
+    <string name="feedback_tile_added">Added \"%1$s\" tile to your Quick Settings panel!</string>
+    <string name="feedback_tile_already_added">\"%1$s\" is already in Quick Settings — swipe down from the top to use it.</string>
+    <string name="feedback_widget_pin_requested">Confirm on the launcher prompt to place the 2×1 widget.</string>
+    <string name="feedback_widget_unsupported">Your launcher does not support 1-tap widget pinning. Long-press your home screen and choose Widgets.</string>
+    <string name="feedback_shortcut_pin_requested">Confirm on the launcher prompt to place the 1×1 shortcut.</string>
+    <string name="feedback_shortcut_unsupported">Your launcher does not support 1-tap shortcut pinning. Long-press the app icon to drag shortcuts.</string>
+
+    <string name="dialog_manual_qs_title">How to add to Quick Settings</string>
+    <string name="dialog_manual_qs_body">1. Swipe down twice from the top of your screen (where Wi-Fi and Flashlight live).\n2. Tap the Edit (pencil ✏️ or ⋮) button.\n3. Drag \"%1$s\" into your active tiles.</string>
+    <string name="action_got_it">Got it</string>
 
     <!-- Common Status Badges -->
     <string name="status_on">ON</string>

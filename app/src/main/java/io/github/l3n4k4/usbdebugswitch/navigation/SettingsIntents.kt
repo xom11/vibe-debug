@@ -12,6 +12,7 @@ object SettingsIntents {
     const val EXTRA_SHOW_FRAGMENT_ARGS = ":settings:show_fragment_args"
     const val ARG_BUILD_NUMBER = "build_number"
     const val ARG_ENABLE_ADB = "enable_adb"
+    const val ARG_ENABLE_WIRELESS_ADB = "toggle_adb_wireless"
 
     const val ADB_GRANT_COMMAND =
         "adb shell pm grant io.github.l3n4k4.usbdebugswitch android.permission.WRITE_SECURE_SETTINGS"
@@ -29,6 +30,12 @@ object SettingsIntents {
     fun buildEnableAdbIntent(): Intent {
         return Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS).apply {
             applyFragmentHighlight(ARG_ENABLE_ADB)
+        }
+    }
+
+    fun buildEnableWirelessAdbIntent(): Intent {
+        return Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS).apply {
+            applyFragmentHighlight(ARG_ENABLE_WIRELESS_ADB)
         }
     }
 
@@ -56,6 +63,17 @@ object SettingsIntents {
             context = context,
             candidates = listOf(
                 ::buildEnableAdbIntent,
+                ::buildDeveloperOptionsTopIntent,
+                ::buildRootSettingsFallbackIntent
+            )
+        )
+    }
+
+    fun launchEnableWirelessAdbScreen(context: Context): Boolean {
+        return launchWithFallbacks(
+            context = context,
+            candidates = listOf(
+                ::buildEnableWirelessAdbIntent,
                 ::buildDeveloperOptionsTopIntent,
                 ::buildRootSettingsFallbackIntent
             )

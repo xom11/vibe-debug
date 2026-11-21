@@ -49,6 +49,23 @@ class SettingsIntentsTest {
     }
 
     @Test
+    fun `buildEnableWirelessAdbIntent targets Developer Options with toggle_adb_wireless highlight extras`() {
+        val intent = SettingsIntents.buildEnableWirelessAdbIntent()
+
+        assertEquals(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS, intent.action)
+        assertEquals(
+            SettingsIntents.ARG_ENABLE_WIRELESS_ADB,
+            intent.getStringExtra(SettingsIntents.EXTRA_FRAGMENT_ARG_KEY)
+        )
+        val bundle = intent.getBundleExtra(SettingsIntents.EXTRA_SHOW_FRAGMENT_ARGS)
+        assertNotNull(bundle)
+        assertEquals(
+            SettingsIntents.ARG_ENABLE_WIRELESS_ADB,
+            bundle?.getString(SettingsIntents.EXTRA_FRAGMENT_ARG_KEY)
+        )
+    }
+
+    @Test
     fun `buildDeveloperOptionsTopIntent omits fragment highlight args for top-of-page Banking helper`() {
         val intent = SettingsIntents.buildDeveloperOptionsTopIntent()
 

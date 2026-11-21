@@ -3,16 +3,45 @@
     <string name="app_name">Bật Tắt Gỡ Lỗi USB</string>
     <string name="app_subtitle">Kiểm tra &amp; mở nhanh công tắc Gỡ lỗi USB</string>
 
-    <!-- Quick Settings Tile & Home Widget -->
+    <!-- Quick Settings Tiles, Home Widget & App Shortcuts -->
     <string name="tile_label">Gỡ lỗi USB</string>
+    <string name="tile_wireless_label">Gỡ lỗi Wi-Fi</string>
     <string name="tile_subtitle_on">Đang BẬT</string>
     <string name="tile_subtitle_off">Đang TẮT</string>
+    <string name="tile_subtitle_unsupported">Android 11+</string>
+
     <string name="widget_label">Gỡ lỗi USB</string>
     <string name="widget_description">Xem trạng thái và bật/tắt nhanh Gỡ lỗi USB ngay từ màn hình chính.</string>
     <string name="widget_state_on">BẬT</string>
     <string name="widget_state_off">TẮT</string>
     <string name="widget_hint_one_tap">Chạm để bật/tắt</string>
     <string name="widget_hint_open">Chạm để mở</string>
+
+    <string name="shortcut_usb_short">Gỡ lỗi USB</string>
+    <string name="shortcut_usb_long">Mở nhanh Gỡ lỗi USB</string>
+    <string name="shortcut_wireless_short">Gỡ lỗi Wi-Fi</string>
+    <string name="shortcut_wireless_long">Mở nhanh Gỡ lỗi không dây</string>
+    <string name="shortcut_dev_off_short">Tắt Dev Mode</string>
+    <string name="shortcut_dev_off_long">Mở đầu trang tắt Chế độ nhà phát triển</string>
+
+    <!-- In-App Quick Surfaces Card -->
+    <string name="quick_surfaces_title">Tạo lối tắt nhanh (Thanh Wi-Fi &amp; Màn hình chính)</string>
+    <string name="quick_surfaces_subtitle">Đặt nút bật/tắt ngay trên thanh kéo từ trên xuống (chỗ bật Wi-Fi, Đèn pin) hoặc ghim Widget ra màn hình chính chỉ với 1 chạm.</string>
+    <string name="btn_add_qs_usb">Thêm nút Gỡ lỗi USB lên thanh Wi-Fi</string>
+    <string name="btn_add_qs_wireless">Thêm nút Gỡ lỗi không dây lên thanh Wi-Fi</string>
+    <string name="btn_pin_home_widget">Thêm Widget (2×1)</string>
+    <string name="btn_pin_home_shortcut">Ghim lối tắt (1×1)</string>
+
+    <string name="feedback_tile_added">Đã thêm nút \"%1$s\" vào thanh Cài đặt nhanh!</string>
+    <string name="feedback_tile_already_added">Nút \"%1$s\" đã có sẵn trên thanh Cài đặt nhanh — kéo từ trên xuống để dùng ngay.</string>
+    <string name="feedback_widget_pin_requested">Bấm Thêm trên hộp thoại của máy để đặt Widget 2×1 ra màn hình chính.</string>
+    <string name="feedback_widget_unsupported">Màn hình chính hiện tại không hỗ trợ ghim tự động. Hãy nhấn giữ khoảng trống ngoài màn hình chính rồi chọn Tiện ích (Widgets).</string>
+    <string name="feedback_shortcut_pin_requested">Bấm Thêm trên hộp thoại của máy để đặt lối tắt 1×1 ra màn hình chính.</string>
+    <string name="feedback_shortcut_unsupported">Màn hình chính hiện tại không hỗ trợ ghim tự động. Bạn có thể nhấn giữ biểu tượng ứng dụng để kéo lối tắt ra ngoài.</string>
+
+    <string name="dialog_manual_qs_title">Cách thêm lên thanh Wi-Fi / Cài đặt nhanh</string>
+    <string name="dialog_manual_qs_body">1. Vuốt từ mép trên màn hình xuống 2 lần (chỗ bật Wi-Fi, Bluetooth, Đèn pin).\n2. Bấm biểu tượng Chỉnh sửa (hình cây bút ✏️ hoặc dấu ⋮).\n3. Tìm ô \"%1$s\" ở phía dưới rồi kéo lên khu vực các nút đang dùng.</string>
+    <string name="action_got_it">Đã hiểu</string>
 
     <!-- Common Status Badges -->
     <string name="status_on">Đang BẬT</string>

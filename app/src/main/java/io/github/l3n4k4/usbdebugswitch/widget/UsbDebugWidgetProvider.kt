@@ -68,6 +68,10 @@ class UsbDebugWidgetProvider : AppWidgetProvider() {
             val privileged = controller.hasWritePermission()
 
             val views = RemoteViews(context.packageName, R.layout.widget_usb_debug)
+            views.setTextViewText(
+                R.id.widget_title,
+                context.getString(R.string.widget_label)
+            )
             views.setInt(
                 R.id.widget_root,
                 "setBackgroundResource",

@@ -26,7 +26,9 @@ import io.github.l3n4k4.usbdebugswitch.data.DevSettingsController
 import io.github.l3n4k4.usbdebugswitch.debug.DebugPreviewConfig
 import io.github.l3n4k4.usbdebugswitch.model.OemBrandDetector
 import io.github.l3n4k4.usbdebugswitch.navigation.SettingsIntents
+import io.github.l3n4k4.usbdebugswitch.shortcut.QuickSurfaceHelper
 import io.github.l3n4k4.usbdebugswitch.tile.UsbDebugTileService
+import io.github.l3n4k4.usbdebugswitch.tile.WirelessDebugTileService
 import io.github.l3n4k4.usbdebugswitch.ui.UsbDebugScreen
 import io.github.l3n4k4.usbdebugswitch.ui.theme.UsbDebugSwitchTheme
 import io.github.l3n4k4.usbdebugswitch.widget.UsbDebugWidgetProvider
@@ -142,6 +144,18 @@ class MainActivity : ComponentActivity() {
                     onOpenDeveloperOptionsTop = {
                         SettingsIntents.launchDeveloperOptionsTopScreen(this@MainActivity)
                     },
+                    onAddUsbQuickTile = { onResult ->
+                        QuickSurfaceHelper.requestAddUsbTile(this@MainActivity, onResult)
+                    },
+                    onAddWirelessQuickTile = { onResult ->
+                        QuickSurfaceHelper.requestAddWirelessTile(this@MainActivity, onResult)
+                    },
+                    onPinHomeWidget = {
+                        QuickSurfaceHelper.requestPinUsbWidget(this@MainActivity)
+                    },
+                    onPinHomeShortcut = {
+                        QuickSurfaceHelper.requestPinUsbShortcut(this@MainActivity)
+                    },
                     onSetUsbDebugging = { enabled ->
                         val sim = previewState
                         if (sim != null) {
@@ -200,6 +214,12 @@ class MainActivity : ComponentActivity() {
             TileService.requestListeningState(
                 applicationContext,
                 ComponentName(applicationContext, UsbDebugTileService::class.java)
+            )
+        }
+        runCatching {
+            TileService.requestListeningState(
+                applicationContext,
+                ComponentName(applicationContext, WirelessDebugTileService::class.java)
             )
         }
     }

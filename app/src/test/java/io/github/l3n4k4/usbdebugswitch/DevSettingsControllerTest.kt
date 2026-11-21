@@ -169,4 +169,41 @@ class DevSettingsControllerTest {
         assertTrue(gateway.devOptions)
         assertFalse(gateway.adb)
     }
+
+    @Test
+    fun `toggleWirelessDebugging flips state and auto-enables dev options when turning ON`() {
+        val gateway = FakeSettingsGateway(
+            supportsWirelessAdb = true,
+            hasPermission = true,
+            devOptions = false,
+            adb = false,
+            wirelessAdb = false
+        )
+        val controller = DevSettingsController(gateway)
+
+        assertTrue(controller.toggleWirelessDebugging())
+        assertTrue(gateway.devOptions)
+        assertTrue(gateway.wirelessAdb)
+
+        assertTrue(controller.toggleWirelessDebugging())
+        assertTrue(gateway.devOptions)
+        assertFalse(gateway.wirelessAdb)
+    }
+
+    @Test
+    fun `toggleWirelessDebugging fails cleanly when unsupported or unprivileged`() {
+        val unsupportedGateway = FakeSettingsGateway(
+            supportsWirelessAdb = false,
+            hasPermission = true
+        )
+        assertFalse(DevSettingsController(unsupportedGateway).toggleWirelessDebugging())
+        assertTrue(unsupportedGateway.writeLog.isEmpty())
+
+        val unprivilegedGateway = FakeSettingsGateway(
+            supportsWirelessAdb = true,
+            hasPermission = false
+        )
+        assertFalse(DevSettingsController(unprivilegedGateway).toggleWirelessDebugging())
+        assertTrue(unprivilegedGateway.writeLog.isEmpty())
+    }
 }

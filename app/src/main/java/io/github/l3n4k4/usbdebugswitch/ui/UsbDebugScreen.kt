@@ -11,11 +11,15 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,6 +34,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -37,6 +42,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -48,6 +55,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -69,7 +77,9 @@ import io.github.l3n4k4.usbdebugswitch.R
 import io.github.l3n4k4.usbdebugswitch.model.DevState
 import io.github.l3n4k4.usbdebugswitch.model.OemBrand
 import io.github.l3n4k4.usbdebugswitch.navigation.SettingsIntents
+import io.github.l3n4k4.usbdebugswitch.shortcut.TileAddOutcome
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private enum class PendingTurnOffConfirm {
     USB_DEBUGGING,
@@ -91,6 +101,10 @@ fun UsbDebugScreen(
     onOpenBuildNumberScreen: () -> Unit,
     onOpenEnableAdbScreen: () -> Unit,
     onOpenDeveloperOptionsTop: () -> Unit,
+    onAddUsbQuickTile: ((TileAddOutcome) -> Unit) -> Unit,
+    onAddWirelessQuickTile: ((TileAddOutcome) -> Unit) -> Unit,
+    onPinHomeWidget: () -> Boolean,
+    onPinHomeShortcut: () -> Boolean,
     onSetUsbDebugging: (Boolean) -> Unit,
     onSetWirelessDebugging: (Boolean) -> Unit,
     onSetDeveloperOptions: (Boolean) -> Unit
@@ -99,11 +113,43 @@ fun UsbDebugScreen(
     var selectedBrand by remember(detectedBrand) { mutableStateOf(detectedBrand) }
     var showBrandPicker by rememberSaveable { mutableStateOf(false) }
     var techExpanded by rememberSaveable { mutableStateOf(false) }
+    var manualQsTileLabel by remember { mutableStateOf<String?>(null) }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    fun handleTileOutcome(outcome: TileAddOutcome) {
+        when (outcome) {
+            is TileAddOutcome.Added -> {
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        context.getString(R.string.feedback_tile_added, outcome.tileLabel)
+                    )
+                }
+            }
+
+            is TileAddOutcome.AlreadyAdded -> {
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        context.getString(R.string.feedback_tile_already_added, outcome.tileLabel)
+                    )
+                }
+            }
+
+            TileAddOutcome.Dismissed -> Unit
+
+            is TileAddOutcome.NeedsManualInstructions -> {
+                manualQsTileLabel = outcome.tileLabel
+            }
+        }
+    }
 
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .semantics { testTagsAsResourceId = true },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -249,6 +295,40 @@ fun UsbDebugScreen(
                 }
             }
 
+            QuickSurfacesCard(
+                supportsWirelessAdb = devState.supportsWirelessAdb,
+                onAddUsbTile = { onAddUsbQuickTile(::handleTileOutcome) },
+                onAddWirelessTile = { onAddWirelessQuickTile(::handleTileOutcome) },
+                onPinWidget = {
+                    val requested = onPinHomeWidget()
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            context.getString(
+                                if (requested) {
+                                    R.string.feedback_widget_pin_requested
+                                } else {
+                                    R.string.feedback_widget_unsupported
+                                }
+                            )
+                        )
+                    }
+                },
+                onPinShortcut = {
+                    val requested = onPinHomeShortcut()
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            context.getString(
+                                if (requested) {
+                                    R.string.feedback_shortcut_pin_requested
+                                } else {
+                                    R.string.feedback_shortcut_unsupported
+                                }
+                            )
+                        )
+                    }
+                }
+            )
+
             TechnicianFooterCard(
                 hasWritePermission = hasWritePermission,
                 expanded = techExpanded,
@@ -297,6 +377,139 @@ fun UsbDebugScreen(
         }
 
         null -> Unit
+    }
+
+    manualQsTileLabel?.let { tileLabel ->
+        AlertDialog(
+            onDismissRequest = { manualQsTileLabel = null },
+            title = {
+                Text(
+                    text = stringResource(R.string.dialog_manual_qs_title),
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(text = stringResource(R.string.dialog_manual_qs_body, tileLabel))
+            },
+            confirmButton = {
+                Button(onClick = { manualQsTileLabel = null }) {
+                    Text(text = stringResource(R.string.action_got_it))
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun QuickSurfacesCard(
+    supportsWirelessAdb: Boolean,
+    onAddUsbTile: () -> Unit,
+    onAddWirelessTile: () -> Unit,
+    onPinWidget: () -> Unit,
+    onPinShortcut: () -> Unit
+) {
+    OutlinedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("card_quick_surfaces"),
+        shape = RoundedCornerShape(18.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.quick_surfaces_title),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = stringResource(R.string.quick_surfaces_subtitle),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            FilledTonalButton(
+                onClick = onAddUsbTile,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp)
+                    .testTag("btn_add_qs_usb"),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_qs_usb_debug),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.btn_add_qs_usb),
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            if (supportsWirelessAdb) {
+                FilledTonalButton(
+                    onClick = onAddWirelessTile,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                        .testTag("btn_add_qs_wireless"),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_qs_wireless_debug),
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.btn_add_qs_wireless),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Max),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onPinWidget,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .heightIn(min = 44.dp)
+                        .testTag("btn_pin_home_widget"),
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.btn_pin_home_widget),
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                OutlinedButton(
+                    onClick = onPinShortcut,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .heightIn(min = 44.dp)
+                        .testTag("btn_pin_home_shortcut"),
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.btn_pin_home_shortcut),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
     }
 }
 

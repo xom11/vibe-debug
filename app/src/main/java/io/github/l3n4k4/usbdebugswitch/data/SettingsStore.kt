@@ -150,4 +150,10 @@ class DevSettingsController(private val gateway: SettingsGateway) {
         val target = !gateway.isAdbEnabled()
         return setUsbDebugging(target)
     }
+
+    fun toggleWirelessDebugging(): Boolean {
+        if (!gateway.supportsWirelessAdb) return false
+        val target = !gateway.isWirelessAdbEnabled()
+        return setWirelessDebugging(target)
+    }
 }
