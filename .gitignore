@@ -1,0 +1,29 @@
+# Gradle & Android build outputs
+.gradle/
+build/
+app/build/
+*/build/
+.kotlin/
+captures/
+.externalNativeBuild/
+.cxx/
+*.ap_
+*.dex
+*.apk
+*.aab
+
+# IDE & local environment
+local.properties
+.idea/
+*.iml
+*.hprof
+.DS_Store
+
+# Signing keys & secrets
+*.jks
+*.keystore
+keystore.properties
+
+# Local agent / hardware test notes & AI specs
+.local-test-env.md
+docs/superpowers/
