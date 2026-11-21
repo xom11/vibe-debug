@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">USB Debug Switch</string>
+    <string name="app_subtitle">Quick USB Debugging monitor &amp; shortcut</string>
+
+    <!-- Quick Settings Tile & Home Widget -->
+    <string name="tile_label">USB Debug</string>
+    <string name="tile_subtitle_on">ON</string>
+    <string name="tile_subtitle_off">OFF</string>
+    <string name="widget_label">USB Debug</string>
+    <string name="widget_description">Check and switch USB Debugging from your home screen.</string>
+    <string name="widget_state_on">ON</string>
+    <string name="widget_state_off">OFF</string>
+    <string name="widget_hint_one_tap">Tap to switch</string>
+    <string name="widget_hint_open">Tap to open</string>
+
+    <!-- Common Status Badges -->
+    <string name="status_on">ON</string>
+    <string name="status_off">OFF</string>
+    <string name="label_usb_debugging">USB Debugging</string>
+    <string name="label_wireless_debugging">Wireless Debugging</string>
+    <string name="label_developer_mode">Developer Mode</string>
+    <string name="status_hero_title">Current Device Status</string>
+
+    <!-- State A1: Unprivileged & Developer Mode OFF -->
+    <string name="dev_off_banner_title">Developer Mode is OFF</string>
+    <string name="dev_off_banner_subtitle">Unlock it once in Settings to access the USB Debugging switch.</string>
+    <string name="guide_card_title">Unlock Guide for %1$s</string>
+    <string name="brand_samsung">Samsung</string>
+    <string name="brand_oneplus_oppo_realme">OPPO / Realme / OnePlus</string>
+    <string name="brand_xiaomi">Xiaomi / Redmi / POCO</string>
+    <string name="brand_vivo">Vivo / iQOO</string>
+    <string name="brand_google_other">Pixel / Stock / Other</string>
+
+    <string name="guide_samsung_step1">Tap the button below to open About phone.</string>
+    <string name="guide_samsung_step2">Software information → tap Build number 7 times</string>
+    <string name="guide_oneplus_step1">Tap the button below to open About device.</string>
+    <string name="guide_oneplus_step2">Version → tap Version number 7 times</string>
+    <string name="guide_xiaomi_step1">Tap the button below to open About phone.</string>
+    <string name="guide_xiaomi_step2">Tap OS / MIUI version 7 times</string>
+    <string name="guide_vivo_step1">Tap the button below to open About phone.</string>
+    <string name="guide_vivo_step2">Software information → tap Build number 7 times</string>
+    <string name="guide_google_step1">Tap the button below to open About phone.</string>
+    <string name="guide_google_step2">Scroll to bottom → tap Build number 7 times</string>
+
+    <string name="other_brands_toggle">Other brands</string>
+    <string name="btn_open_build_number">Open Build Number Screen</string>
+    <string name="note_pin_and_back">Enter your screen lock PIN/password if prompted, then press Back to return here.</string>
+
+    <!-- State A2: Unprivileged & Developer Mode ON -->
+    <string name="btn_go_turn_on_adb">Go to Turn ON USB Debugging</string>
+    <string name="btn_go_turn_off_adb">Go to Turn OFF USB Debugging</string>
+    <string name="adb_jump_hint">Opens Developer Options and highlights the USB debugging switch.</string>
+
+    <string name="banking_card_title">Blocked by banking or ID apps?</string>
+    <string name="banking_card_body">Some banking or digital ID apps require turning off the master Developer Options switch at the top of the screen (you will need to tap Build number 7 times next time unless 1-tap mode is enabled).</string>
+    <string name="btn_open_dev_options_top">Open top of Developer Options to turn off</string>
+
+    <string name="pref_auto_jump_title">Auto-jump to USB Debugging toggle on launch</string>
+    <string name="pref_auto_jump_subtitle">Immediately open the highlighted USB Debugging setting when you launch this app.</string>
+    <string name="auto_jump_countdown_notice">Opening USB Debugging setting…</string>
+    <string name="action_cancel">Cancel</string>
+
+    <!-- Mode B: Privileged 1-Tap Mode -->
+    <string name="mode_one_tap_badge">1-Tap Mode Active</string>
+    <string name="mode_one_tap_subtitle">Direct switches are unlocked via WRITE_SECURE_SETTINGS.</string>
+    <string name="switch_usb_desc">Auto-enables Developer Mode if currently off</string>
+    <string name="switch_wireless_desc">Debug over Wi-Fi on Android 11 and newer</string>
+    <string name="switch_dev_options_desc">Turn off cleanly for banking or ID apps</string>
+    <string name="btn_open_system_dev_settings">Open Android Developer Options (RSA keys / Wi-Fi pairing)</string>
+
+    <!-- Confirmation Dialogs (Mode B) -->
+    <string name="dialog_turn_off_usb_title">Turn off USB Debugging?</string>
+    <string name="dialog_turn_off_usb_body">Turning off USB Debugging may disconnect an active computer cable session. Continue?</string>
+    <string name="dialog_turn_off_wireless_title">Turn off Wireless Debugging?</string>
+    <string name="dialog_turn_off_wireless_body">Turning off Wireless Debugging will disconnect active Wi-Fi ADB sessions. Continue?</string>
+    <string name="dialog_turn_off_dev_title">Turn off Developer Options?</string>
+    <string name="dialog_turn_off_dev_body">This will turn off USB Debugging, Wireless Debugging, and Developer Options together so banking and ID apps pass checks cleanly. You can re-enable everything in 1 tap anytime.</string>
+    <string name="action_confirm_turn_off">Turn Off</string>
+
+    <!-- Collapsible Technician Footer -->
+    <string name="tech_footer_header">For technicians (Enable 1-tap mode)</string>
+    <string name="tech_perm_label">WRITE_SECURE_SETTINGS status:</string>
+    <string name="tech_perm_granted">Granted</string>
+    <string name="tech_perm_not_granted">Not granted</string>
+    <string name="tech_cmd_intro">Run once from a computer with ADB (or via Shizuku) to unlock direct 1-tap switches:</string>
+    <string name="action_copy_command">Copy ADB command</string>
+    <string name="action_copied">Copied</string>
+    <string name="tech_note_oneplus">• OnePlus / OPPO / Realme (OxygenOS / ColorOS): Turn ON \"Disable permission monitoring\" near the bottom of Developer Options before running pm grant, then turn it back off.</string>
+    <string name="tech_note_xiaomi">• Xiaomi / Redmi / POCO (HyperOS / MIUI): Turn ON \"USB debugging (Security settings)\" in Developer Options before running pm grant.</string>
+</resources>

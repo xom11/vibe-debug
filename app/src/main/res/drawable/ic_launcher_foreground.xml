@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- USB Trident Stem & Branches (Upper Safe Zone) -->
+    <!-- Center vertical stem -->
+    <path
+        android:fillColor="#E2F1FF"
+        android:pathData="M51.8,29h4.4v25h-4.4z" />
+    <!-- Top arrow head -->
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M54,22L47.5,30.5H60.5Z" />
+
+    <!-- Left branch + circle node -->
+    <path
+        android:strokeColor="#E2F1FF"
+        android:strokeWidth="3.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M54,48L41,40L41,34" />
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M41,32.5m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0" />
+
+    <!-- Right branch + square node -->
+    <path
+        android:strokeColor="#E2F1FF"
+        android:strokeWidth="3.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M54,44L67,37L67,32" />
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M63.2,26.8h7.6v7.6h-7.6z" />
+
+    <!-- Toggle Switch Pill Track (Lower Safe Zone) -->
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M42,54L66,54A13,13 0,0 1,79 67L79,67A13,13 0,0 1,66 80L42,80A13,13 0,0 1,29 67L29,67A13,13 0,0 1,42 54Z" />
+
+    <!-- Subtle ON indicator bar on left of pill -->
+    <path
+        android:strokeColor="#D1FAE5"
+        android:strokeWidth="3.2"
+        android:strokeLineCap="round"
+        android:pathData="M41,62L41,72" />
+
+    <!-- Toggle Thumb Circle (Right / Active) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M66,67m-9.2,0a9.2,9.2 0,1 1,18.4 0a9.2,9.2 0,1 1,-18.4 0" />
+</vector>

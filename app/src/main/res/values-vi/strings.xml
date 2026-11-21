@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Bật Tắt Gỡ Lỗi USB</string>
+    <string name="app_subtitle">Kiểm tra &amp; mở nhanh công tắc Gỡ lỗi USB</string>
+
+    <!-- Quick Settings Tile & Home Widget -->
+    <string name="tile_label">Gỡ lỗi USB</string>
+    <string name="tile_subtitle_on">Đang BẬT</string>
+    <string name="tile_subtitle_off">Đang TẮT</string>
+    <string name="widget_label">Gỡ lỗi USB</string>
+    <string name="widget_description">Xem trạng thái và bật/tắt nhanh Gỡ lỗi USB ngay từ màn hình chính.</string>
+    <string name="widget_state_on">BẬT</string>
+    <string name="widget_state_off">TẮT</string>
+    <string name="widget_hint_one_tap">Chạm để bật/tắt</string>
+    <string name="widget_hint_open">Chạm để mở</string>
+
+    <!-- Common Status Badges -->
+    <string name="status_on">Đang BẬT</string>
+    <string name="status_off">Đang TẮT</string>
+    <string name="label_usb_debugging">Gỡ lỗi USB</string>
+    <string name="label_wireless_debugging">Gỡ lỗi không dây</string>
+    <string name="label_developer_mode">Chế độ nhà phát triển</string>
+    <string name="status_hero_title">Trạng thái hiện tại trên máy</string>
+
+    <!-- State A1: Unprivileged & Developer Mode OFF -->
+    <string name="dev_off_banner_title">Chế độ nhà phát triển đang TẮT</string>
+    <string name="dev_off_banner_subtitle">Chỉ cần mở khoá một lần trong Cài đặt để thấy công tắc Gỡ lỗi USB.</string>
+    <string name="guide_card_title">Cách mở trên máy %1$s</string>
+    <string name="brand_samsung">Samsung</string>
+    <string name="brand_oneplus_oppo_realme">OPPO / Realme / OnePlus</string>
+    <string name="brand_xiaomi">Xiaomi / Redmi / POCO</string>
+    <string name="brand_vivo">Vivo / iQOO</string>
+    <string name="brand_google_other">Pixel / Android gốc / Hãng khác</string>
+
+    <string name="guide_samsung_step1">Bấm nút bên dưới để mở Thông tin điện thoại.</string>
+    <string name="guide_samsung_step2">Thông tin phần mềm → chạm 7 lần vào Số hiệu bản tạo</string>
+    <string name="guide_oneplus_step1">Bấm nút bên dưới để mở Giới thiệu về thiết bị.</string>
+    <string name="guide_oneplus_step2">Phiên bản → chạm 7 lần vào Số phiên bản</string>
+    <string name="guide_xiaomi_step1">Bấm nút bên dưới để mở Giới thiệu điện thoại.</string>
+    <string name="guide_xiaomi_step2">Chạm 7 lần vào Phiên bản hệ điều hành (HyperOS / MIUI)</string>
+    <string name="guide_vivo_step1">Bấm nút bên dưới để mở Giới thiệu điện thoại.</string>
+    <string name="guide_vivo_step2">Thông tin phần mềm → chạm 7 lần vào Số bản dựng</string>
+    <string name="guide_google_step1">Bấm nút bên dưới để mở Giới thiệu về điện thoại.</string>
+    <string name="guide_google_step2">Kéo xuống cuối → chạm 7 lần vào Số bản dựng</string>
+
+    <string name="other_brands_toggle">Xem hãng khác</string>
+    <string name="btn_open_build_number">Mở tới chỗ bấm 7 lần</string>
+    <string name="note_pin_and_back">Nhập mật khẩu màn hình khoá nếu máy hỏi, rồi bấm Quay lại đây.</string>
+
+    <!-- State A2: Unprivileged & Developer Mode ON -->
+    <string name="btn_go_turn_on_adb">Đi tới BẬT Gỡ lỗi USB</string>
+    <string name="btn_go_turn_off_adb">Đi tới TẮT Gỡ lỗi USB</string>
+    <string name="adb_jump_hint">Tự mở Tuỳ chọn nhà phát triển và cuộn tới đúng dòng Gỡ lỗi USB.</string>
+
+    <string name="banking_card_title">VNeID hoặc app ngân hàng báo lỗi?</string>
+    <string name="banking_card_body">Một số ứng dụng ngân hàng hoặc VNeID yêu cầu tắt hẳn công tắc tổng Chế độ nhà phát triển ở đầu trang (lần sau muốn bật lại sẽ cần bấm 7 lần vào Số phiên bản, trừ khi đã bật chế độ 1 chạm).</string>
+    <string name="btn_open_dev_options_top">Mở đầu trang để tắt hẳn Chế độ nhà phát triển</string>
+
+    <string name="pref_auto_jump_title">Tự nhảy thẳng tới công tắc Gỡ lỗi USB khi mở app</string>
+    <string name="pref_auto_jump_subtitle">Tự động chuyển sang dòng Gỡ lỗi USB trong Cài đặt ngay khi mở ứng dụng này.</string>
+    <string name="auto_jump_countdown_notice">Đang mở tới công tắc Gỡ lỗi USB…</string>
+    <string name="action_cancel">Huỷ</string>
+
+    <!-- Mode B: Privileged 1-Tap Mode -->
+    <string name="mode_one_tap_badge">Chế độ 1 chạm đang hoạt động</string>
+    <string name="mode_one_tap_subtitle">Đã cấp quyền bật/tắt trực tiếp ngay trong ứng dụng.</string>
+    <string name="switch_usb_desc">Tự mở lại Chế độ nhà phát triển nếu đang tắt</string>
+    <string name="switch_wireless_desc">Gỡ lỗi qua Wi-Fi trên Android 11 trở lên</string>
+    <string name="switch_dev_options_desc">Tắt sạch toàn bộ để dùng VNeID và app ngân hàng</string>
+    <string name="btn_open_system_dev_settings">Mở Tuỳ chọn nhà phát triển hệ thống (khoá RSA / ghép đôi Wi-Fi)</string>
+
+    <!-- Confirmation Dialogs (Mode B) -->
+    <string name="dialog_turn_off_usb_title">Tắt Gỡ lỗi USB?</string>
+    <string name="dialog_turn_off_usb_body">Tắt Gỡ lỗi USB có thể ngắt kết nối cáp máy tính đang dùng. Tiếp tục?</string>
+    <string name="dialog_turn_off_wireless_title">Tắt Gỡ lỗi không dây?</string>
+    <string name="dialog_turn_off_wireless_body">Tắt Gỡ lỗi không dây sẽ ngắt phiên kết nối ADB qua Wi-Fi đang hoạt động. Tiếp tục?</string>
+    <string name="dialog_turn_off_dev_title">Tắt Chế độ nhà phát triển?</string>
+    <string name="dialog_turn_off_dev_body">Ứng dụng sẽ tắt sạch Gỡ lỗi USB, Gỡ lỗi không dây và Chế độ nhà phát triển để bạn mở VNeID / ngân hàng không bị chặn. Khi cần dùng lại chỉ mất 1 chạm.</string>
+    <string name="action_confirm_turn_off">Tắt ngay</string>
+
+    <!-- Collapsible Technician Footer -->
+    <string name="tech_footer_header">Dành cho kỹ thuật viên (Bật chế độ 1 chạm)</string>
+    <string name="tech_perm_label">Quyền WRITE_SECURE_SETTINGS:</string>
+    <string name="tech_perm_granted">Đã cấp</string>
+    <string name="tech_perm_not_granted">Chưa cấp</string>
+    <string name="tech_cmd_intro">Chạy lệnh này 1 lần từ máy tính có ADB (hoặc qua Shizuku) để mở khoá công tắc 1 chạm:</string>
+    <string name="action_copy_command">Sao chép lệnh ADB</string>
+    <string name="action_copied">Đã sao chép</string>
+    <string name="tech_note_oneplus">• OnePlus / OPPO / Realme (OxygenOS / ColorOS): Bật mục \"Tắt giám sát quyền\" (Disable permission monitoring) ở gần cuối Tuỳ chọn nhà phát triển trước khi chạy lệnh pm grant, xong có thể tắt lại.</string>
+    <string name="tech_note_xiaomi">• Xiaomi / Redmi / POCO (HyperOS / MIUI): Bật thêm \"Gỡ lỗi USB (Cài đặt bảo mật)\" trong Tuỳ chọn nhà phát triển trước khi chạy lệnh pm grant.</string>
+</resources>
