@@ -164,15 +164,6 @@
     <string name="switch_dev_options_desc">Tắt sạch toàn bộ để dùng VNeID và app ngân hàng</string>
     <string name="btn_open_system_dev_settings">Mở Tuỳ chọn nhà phát triển hệ thống</string>
 
-    <!-- Confirmation Dialogs (Mode B) -->
-    <string name="dialog_turn_off_usb_title">Tắt Gỡ lỗi USB?</string>
-    <string name="dialog_turn_off_usb_body">Tắt Gỡ lỗi USB có thể ngắt kết nối cáp máy tính đang dùng. Tiếp tục?</string>
-    <string name="dialog_turn_off_wireless_title">Tắt Gỡ lỗi không dây?</string>
-    <string name="dialog_turn_off_wireless_body">Tắt Gỡ lỗi không dây sẽ ngắt phiên kết nối ADB qua Wi-Fi đang hoạt động. Tiếp tục?</string>
-    <string name="dialog_turn_off_dev_title">Tắt Chế độ nhà phát triển?</string>
-    <string name="dialog_turn_off_dev_body">Ứng dụng sẽ tắt sạch Gỡ lỗi USB, Gỡ lỗi không dây và Chế độ nhà phát triển để bạn mở VNeID / ngân hàng không bị chặn. Khi cần dùng lại chỉ mất 1 chạm.</string>
-    <string name="action_confirm_turn_off">Tắt ngay</string>
-
     <!-- Shortcuts Tab -->
     <string name="shortcuts_title">Lối tắt</string>
     <string name="shortcuts_subtitle">Thêm ô Cài đặt nhanh, ghim ra màn hình chính hoặc mở app ngân hàng không gỡ lỗi.</string>

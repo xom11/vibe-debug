@@ -164,15 +164,6 @@
     <string name="switch_dev_options_desc">Turn off cleanly for banking or ID apps</string>
     <string name="btn_open_system_dev_settings">Open System Developer Options</string>
 
-    <!-- Confirmation Dialogs (Mode B) -->
-    <string name="dialog_turn_off_usb_title">Turn off USB Debugging?</string>
-    <string name="dialog_turn_off_usb_body">Turning off USB Debugging may disconnect an active computer cable session. Continue?</string>
-    <string name="dialog_turn_off_wireless_title">Turn off Wireless Debugging?</string>
-    <string name="dialog_turn_off_wireless_body">Turning off Wireless Debugging will disconnect active Wi-Fi ADB sessions. Continue?</string>
-    <string name="dialog_turn_off_dev_title">Turn off Developer Options?</string>
-    <string name="dialog_turn_off_dev_body">This will turn off USB Debugging, Wireless Debugging, and Developer Options together so banking and ID apps pass checks cleanly. You can re-enable everything in 1 tap anytime.</string>
-    <string name="action_confirm_turn_off">Turn Off</string>
-
     <!-- Shortcuts Tab -->
     <string name="shortcuts_title">Shortcuts</string>
     <string name="shortcuts_subtitle">Add Quick Settings tiles, pin home controls, or launch banking apps without debugging.</string>

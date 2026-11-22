@@ -56,14 +56,14 @@ The app uses a 3-tab bottom-navigation layout (`HomeTab`, `ShortcutsTab`, `Setup
 - **Signature USB Hero Card:**
   - Prominent `52.sp` `ON` / `OFF` (`BẬT` / `TẮT`) headline, dynamic status/auto-off subtitle, and interactive **88dp circular power/action button**:
     - **Mode A (Unprivileged):** Opens Build Number screen when Developer Mode is OFF, or Developer Options highlighted on `enable_adb` when Developer Mode is ON.
-    - **Mode B (Privileged):** 1-tap toggle (with confirmation dialog before turning OFF; auto-enables Developer Mode first if currently OFF when turning ON).
+    - **Mode B (Privileged):** Instant 1-tap toggle without confirmation popups (auto-enables Developer Mode first if currently OFF when turning ON).
   - Bottom `FlowRow` chips: `adb_enabled = 0/1`, clickable Mode B Auto-Off timer chip, or clickable Mode A Auto-Jump chip.
 - **OEM Unlock Guide Card (Mode A when `development_settings_enabled == 0` and not blocked):**
   - Auto-detects manufacturer/brand (`Samsung`, `OPPO / Realme / OnePlus`, `Xiaomi / Redmi / POCO`, `Vivo / iQOO`, `Pixel / Stock / Other`), renders 2 brand-accurate steps with an *"Other brands"* chip selector, a primary button launching `ACTION_DEVICE_INFO_SETTINGS` with `:settings:fragment_args_key = "build_number"` (with safe fallbacks), and PIN reminder note.
 - **Secondary Controls:**
-  - **Wireless Debugging wide card** (Android 11+): 1-tap switch in Mode B (confirm on turn-off); jumps to `toggle_adb_wireless` (or Build Number if Dev OFF) in Mode A.
+  - **Wireless Debugging wide card** (Android 11+): instant 1-tap switch in Mode B; jumps to `toggle_adb_wireless` (or Build Number if Dev OFF) in Mode A.
   - **Equal-height 2-column cards (`IntrinsicSize.Max`):**
-    - **Developer Options:** 1-tap cascade off (`adb_enabled=0`, `adb_wifi_enabled=0`, `development_settings_enabled=0`) with confirmation in Mode B; jumps to top of Developer Options in Mode A.
+    - **Developer Options:** instant 1-tap cascade off (`adb_enabled=0`, `adb_wifi_enabled=0`, `development_settings_enabled=0`) in Mode B; jumps to top of Developer Options in Mode A.
     - **Keep Awake (`stay_on_while_plugged_in`):** 1-tap toggle in Mode B; opens Developer Options in Mode A.
 - **Banking / VNeID Helper Card:**
   - Mode A: opens top of Developer Options (`ACTION_APPLICATION_DEVELOPMENT_SETTINGS` without fragment args).

@@ -47,12 +47,6 @@ import io.github.l3n4k4.usbdebugswitch.ui.theme.AppTheme
 import io.github.l3n4k4.usbdebugswitch.ui.theme.MonoFont
 import kotlinx.coroutines.launch
 
-private enum class PendingTurnOffConfirm {
-    USB_DEBUGGING,
-    WIRELESS_DEBUGGING,
-    DEVELOPER_OPTIONS,
-}
-
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun UsbDebugScreen(
@@ -96,7 +90,6 @@ fun UsbDebugScreen(
     var currentTab by rememberSaveable(initialTab) {
         mutableStateOf(AppTab.fromRoute(initialTab))
     }
-    var pendingConfirm by remember { mutableStateOf<PendingTurnOffConfirm?>(null) }
     var manualQsTileLabel by remember { mutableStateOf<String?>(null) }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -218,11 +211,8 @@ fun UsbDebugScreen(
                             onOpenEnableWirelessAdbScreen = onOpenEnableWirelessAdbScreen,
                             onOpenDeveloperOptionsTop = onOpenDeveloperOptionsTop,
                             onSetUsbDebugging = onSetUsbDebugging,
-                            onRequestTurnOffUsb = { pendingConfirm = PendingTurnOffConfirm.USB_DEBUGGING },
                             onSetWirelessDebugging = onSetWirelessDebugging,
-                            onRequestTurnOffWireless = { pendingConfirm = PendingTurnOffConfirm.WIRELESS_DEBUGGING },
                             onSetDeveloperOptions = onSetDeveloperOptions,
-                            onRequestTurnOffDevOptions = { pendingConfirm = PendingTurnOffConfirm.DEVELOPER_OPTIONS },
                             onSetKeepAwake = onSetKeepAwake,
                         )
                     }
@@ -269,46 +259,6 @@ fun UsbDebugScreen(
         }
     }
 
-    when (pendingConfirm) {
-        PendingTurnOffConfirm.USB_DEBUGGING -> {
-            ConfirmTurnOffDialog(
-                title = stringResource(R.string.dialog_turn_off_usb_title),
-                body = stringResource(R.string.dialog_turn_off_usb_body),
-                onConfirm = {
-                    pendingConfirm = null
-                    onSetUsbDebugging(false)
-                },
-                onDismiss = { pendingConfirm = null },
-            )
-        }
-
-        PendingTurnOffConfirm.WIRELESS_DEBUGGING -> {
-            ConfirmTurnOffDialog(
-                title = stringResource(R.string.dialog_turn_off_wireless_title),
-                body = stringResource(R.string.dialog_turn_off_wireless_body),
-                onConfirm = {
-                    pendingConfirm = null
-                    onSetWirelessDebugging(false)
-                },
-                onDismiss = { pendingConfirm = null },
-            )
-        }
-
-        PendingTurnOffConfirm.DEVELOPER_OPTIONS -> {
-            ConfirmTurnOffDialog(
-                title = stringResource(R.string.dialog_turn_off_dev_title),
-                body = stringResource(R.string.dialog_turn_off_dev_body),
-                onConfirm = {
-                    pendingConfirm = null
-                    onSetDeveloperOptions(false)
-                },
-                onDismiss = { pendingConfirm = null },
-            )
-        }
-
-        null -> Unit
-    }
-
     manualQsTileLabel?.let { tileLabel ->
         AlertDialog(
             onDismissRequest = { manualQsTileLabel = null },
@@ -340,45 +290,4 @@ fun UsbDebugScreen(
             },
         )
     }
-}
-
-@Composable
-private fun ConfirmTurnOffDialog(
-    title: String,
-    body: String,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val palette = AppTheme.palette
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = palette.surface,
-        titleContentColor = palette.text,
-        textContentColor = palette.soft,
-        title = {
-            Text(text = title, fontWeight = FontWeight.SemiBold)
-        },
-        text = {
-            Text(text = body, lineHeight = 20.sp)
-        },
-        confirmButton = {
-            Button(
-                onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = palette.mint,
-                    contentColor = palette.onMint,
-                ),
-            ) {
-                Text(
-                    text = stringResource(R.string.action_confirm_turn_off),
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.action_cancel), color = palette.soft)
-            }
-        },
-    )
 }

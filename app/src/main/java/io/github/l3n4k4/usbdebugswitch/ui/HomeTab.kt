@@ -79,11 +79,8 @@ fun HomeTab(
     onOpenEnableWirelessAdbScreen: () -> Unit,
     onOpenDeveloperOptionsTop: () -> Unit,
     onSetUsbDebugging: (Boolean) -> Unit,
-    onRequestTurnOffUsb: () -> Unit,
     onSetWirelessDebugging: (Boolean) -> Unit,
-    onRequestTurnOffWireless: () -> Unit,
     onSetDeveloperOptions: (Boolean) -> Unit,
-    onRequestTurnOffDevOptions: () -> Unit,
     onSetKeepAwake: (Boolean) -> Unit,
 ) {
     val palette = AppTheme.palette
@@ -236,7 +233,7 @@ fun HomeTab(
             nowMs = now,
             onHeroPowerClick = {
                 if (hasWritePermission) {
-                    if (devState.adbEnabled) onRequestTurnOffUsb() else onSetUsbDebugging(true)
+                    onSetUsbDebugging(!devState.adbEnabled)
                 } else {
                     if (devState.devOptionsEnabled) onOpenEnableAdbScreen() else onOpenBuildNumberScreen()
                 }
@@ -278,7 +275,7 @@ fun HomeTab(
                 hasWritePermission = hasWritePermission,
                 onClick = {
                     if (hasWritePermission) {
-                        if (devState.wirelessAdbEnabled) onRequestTurnOffWireless() else onSetWirelessDebugging(true)
+                        onSetWirelessDebugging(!devState.wirelessAdbEnabled)
                     } else {
                         if (devState.devOptionsEnabled) onOpenEnableWirelessAdbScreen() else onOpenBuildNumberScreen()
                     }
@@ -308,7 +305,7 @@ fun HomeTab(
                     .testTag("card_dev_options"),
                 onClick = {
                     if (hasWritePermission) {
-                        if (devState.devOptionsEnabled) onRequestTurnOffDevOptions() else onSetDeveloperOptions(true)
+                        onSetDeveloperOptions(!devState.devOptionsEnabled)
                     } else {
                         if (devState.devOptionsEnabled) onOpenDeveloperOptionsTop() else onOpenBuildNumberScreen()
                     }
