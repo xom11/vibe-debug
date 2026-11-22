@@ -228,6 +228,7 @@
     <string name="section_safety_timer">Hẹn giờ tự tắt (An toàn)</string>
     <string name="auto_off_title">Tự tắt Gỡ lỗi USB</string>
     <string name="auto_off_subtitle">Tự động tắt Gỡ lỗi USB sau khoảng thời gian đã chọn để tránh quên.</string>
+    <string name="auto_off_requires_one_tap">Cần bật chế độ 1 chạm (cấp quyền WRITE_SECURE_SETTINGS ở trên).</string>
     <string name="auto_off_duration_label">Tắt sau</string>
     <string name="minutes_option">%d phút</string>
     <string name="auto_off_inexact_note">Dùng bộ hẹn giờ tiết kiệm pin chuẩn Android (không xin thêm quyền); khi đóng app, thời điểm tự tắt thực tế có thể trễ khoảng ~1–10 phút.</string>

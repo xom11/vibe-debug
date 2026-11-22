@@ -228,6 +228,7 @@
     <string name="section_safety_timer">Safety Auto-Off Timer</string>
     <string name="auto_off_title">Auto-off USB Debugging</string>
     <string name="auto_off_subtitle">Automatically turns off USB Debugging after the chosen delay.</string>
+    <string name="auto_off_requires_one_tap">Requires 1-Tap Mode (grant WRITE_SECURE_SETTINGS above).</string>
     <string name="auto_off_duration_label">Turn off after</string>
     <string name="minutes_option">%d min</string>
     <string name="auto_off_inexact_note">Uses Android\'s battery-friendly scheduler without extra permissions; actual turn-off triggers within ~1–10 min of the target time when closed.</string>

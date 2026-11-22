@@ -29,6 +29,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -250,16 +251,23 @@ fun SetupTab(
         }
 
         // Section 2: Auto-Off Timer (Safety)
+        val canUseAutoOff = hasWritePermission && !devState.blockedByPolicy
         SectionLabel(stringResource(R.string.section_safety_timer))
         SurfaceCard(modifier = Modifier.testTag("card_auto_off_timer")) {
             SwitchRow(
                 title = stringResource(R.string.auto_off_title),
-                checked = autoOffEnabled,
+                checked = autoOffEnabled && canUseAutoOff,
                 onChange = onAutoOffEnabledChanged,
-                modifier = Modifier.testTag("row_auto_off_switch"),
-                sub = stringResource(R.string.auto_off_subtitle),
+                modifier = Modifier
+                    .alpha(if (canUseAutoOff) 1f else 0.65f)
+                    .testTag("row_auto_off_switch"),
+                sub = stringResource(
+                    if (canUseAutoOff) R.string.auto_off_subtitle
+                    else R.string.auto_off_requires_one_tap
+                ),
+                enabled = canUseAutoOff,
             )
-            AnimatedVisibility(visible = autoOffEnabled) {
+            AnimatedVisibility(visible = autoOffEnabled && canUseAutoOff) {
                 Row(
                     Modifier
                         .fillMaxWidth()
@@ -340,14 +348,16 @@ fun SetupTab(
                 LanguagePickerRow()
             }
 
-            RowDivider()
-            SwitchRow(
-                title = stringResource(R.string.pref_auto_jump_title),
-                checked = autoJumpEnabled,
-                onChange = onAutoJumpChanged,
-                modifier = Modifier.testTag("row_auto_jump_switch"),
-                sub = stringResource(R.string.pref_auto_jump_subtitle),
-            )
+            if (!hasWritePermission) {
+                RowDivider()
+                SwitchRow(
+                    title = stringResource(R.string.pref_auto_jump_title),
+                    checked = autoJumpEnabled,
+                    onChange = onAutoJumpChanged,
+                    modifier = Modifier.testTag("row_auto_jump_switch"),
+                    sub = stringResource(R.string.pref_auto_jump_subtitle),
+                )
+            }
         }
 
         // Section 4: Privacy & Version
