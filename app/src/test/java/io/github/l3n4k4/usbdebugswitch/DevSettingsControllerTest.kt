@@ -14,7 +14,9 @@ class DevSettingsControllerTest {
         var hasPermission: Boolean = true,
         var devOptions: Boolean = false,
         var adb: Boolean = false,
-        var wirelessAdb: Boolean = false
+        var wirelessAdb: Boolean = false,
+        var keepAwake: Boolean = false,
+        var blockedByPolicy: Boolean = false
     ) : SettingsGateway {
         val writeLog = mutableListOf<Pair<String, Boolean>>()
 
@@ -22,6 +24,8 @@ class DevSettingsControllerTest {
         override fun isDevOptionsEnabled(): Boolean = devOptions
         override fun isAdbEnabled(): Boolean = adb
         override fun isWirelessAdbEnabled(): Boolean = wirelessAdb
+        override fun isKeepAwakeEnabled(): Boolean = keepAwake
+        override fun isDebuggingBlockedByPolicy(): Boolean = blockedByPolicy
 
         override fun putDevOptionsEnabled(enabled: Boolean): Boolean {
             if (!hasPermission) return false
@@ -41,6 +45,13 @@ class DevSettingsControllerTest {
             if (!hasPermission || !supportsWirelessAdb) return false
             wirelessAdb = enabled
             writeLog += "adb_wifi_enabled" to enabled
+            return true
+        }
+
+        override fun putKeepAwakeEnabled(enabled: Boolean): Boolean {
+            if (!hasPermission) return false
+            keepAwake = enabled
+            writeLog += "stay_on_while_plugged_in" to enabled
             return true
         }
     }
@@ -149,6 +160,9 @@ class DevSettingsControllerTest {
         assertFalse(controller.setUsbDebugging(false))
         assertFalse(controller.setWirelessDebugging(true))
         assertFalse(controller.setDeveloperOptions(false))
+        assertFalse(controller.setKeepAwake(true))
+        assertFalse(controller.toggleKeepAwake())
+        assertFalse(controller.toggleDeveloperOptions())
         assertTrue(gateway.writeLog.isEmpty())
     }
 
@@ -205,5 +219,73 @@ class DevSettingsControllerTest {
         )
         assertFalse(DevSettingsController(unprivilegedGateway).toggleWirelessDebugging())
         assertTrue(unprivilegedGateway.writeLog.isEmpty())
+    }
+
+    @Test
+    fun `keepAwake setter and toggle update state when privileged`() {
+        val gateway = FakeSettingsGateway(
+            hasPermission = true,
+            keepAwake = false
+        )
+        val controller = DevSettingsController(gateway)
+
+        assertFalse(controller.readState().keepAwakeEnabled)
+        assertTrue(controller.setKeepAwake(true))
+        assertTrue(controller.readState().keepAwakeEnabled)
+
+        assertTrue(controller.toggleKeepAwake())
+        assertFalse(controller.readState().keepAwakeEnabled)
+        assertEquals(
+            listOf(
+                "stay_on_while_plugged_in" to true,
+                "stay_on_while_plugged_in" to false
+            ),
+            gateway.writeLog
+        )
+    }
+
+    @Test
+    fun `toggleDeveloperOptions flips ON and cascades OFF cleanly`() {
+        val gateway = FakeSettingsGateway(
+            supportsWirelessAdb = true,
+            hasPermission = true,
+            devOptions = false,
+            adb = false,
+            wirelessAdb = false
+        )
+        val controller = DevSettingsController(gateway)
+
+        assertTrue(controller.toggleDeveloperOptions())
+        assertTrue(controller.readState().devOptionsEnabled)
+
+        gateway.adb = true
+        gateway.wirelessAdb = true
+        assertTrue(controller.toggleDeveloperOptions())
+        val after = controller.readState()
+        assertFalse(after.devOptionsEnabled)
+        assertFalse(after.adbEnabled)
+        assertFalse(after.wirelessAdbEnabled)
+    }
+
+    @Test
+    fun `blockedByPolicy prevents all debugging mutations even with permission`() {
+        val gateway = FakeSettingsGateway(
+            supportsWirelessAdb = true,
+            hasPermission = true,
+            devOptions = true,
+            adb = true,
+            wirelessAdb = true,
+            blockedByPolicy = true
+        )
+        val controller = DevSettingsController(gateway)
+
+        assertTrue(controller.readState().blockedByPolicy)
+        assertFalse(controller.setUsbDebugging(false))
+        assertFalse(controller.setWirelessDebugging(false))
+        assertFalse(controller.setDeveloperOptions(false))
+        assertFalse(controller.toggleUsbDebugging())
+        assertFalse(controller.toggleWirelessDebugging())
+        assertFalse(controller.toggleDeveloperOptions())
+        assertTrue(gateway.writeLog.isEmpty())
     }
 }

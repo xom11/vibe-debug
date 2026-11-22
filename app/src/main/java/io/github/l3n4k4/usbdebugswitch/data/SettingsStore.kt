@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.database.ContentObserver
 import android.os.Build
+import android.os.UserManager
 import android.provider.Settings
 import androidx.core.content.ContextCompat
 import io.github.l3n4k4.usbdebugswitch.model.DevState
@@ -13,6 +14,8 @@ object SettingsKeys {
     const val DEV_OPTIONS: String = Settings.Global.DEVELOPMENT_SETTINGS_ENABLED
     const val ADB_ENABLED: String = Settings.Global.ADB_ENABLED
     const val ADB_WIFI_ENABLED: String = "adb_wifi_enabled"
+    const val STAY_ON_WHILE_PLUGGED_IN: String = Settings.Global.STAY_ON_WHILE_PLUGGED_IN
+    const val STAY_ON_MASK: Int = 7
 }
 
 interface SettingsGateway {
@@ -21,11 +24,15 @@ interface SettingsGateway {
     fun isDevOptionsEnabled(): Boolean
     fun isAdbEnabled(): Boolean
     fun isWirelessAdbEnabled(): Boolean
+    fun isKeepAwakeEnabled(): Boolean = false
+    fun isDebuggingBlockedByPolicy(): Boolean = false
     fun putDevOptionsEnabled(enabled: Boolean): Boolean
     fun putAdbEnabled(enabled: Boolean): Boolean
     fun putWirelessAdbEnabled(enabled: Boolean): Boolean
+    fun putKeepAwakeEnabled(enabled: Boolean): Boolean = false
 }
 
+/** Gateway backed by Android [Settings.Global] and [UserManager]. */
 class AndroidSettingsGateway(private val context: Context) : SettingsGateway {
 
     override val supportsWirelessAdb: Boolean
@@ -38,44 +45,57 @@ class AndroidSettingsGateway(private val context: Context) : SettingsGateway {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    override fun isDevOptionsEnabled(): Boolean = readGlobalFlag(SettingsKeys.DEV_OPTIONS)
+    override fun isDevOptionsEnabled(): Boolean = readGlobalInt(SettingsKeys.DEV_OPTIONS) == 1
 
-    override fun isAdbEnabled(): Boolean = readGlobalFlag(SettingsKeys.ADB_ENABLED)
+    override fun isAdbEnabled(): Boolean = readGlobalInt(SettingsKeys.ADB_ENABLED) == 1
 
     override fun isWirelessAdbEnabled(): Boolean {
         if (!supportsWirelessAdb) return false
-        return readGlobalFlag(SettingsKeys.ADB_WIFI_ENABLED)
+        return readGlobalInt(SettingsKeys.ADB_WIFI_ENABLED) == 1
+    }
+
+    override fun isKeepAwakeEnabled(): Boolean =
+        readGlobalInt(SettingsKeys.STAY_ON_WHILE_PLUGGED_IN) != 0
+
+    override fun isDebuggingBlockedByPolicy(): Boolean {
+        return try {
+            val userManager = context.getSystemService(UserManager::class.java) ?: return false
+            userManager.hasUserRestriction(UserManager.DISALLOW_DEBUGGING_FEATURES)
+        } catch (_: Exception) {
+            false
+        }
     }
 
     override fun putDevOptionsEnabled(enabled: Boolean): Boolean =
-        writeGlobalFlag(SettingsKeys.DEV_OPTIONS, enabled)
+        writeGlobalInt(SettingsKeys.DEV_OPTIONS, if (enabled) 1 else 0)
 
     override fun putAdbEnabled(enabled: Boolean): Boolean =
-        writeGlobalFlag(SettingsKeys.ADB_ENABLED, enabled)
+        writeGlobalInt(SettingsKeys.ADB_ENABLED, if (enabled) 1 else 0)
 
     override fun putWirelessAdbEnabled(enabled: Boolean): Boolean {
         if (!supportsWirelessAdb) return false
-        return writeGlobalFlag(SettingsKeys.ADB_WIFI_ENABLED, enabled)
+        return writeGlobalInt(SettingsKeys.ADB_WIFI_ENABLED, if (enabled) 1 else 0)
     }
 
+    override fun putKeepAwakeEnabled(enabled: Boolean): Boolean =
+        writeGlobalInt(
+            SettingsKeys.STAY_ON_WHILE_PLUGGED_IN,
+            if (enabled) SettingsKeys.STAY_ON_MASK else 0
+        )
+
+    /** Registers [observer] on all developer setting keys supported by this device. */
     fun registerObserver(observer: ContentObserver) {
         val resolver = context.contentResolver
-        resolver.registerContentObserver(
-            Settings.Global.getUriFor(SettingsKeys.DEV_OPTIONS),
-            false,
-            observer
-        )
-        resolver.registerContentObserver(
-            Settings.Global.getUriFor(SettingsKeys.ADB_ENABLED),
-            false,
-            observer
-        )
-        if (supportsWirelessAdb) {
-            resolver.registerContentObserver(
-                Settings.Global.getUriFor(SettingsKeys.ADB_WIFI_ENABLED),
-                false,
-                observer
-            )
+        val watchedKeys = buildList {
+            add(SettingsKeys.DEV_OPTIONS)
+            add(SettingsKeys.ADB_ENABLED)
+            add(SettingsKeys.STAY_ON_WHILE_PLUGGED_IN)
+            if (supportsWirelessAdb) {
+                add(SettingsKeys.ADB_WIFI_ENABLED)
+            }
+        }
+        watchedKeys.forEach { key ->
+            resolver.registerContentObserver(Settings.Global.getUriFor(key), false, observer)
         }
     }
 
@@ -85,17 +105,17 @@ class AndroidSettingsGateway(private val context: Context) : SettingsGateway {
         }
     }
 
-    private fun readGlobalFlag(key: String): Boolean {
+    private fun readGlobalInt(key: String): Int {
         return try {
-            Settings.Global.getInt(context.contentResolver, key, 0) == 1
+            Settings.Global.getInt(context.contentResolver, key, 0)
         } catch (_: Exception) {
-            false
+            0
         }
     }
 
-    private fun writeGlobalFlag(key: String, enabled: Boolean): Boolean {
+    private fun writeGlobalInt(key: String, value: Int): Boolean {
         return try {
-            Settings.Global.putInt(context.contentResolver, key, if (enabled) 1 else 0)
+            Settings.Global.putInt(context.contentResolver, key, value)
         } catch (_: SecurityException) {
             false
         } catch (_: Exception) {
@@ -104,6 +124,7 @@ class AndroidSettingsGateway(private val context: Context) : SettingsGateway {
     }
 }
 
+/** Coordinates safe reads and writes for developer, debugging, and keep-awake settings. */
 class DevSettingsController(private val gateway: SettingsGateway) {
 
     fun hasWritePermission(): Boolean = gateway.hasWriteSecureSettings()
@@ -114,28 +135,26 @@ class DevSettingsController(private val gateway: SettingsGateway) {
             devOptionsEnabled = gateway.isDevOptionsEnabled(),
             adbEnabled = gateway.isAdbEnabled(),
             wirelessAdbEnabled = if (wirelessSupported) gateway.isWirelessAdbEnabled() else false,
-            supportsWirelessAdb = wirelessSupported
+            keepAwakeEnabled = gateway.isKeepAwakeEnabled(),
+            supportsWirelessAdb = wirelessSupported,
+            blockedByPolicy = gateway.isDebuggingBlockedByPolicy()
         )
     }
 
     fun setUsbDebugging(enabled: Boolean): Boolean {
-        if (!gateway.hasWriteSecureSettings()) return false
-        if (enabled && !gateway.isDevOptionsEnabled()) {
-            if (!gateway.putDevOptionsEnabled(true)) return false
-        }
+        if (!canMutateDebugging()) return false
+        if (enabled && !ensureDevOptionsEnabled()) return false
         return gateway.putAdbEnabled(enabled)
     }
 
     fun setWirelessDebugging(enabled: Boolean): Boolean {
-        if (!gateway.hasWriteSecureSettings() || !gateway.supportsWirelessAdb) return false
-        if (enabled && !gateway.isDevOptionsEnabled()) {
-            if (!gateway.putDevOptionsEnabled(true)) return false
-        }
+        if (!canMutateDebugging() || !gateway.supportsWirelessAdb) return false
+        if (enabled && !ensureDevOptionsEnabled()) return false
         return gateway.putWirelessAdbEnabled(enabled)
     }
 
     fun setDeveloperOptions(enabled: Boolean): Boolean {
-        if (!gateway.hasWriteSecureSettings()) return false
+        if (!canMutateDebugging()) return false
         if (enabled) {
             return gateway.putDevOptionsEnabled(true)
         }
@@ -146,14 +165,25 @@ class DevSettingsController(private val gateway: SettingsGateway) {
         return gateway.putDevOptionsEnabled(false)
     }
 
-    fun toggleUsbDebugging(): Boolean {
-        val target = !gateway.isAdbEnabled()
-        return setUsbDebugging(target)
+    fun setKeepAwake(enabled: Boolean): Boolean {
+        if (!gateway.hasWriteSecureSettings()) return false
+        return gateway.putKeepAwakeEnabled(enabled)
     }
+
+    fun toggleUsbDebugging(): Boolean = setUsbDebugging(!gateway.isAdbEnabled())
 
     fun toggleWirelessDebugging(): Boolean {
         if (!gateway.supportsWirelessAdb) return false
-        val target = !gateway.isWirelessAdbEnabled()
-        return setWirelessDebugging(target)
+        return setWirelessDebugging(!gateway.isWirelessAdbEnabled())
     }
+
+    fun toggleDeveloperOptions(): Boolean = setDeveloperOptions(!gateway.isDevOptionsEnabled())
+
+    fun toggleKeepAwake(): Boolean = setKeepAwake(!gateway.isKeepAwakeEnabled())
+
+    private fun canMutateDebugging(): Boolean =
+        !gateway.isDebuggingBlockedByPolicy() && gateway.hasWriteSecureSettings()
+
+    private fun ensureDevOptionsEnabled(): Boolean =
+        gateway.isDevOptionsEnabled() || gateway.putDevOptionsEnabled(true)
 }

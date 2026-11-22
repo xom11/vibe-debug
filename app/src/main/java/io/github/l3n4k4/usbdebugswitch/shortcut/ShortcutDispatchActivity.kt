@@ -17,9 +17,11 @@ class ShortcutDispatchActivity : Activity() {
         val state = controller.readState()
         val hasPerm = controller.hasWritePermission()
 
+        val blockedOrNeedsMain = state.blockedByPolicy || hasPerm || !state.devOptionsEnabled
+
         when (intent?.action) {
             ACTION_SHORTCUT_USB -> {
-                if (hasPerm || !state.devOptionsEnabled) {
+                if (blockedOrNeedsMain) {
                     openMainApp()
                 } else {
                     SettingsIntents.launchEnableAdbScreen(this)
@@ -27,7 +29,7 @@ class ShortcutDispatchActivity : Activity() {
             }
 
             ACTION_SHORTCUT_WIRELESS -> {
-                if (hasPerm || !state.devOptionsEnabled || !state.supportsWirelessAdb) {
+                if (blockedOrNeedsMain || !state.supportsWirelessAdb) {
                     openMainApp()
                 } else {
                     SettingsIntents.launchEnableWirelessAdbScreen(this)
@@ -35,7 +37,7 @@ class ShortcutDispatchActivity : Activity() {
             }
 
             ACTION_SHORTCUT_DEV_TOP -> {
-                if (hasPerm || !state.devOptionsEnabled) {
+                if (blockedOrNeedsMain) {
                     openMainApp()
                 } else {
                     SettingsIntents.launchDeveloperOptionsTopScreen(this)

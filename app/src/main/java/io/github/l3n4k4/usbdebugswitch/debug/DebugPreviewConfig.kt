@@ -7,11 +7,13 @@ import io.github.l3n4k4.usbdebugswitch.model.DevState
 import io.github.l3n4k4.usbdebugswitch.model.OemBrand
 import io.github.l3n4k4.usbdebugswitch.model.OemBrandDetector
 
+/** Debug-only preview configuration parsed from launcher intent extras. */
 data class DebugPreviewConfig(
     val stateKey: String,
     val simulatedState: DevState,
     val hasWritePermission: Boolean,
-    val brandOverride: OemBrand?
+    val brandOverride: OemBrand?,
+    val initialTab: String? = null
 ) {
     val bannerText: String
         get() = buildString {
@@ -21,11 +23,18 @@ data class DebugPreviewConfig(
                 append(" • brand=")
                 append(it.id)
             }
+            initialTab?.let {
+                append(" • tab=")
+                append(it)
+            }
         }
 
     companion object {
         const val EXTRA_PREVIEW_STATE = "debug_preview_state"
         const val EXTRA_PREVIEW_BRAND = "debug_brand"
+        const val EXTRA_PREVIEW_TAB = "debug_tab"
+
+        private val VALID_TABS = setOf("home", "shortcuts", "setup")
 
         fun fromIntent(intent: Intent?): DebugPreviewConfig? {
             if (!BuildConfig.DEBUG || intent == null) return null
@@ -40,58 +49,65 @@ data class DebugPreviewConfig(
             val brandOverride = OemBrandDetector.fromPreviewKey(
                 intent.getStringExtra(EXTRA_PREVIEW_BRAND)
             )
+            val initialTab = intent.getStringExtra(EXTRA_PREVIEW_TAB)
+                ?.trim()
+                ?.lowercase()
+                ?.takeIf { it in VALID_TABS }
 
-            return when (rawState) {
-                "dev_off" -> DebugPreviewConfig(
-                    stateKey = "dev_off",
-                    simulatedState = DevState(
-                        devOptionsEnabled = false,
-                        adbEnabled = false,
-                        wirelessAdbEnabled = false,
-                        supportsWirelessAdb = supportsWireless
-                    ),
-                    hasWritePermission = false,
-                    brandOverride = brandOverride
-                )
+            val preset: Pair<DevState, Boolean> = when (rawState) {
+                "dev_off" -> DevState(
+                    devOptionsEnabled = false,
+                    adbEnabled = false,
+                    wirelessAdbEnabled = false,
+                    supportsWirelessAdb = supportsWireless
+                ) to false
 
-                "adb_off" -> DebugPreviewConfig(
-                    stateKey = "adb_off",
-                    simulatedState = DevState(
-                        devOptionsEnabled = true,
-                        adbEnabled = false,
-                        wirelessAdbEnabled = false,
-                        supportsWirelessAdb = supportsWireless
-                    ),
-                    hasWritePermission = false,
-                    brandOverride = brandOverride
-                )
+                "adb_off" -> DevState(
+                    devOptionsEnabled = true,
+                    adbEnabled = false,
+                    wirelessAdbEnabled = false,
+                    supportsWirelessAdb = supportsWireless
+                ) to false
 
-                "adb_on" -> DebugPreviewConfig(
-                    stateKey = "adb_on",
-                    simulatedState = DevState(
-                        devOptionsEnabled = true,
-                        adbEnabled = true,
-                        wirelessAdbEnabled = false,
-                        supportsWirelessAdb = supportsWireless
-                    ),
-                    hasWritePermission = false,
-                    brandOverride = brandOverride
-                )
+                "adb_on" -> DevState(
+                    devOptionsEnabled = true,
+                    adbEnabled = true,
+                    wirelessAdbEnabled = false,
+                    supportsWirelessAdb = supportsWireless
+                ) to false
 
-                "privileged" -> DebugPreviewConfig(
-                    stateKey = "privileged",
-                    simulatedState = DevState(
-                        devOptionsEnabled = true,
-                        adbEnabled = true,
-                        wirelessAdbEnabled = false,
-                        supportsWirelessAdb = supportsWireless
-                    ),
-                    hasWritePermission = true,
-                    brandOverride = brandOverride
-                )
+                "privileged" -> DevState(
+                    devOptionsEnabled = true,
+                    adbEnabled = true,
+                    wirelessAdbEnabled = false,
+                    supportsWirelessAdb = supportsWireless
+                ) to true
 
-                else -> null
+                "privileged_off" -> DevState(
+                    devOptionsEnabled = true,
+                    adbEnabled = false,
+                    wirelessAdbEnabled = false,
+                    supportsWirelessAdb = supportsWireless
+                ) to true
+
+                "blocked" -> DevState(
+                    devOptionsEnabled = false,
+                    adbEnabled = false,
+                    wirelessAdbEnabled = false,
+                    supportsWirelessAdb = supportsWireless,
+                    blockedByPolicy = true
+                ) to false
+
+                else -> return null
             }
+
+            return DebugPreviewConfig(
+                stateKey = rawState,
+                simulatedState = preset.first,
+                hasWritePermission = preset.second,
+                brandOverride = brandOverride,
+                initialTab = initialTab
+            )
         }
     }
 }

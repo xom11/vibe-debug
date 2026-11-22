@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Bật Tắt Gỡ Lỗi USB</string>
+    <string name="app_name">VibeADB</string>
     <string name="app_subtitle">Kiểm tra &amp; mở nhanh công tắc Gỡ lỗi USB</string>
 
     <!-- Quick Settings Tiles, Home Widget & App Shortcuts -->
     <string name="tile_label">Gỡ lỗi USB</string>
     <string name="tile_wireless_label">Gỡ lỗi Wi-Fi</string>
+    <string name="tile_dev_options_label">Tùy chọn nhà phát triển</string>
+    <string name="tile_keep_awake_label">Giữ màn hình sáng</string>
     <string name="tile_subtitle_on">Đang BẬT</string>
     <string name="tile_subtitle_off">Đang TẮT</string>
     <string name="tile_subtitle_unsupported">Android 11+</string>
+    <string name="tile_subtitle_blocked">Bị chính sách chặn</string>
+    <string name="tile_subtitle_awake_charging">Khi đang sạc</string>
+    <string name="tile_subtitle_auto_off_in">Tự tắt sau %d phút</string>
 
     <string name="widget_label">Gỡ lỗi USB</string>
     <string name="widget_description">Xem trạng thái và bật/tắt nhanh Gỡ lỗi USB ngay từ màn hình chính.</string>
@@ -24,7 +29,20 @@
     <string name="shortcut_dev_off_short">Tắt Dev Mode</string>
     <string name="shortcut_dev_off_long">Mở đầu trang tắt Chế độ nhà phát triển</string>
 
-    <!-- In-App Quick Surfaces Card -->
+    <!-- Safe Launch Contracts -->
+    <string name="safe_launch_shortcut_long">%s (Không gỡ lỗi)</string>
+    <string name="safe_launch_toast_clean">Đã tắt sạch gỡ lỗi. Đang mở %s…</string>
+    <string name="safe_launch_toast_need_perm">Hãy bật chế độ 1 chạm trong Thiết lập trước (đang mở Tùy chọn nhà phát triển).</string>
+    <string name="safe_launch_toast_blocked">Tính năng gỡ lỗi bị chính sách thiết bị chặn.</string>
+    <string name="safe_launch_toast_not_found">Không tìm thấy ứng dụng.</string>
+    <string name="safe_launch_not_listed">Ứng dụng này chưa có trong danh sách Mở an toàn.</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Trang chủ</string>
+    <string name="nav_shortcuts">Lối tắt</string>
+    <string name="nav_setup">Thiết lập</string>
+
+    <!-- Quick Surfaces & Feedback -->
     <string name="quick_surfaces_title">Tạo lối tắt nhanh (Thanh Wi-Fi &amp; Màn hình chính)</string>
     <string name="quick_surfaces_subtitle">Đặt nút bật/tắt ngay trên thanh kéo từ trên xuống (chỗ bật Wi-Fi, Đèn pin) hoặc ghim Widget ra màn hình chính chỉ với 1 chạm.</string>
     <string name="btn_add_qs_usb">Thêm nút Gỡ lỗi USB lên thanh Wi-Fi</string>
@@ -49,9 +67,57 @@
     <string name="label_usb_debugging">Gỡ lỗi USB</string>
     <string name="label_wireless_debugging">Gỡ lỗi không dây</string>
     <string name="label_developer_mode">Chế độ nhà phát triển</string>
+    <string name="label_keep_awake">Giữ màn hình sáng</string>
     <string name="status_hero_title">Trạng thái hiện tại trên máy</string>
 
-    <!-- State A1: Unprivileged & Developer Mode OFF -->
+    <!-- Home Tab -->
+    <string name="home_device_line">Android %1$s · API %2$d · %3$s</string>
+    <string name="cd_refresh">Làm mới trạng thái</string>
+    <string name="toast_refreshed">Đã làm mới trạng thái</string>
+    <string name="banner_policy_title">Do chính sách thiết bị quản lý</string>
+    <string name="banner_policy_body">Tổ chức quản lý máy đã khóa tính năng gỡ lỗi (DISALLOW_DEBUGGING_FEATURES).</string>
+    <string name="strip_one_tap_active">Chế độ 1 chạm đang hoạt động • Đã cấp WRITE_SECURE_SETTINGS</string>
+    <string name="strip_mode_a_active">Chế độ mở nhanh không cần PC</string>
+    <string name="action_enable_one_tap">Bật 1 chạm</string>
+
+    <string name="usb_hero_label">GỠ LỖI USB</string>
+    <string name="state_on_caps">BẬT</string>
+    <string name="state_off_caps">TẮT</string>
+    <string name="cd_toggle_usb">Bật tắt Gỡ lỗi USB</string>
+    <string name="usb_sub_blocked">Bị giữ tắt bởi chính sách thiết bị.</string>
+    <string name="usb_sub_on_auto_off">Đang bật · Tự tắt lúc %s</string>
+    <string name="usb_sub_on_manual">Đang bật · Không hẹn tự tắt</string>
+    <string name="usb_sub_off_one_tap">Đang tắt · Chạm nút nguồn để bật</string>
+    <string name="usb_sub_mode_a_dev_off">Chế độ nhà phát triển đang tắt · Chạm nút để mở</string>
+    <string name="usb_sub_mode_a_on">Đang bật · Chạm nút để đi tới tắt</string>
+    <string name="usb_sub_mode_a_off">Đang tắt · Chạm nút để đi tới bật</string>
+
+    <string name="chip_auto_off_min">Tự tắt: %d phút</string>
+    <string name="chip_auto_off_off">Tự tắt: tắt</string>
+    <string name="chip_auto_jump_on">Tự nhảy: Bật</string>
+    <string name="chip_auto_jump_off">Tự nhảy: Tắt</string>
+    <string name="toast_auto_off_enabled">Đã bật tự tắt: %d phút</string>
+    <string name="toast_auto_off_disabled">Đã tắt hẹn giờ tự tắt</string>
+    <string name="toast_auto_jump_on">Đã bật tự nhảy tới Gỡ lỗi USB</string>
+    <string name="toast_auto_jump_off">Đã tắt tự nhảy khi mở app</string>
+
+    <string name="section_controls">Điều khiển</string>
+    <string name="wireless_sub_on">Đang bật · Gỡ lỗi qua Wi-Fi</string>
+    <string name="wireless_sub_off_one_tap">Đang tắt · Chạm để bật</string>
+    <string name="wireless_sub_mode_a">Chạm để mở Gỡ lỗi không dây trong Cài đặt</string>
+    <string name="dev_menu_visible">Đang hiện menu</string>
+    <string name="dev_menu_hidden">Đang ẩn menu</string>
+    <string name="awake_while_charging">Khi đang sạc</string>
+    <string name="awake_off">Đang tắt</string>
+    <string name="awake_mode_a_hint">Mở Cài đặt</string>
+
+    <string name="section_banking_helper">Ngân hàng &amp; VNeID</string>
+    <string name="banking_helper_mode_a_title">VNeID / ngân hàng báo lỗi?</string>
+    <string name="banking_helper_mode_a_sub">Mở đầu trang để tắt hẳn Chế độ nhà phát triển</string>
+    <string name="banking_helper_mode_b_title">Mở VNeID / ngân hàng sạch gỡ lỗi</string>
+    <string name="banking_helper_mode_b_sub">1 chạm tắt sạch Chế độ nhà phát triển trước khi mở app</string>
+
+    <!-- OEM Unlock Guide (State A1: Unprivileged & Dev OFF) -->
     <string name="dev_off_banner_title">Chế độ nhà phát triển đang TẮT</string>
     <string name="dev_off_banner_subtitle">Chỉ cần mở khoá một lần trong Cài đặt để thấy công tắc Gỡ lỗi USB.</string>
     <string name="guide_card_title">Cách mở trên máy %1$s</string>
@@ -76,7 +142,7 @@
     <string name="btn_open_build_number">Mở tới chỗ bấm 7 lần</string>
     <string name="note_pin_and_back">Nhập mật khẩu màn hình khoá nếu máy hỏi, rồi bấm Quay lại đây.</string>
 
-    <!-- State A2: Unprivileged & Developer Mode ON -->
+    <!-- Legacy/Quick Jump & Banking -->
     <string name="btn_go_turn_on_adb">Đi tới BẬT Gỡ lỗi USB</string>
     <string name="btn_go_turn_off_adb">Đi tới TẮT Gỡ lỗi USB</string>
     <string name="adb_jump_hint">Tự mở Tuỳ chọn nhà phát triển và cuộn tới đúng dòng Gỡ lỗi USB.</string>
@@ -85,8 +151,8 @@
     <string name="banking_card_body">Một số ứng dụng ngân hàng hoặc VNeID yêu cầu tắt hẳn công tắc tổng Chế độ nhà phát triển ở đầu trang (lần sau muốn bật lại sẽ cần bấm 7 lần vào Số phiên bản, trừ khi đã bật chế độ 1 chạm).</string>
     <string name="btn_open_dev_options_top">Mở đầu trang để tắt hẳn Chế độ nhà phát triển</string>
 
-    <string name="pref_auto_jump_title">Tự nhảy thẳng tới công tắc Gỡ lỗi USB khi mở app</string>
-    <string name="pref_auto_jump_subtitle">Tự động chuyển sang dòng Gỡ lỗi USB trong Cài đặt ngay khi mở ứng dụng này.</string>
+    <string name="pref_auto_jump_title">Tự nhảy thẳng tới Gỡ lỗi USB khi mở app</string>
+    <string name="pref_auto_jump_subtitle">Tự động chuyển sang dòng Gỡ lỗi USB trong Cài đặt ngay khi mở ứng dụng ở chế độ mở nhanh.</string>
     <string name="auto_jump_countdown_notice">Đang mở tới công tắc Gỡ lỗi USB…</string>
     <string name="action_cancel">Huỷ</string>
 
@@ -96,7 +162,7 @@
     <string name="switch_usb_desc">Tự mở lại Chế độ nhà phát triển nếu đang tắt</string>
     <string name="switch_wireless_desc">Gỡ lỗi qua Wi-Fi trên Android 11 trở lên</string>
     <string name="switch_dev_options_desc">Tắt sạch toàn bộ để dùng VNeID và app ngân hàng</string>
-    <string name="btn_open_system_dev_settings">Mở Tuỳ chọn nhà phát triển hệ thống (khoá RSA / ghép đôi Wi-Fi)</string>
+    <string name="btn_open_system_dev_settings">Mở Tuỳ chọn nhà phát triển hệ thống</string>
 
     <!-- Confirmation Dialogs (Mode B) -->
     <string name="dialog_turn_off_usb_title">Tắt Gỡ lỗi USB?</string>
@@ -107,13 +173,88 @@
     <string name="dialog_turn_off_dev_body">Ứng dụng sẽ tắt sạch Gỡ lỗi USB, Gỡ lỗi không dây và Chế độ nhà phát triển để bạn mở VNeID / ngân hàng không bị chặn. Khi cần dùng lại chỉ mất 1 chạm.</string>
     <string name="action_confirm_turn_off">Tắt ngay</string>
 
-    <!-- Collapsible Technician Footer -->
+    <!-- Shortcuts Tab -->
+    <string name="shortcuts_title">Lối tắt</string>
+    <string name="shortcuts_subtitle">Thêm ô Cài đặt nhanh, ghim ra màn hình chính hoặc mở app ngân hàng không gỡ lỗi.</string>
+    <string name="section_qs_tiles">Ô Cài đặt nhanh</string>
+    <string name="tile_usb_desc">Bật/tắt hoặc mở nhanh Gỡ lỗi USB ngay từ thanh thông báo.</string>
+    <string name="tile_wireless_desc">Công tắc nhanh Gỡ lỗi không dây trên Android 11+.</string>
+    <string name="tile_dev_options_desc">Hiện hoặc ẩn cả menu Tuỳ chọn nhà phát triển.</string>
+    <string name="tile_keep_awake_desc">Giữ màn hình sáng trong lúc cắm sạc kiểm thử.</string>
+    <string name="action_add_tile">Thêm</string>
+
+    <string name="section_home_surfaces">Màn hình chính</string>
+    <string name="section_safe_launch">Mở không cần gỡ lỗi</string>
+    <string name="safe_launch_desc">1 chạm tắt sạch Chế độ nhà phát triển rồi mở thẳng app ngân hàng/VNeID — không chạy nền, không quyền Usage Access, không dịch vụ trợ năng.</string>
+    <string name="safe_launch_empty">Chưa có app nào. Thêm VNeID hoặc các app ngân hàng báo lỗi Chế độ nhà phát triển.</string>
+    <string name="safe_launch_add_btn">+ Thêm app ngân hàng / VNeID</string>
+    <string name="safe_launch_open_now">Mở ngay</string>
+    <string name="safe_launch_pin">Ghim</string>
+    <string name="cd_remove_app">Xoá %s</string>
+    <string name="safe_launch_mode_a_hint">Cần chế độ 1 chạm (tab Thiết lập) để tự động tắt. Hiện tại bấm Mở sẽ đi tới đầu trang Tuỳ chọn nhà phát triển để bạn tự tắt.</string>
+    <string name="safe_launch_pin_ok">Xác nhận trên hộp thoại để ghim \"%s\" ra màn hình chính.</string>
+    <string name="safe_launch_pin_unsupported">Màn hình chính hiện tại không hỗ trợ ghim lối tắt ứng dụng.</string>
+
+    <string name="dialog_pick_app_title">Thêm app mở an toàn</string>
+    <string name="hint_search_apps">Tìm theo tên hoặc tên gói…</string>
+    <string name="loading_apps">Đang tải danh sách ứng dụng…</string>
+    <string name="no_matching_apps">Không tìm thấy ứng dụng phù hợp.</string>
+    <string name="badge_banking_suggested">Ngân hàng / VNeID</string>
+    <string name="badge_added">Đã thêm</string>
+    <string name="action_close">Đóng</string>
+
+    <!-- Setup Tab -->
+    <string name="setup_tab_title">Thiết lập</string>
+    <string name="setup_tab_subtitle">Mở khoá công tắc 1 chạm từ máy tính, đặt hẹn giờ an toàn và tuỳ chỉnh giao diện.</string>
+    <string name="section_one_tap_setup">Bật chế độ 1 chạm</string>
+    <string name="setup_checklist_dev">Chế độ nhà phát triển</string>
+    <string name="setup_checklist_perm">Quyền cài đặt bảo mật</string>
+    <string name="setup_dev_on">Đã bật</string>
+    <string name="setup_dev_off">Chạm để mở</string>
+    <string name="setup_perm_granted">Đã cấp</string>
+    <string name="setup_perm_missing">Chưa cấp</string>
+    <string name="setup_already_ready">Chế độ 1 chạm đã sẵn sàng! Mọi công tắc trực tiếp, Mở an toàn và Ô Cài đặt nhanh đều hoạt động ngay trong app.</string>
+
+    <string name="setup_coloros_title">ColorOS / OxygenOS / Realme UI</string>
+    <string name="setup_coloros_body">ColorOS &amp; OxygenOS 15–16+ chặn lệnh \"pm grant\" (lỗi SecurityException). Hãy chạy lệnh cài đè cấp quyền bên dưới từ máy tính (dữ liệu app vẫn giữ nguyên):</string>
+    <string name="setup_coloros_legacy_note">Trên OxygenOS / ColorOS cũ hơn: bật mục \"Tắt giám sát quyền\" (Disable permission monitoring) ở gần cuối Tuỳ chọn nhà phát triển rồi chạy lệnh \"pm grant\":</string>
+    <string name="setup_standard_intro">Cắm điện thoại vào máy tính đã cài ADB platform-tools và chạy 1 lần:</string>
+    <string name="setup_xiaomi_warning">Lưu ý HyperOS / MIUI: hãy bật thêm mục \"Gỡ lỗi USB (Cài đặt bảo mật)\" trong Tuỳ chọn nhà phát triển trước khi chạy lệnh.</string>
+    <string name="setup_reinstall_fallback">Nếu lệnh \"pm grant\" báo lỗi SecurityException, chạy lệnh sau trong một thư mục trống trên máy tính để cài lại kèm quyền:</string>
+    <string name="btn_recheck_permission">Kiểm tra lại quyền</string>
+    <string name="toast_perm_granted_now">Đã cấp quyền! Chế độ 1 chạm đang hoạt động.</string>
+    <string name="toast_perm_still_missing">Chưa thấy quyền. Hãy chạy lệnh ADB trên máy tính rồi kiểm tra lại.</string>
+
+    <string name="section_safety_timer">Hẹn giờ tự tắt (An toàn)</string>
+    <string name="auto_off_title">Tự tắt Gỡ lỗi USB</string>
+    <string name="auto_off_subtitle">Tự động tắt Gỡ lỗi USB sau khoảng thời gian đã chọn để tránh quên.</string>
+    <string name="auto_off_duration_label">Tắt sau</string>
+    <string name="minutes_option">%d phút</string>
+    <string name="auto_off_inexact_note">Dùng bộ hẹn giờ tiết kiệm pin chuẩn Android (không xin thêm quyền); khi đóng app, thời điểm tự tắt thực tế có thể trễ khoảng ~1–10 phút.</string>
+
+    <string name="section_appearance">Giao diện &amp; Hành vi</string>
+    <string name="pref_theme_label">Giao diện</string>
+    <string name="theme_system">Hệ thống</string>
+    <string name="theme_dark">Tối</string>
+    <string name="theme_light">Sáng</string>
+    <string name="pref_language_label">Ngôn ngữ</string>
+    <string name="language_system">Hệ thống</string>
+    <string name="language_vi">Tiếng Việt</string>
+    <string name="language_en">English</string>
+
+    <string name="section_privacy_about">Quyền riêng tư &amp; Thông tin</string>
+    <string name="privacy_card_title">Không Internet · Không dịch vụ nền</string>
+    <string name="privacy_card_body">Không xin quyền INTERNET, không quảng cáo, không theo dõi, không chạy dịch vụ nền. Chỉ thay đổi cờ nhà phát triển khi bạn bấm.</string>
+    <string name="label_app_version">Phiên bản</string>
+
+    <!-- Legacy Technician / Copy Strings -->
     <string name="tech_footer_header">Dành cho kỹ thuật viên (Bật chế độ 1 chạm)</string>
     <string name="tech_perm_label">Quyền WRITE_SECURE_SETTINGS:</string>
     <string name="tech_perm_granted">Đã cấp</string>
     <string name="tech_perm_not_granted">Chưa cấp</string>
     <string name="tech_cmd_intro">Chạy lệnh này 1 lần từ máy tính có ADB (hoặc qua Shizuku) để mở khoá công tắc 1 chạm:</string>
     <string name="action_copy_command">Sao chép lệnh ADB</string>
+    <string name="action_copy">Sao chép</string>
     <string name="action_copied">Đã sao chép</string>
     <string name="tech_note_oneplus">• OnePlus / OPPO / Realme (OxygenOS / ColorOS): Bật mục \"Tắt giám sát quyền\" (Disable permission monitoring) ở gần cuối Tuỳ chọn nhà phát triển trước khi chạy lệnh pm grant, xong có thể tắt lại.</string>
     <string name="tech_note_xiaomi">• Xiaomi / Redmi / POCO (HyperOS / MIUI): Bật thêm \"Gỡ lỗi USB (Cài đặt bảo mật)\" trong Tuỳ chọn nhà phát triển trước khi chạy lệnh pm grant.</string>

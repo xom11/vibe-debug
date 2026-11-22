@@ -6,14 +6,16 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.service.quicksettings.TileService
 import android.widget.RemoteViews
 import io.github.l3n4k4.usbdebugswitch.MainActivity
 import io.github.l3n4k4.usbdebugswitch.R
 import io.github.l3n4k4.usbdebugswitch.data.AndroidSettingsGateway
+import io.github.l3n4k4.usbdebugswitch.data.AppPreferences
+import io.github.l3n4k4.usbdebugswitch.data.AutoOffManager
 import io.github.l3n4k4.usbdebugswitch.data.DevSettingsController
-import io.github.l3n4k4.usbdebugswitch.tile.UsbDebugTileService
+import io.github.l3n4k4.usbdebugswitch.shortcut.QuickSurfaceHelper
 
+/** Home screen 2x1 widget for checking and toggling USB Debugging. */
 class UsbDebugWidgetProvider : AppWidgetProvider() {
 
     override fun onUpdate(
@@ -29,19 +31,16 @@ class UsbDebugWidgetProvider : AppWidgetProvider() {
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         if (intent.action == ACTION_WIDGET_TOGGLE) {
-            val controller = DevSettingsController(AndroidSettingsGateway(context.applicationContext))
-            if (controller.hasWritePermission()) {
-                controller.toggleUsbDebugging()
-                updateAllWidgets(context.applicationContext)
-                runCatching {
-                    TileService.requestListeningState(
-                        context.applicationContext,
-                        ComponentName(context.applicationContext, UsbDebugTileService::class.java)
-                    )
+            val appContext = context.applicationContext ?: context
+            val controller = DevSettingsController(AndroidSettingsGateway(appContext))
+            val state = controller.readState()
+            if (!state.blockedByPolicy && controller.hasWritePermission()) {
+                if (controller.toggleUsbDebugging()) {
+                    AutoOffManager(appContext, AppPreferences(appContext))
+                        .scheduleIfEnabled(controller.readState().adbEnabled)
                 }
-            } else {
-                updateAllWidgets(context.applicationContext)
             }
+            QuickSurfaceHelper.syncAllSurfaces(appContext)
         }
     }
 
@@ -63,9 +62,11 @@ class UsbDebugWidgetProvider : AppWidgetProvider() {
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int
         ) {
-            val controller = DevSettingsController(AndroidSettingsGateway(context.applicationContext))
+            val appContext = context.applicationContext ?: context
+            val controller = DevSettingsController(AndroidSettingsGateway(appContext))
             val state = controller.readState()
             val privileged = controller.hasWritePermission()
+            val canOneTap = privileged && !state.blockedByPolicy
 
             val views = RemoteViews(context.packageName, R.layout.widget_usb_debug)
             views.setTextViewText(
@@ -91,11 +92,15 @@ class UsbDebugWidgetProvider : AppWidgetProvider() {
             views.setTextViewText(
                 R.id.widget_subtitle,
                 context.getString(
-                    if (privileged) R.string.widget_hint_one_tap else R.string.widget_hint_open
+                    when {
+                        state.blockedByPolicy -> R.string.tile_subtitle_blocked
+                        privileged -> R.string.widget_hint_one_tap
+                        else -> R.string.widget_hint_open
+                    }
                 )
             )
 
-            val tapPendingIntent = if (privileged) {
+            val tapPendingIntent = if (canOneTap) {
                 val toggleIntent = Intent(context, UsbDebugWidgetProvider::class.java).apply {
                     action = ACTION_WIDGET_TOGGLE
                 }

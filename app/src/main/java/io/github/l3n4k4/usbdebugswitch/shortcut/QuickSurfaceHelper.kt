@@ -9,10 +9,13 @@ import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
 import android.graphics.drawable.Icon
 import android.os.Build
+import android.service.quicksettings.TileService
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import io.github.l3n4k4.usbdebugswitch.R
+import io.github.l3n4k4.usbdebugswitch.tile.DevOptionsTileService
+import io.github.l3n4k4.usbdebugswitch.tile.KeepAwakeTileService
 import io.github.l3n4k4.usbdebugswitch.tile.UsbDebugTileService
 import io.github.l3n4k4.usbdebugswitch.tile.WirelessDebugTileService
 import io.github.l3n4k4.usbdebugswitch.widget.UsbDebugWidgetProvider
@@ -24,6 +27,7 @@ sealed interface TileAddOutcome {
     data class NeedsManualInstructions(val tileLabel: String) : TileAddOutcome
 }
 
+/** Coordinates Quick Settings tile prompts, pinned widgets/shortcuts, and surface refreshes. */
 object QuickSurfaceHelper {
 
     const val PINNED_USB_SHORTCUT_ID = "pin_usb_debug"
@@ -31,6 +35,13 @@ object QuickSurfaceHelper {
     internal const val RESULT_TILE_NOT_ADDED = 0
     internal const val RESULT_TILE_ALREADY_ADDED = 1
     internal const val RESULT_TILE_ADDED = 2
+
+    private val TILE_SERVICES = listOf(
+        UsbDebugTileService::class.java,
+        WirelessDebugTileService::class.java,
+        DevOptionsTileService::class.java,
+        KeepAwakeTileService::class.java
+    )
 
     fun requestAddUsbTile(
         context: Context,
@@ -56,6 +67,46 @@ object QuickSurfaceHelper {
             iconRes = R.drawable.ic_qs_wireless_debug,
             onResult = onResult
         )
+    }
+
+    fun requestAddDevOptionsTile(
+        context: Context,
+        onResult: (TileAddOutcome) -> Unit
+    ) {
+        requestAddTileInternal(
+            context = context,
+            tileClass = DevOptionsTileService::class.java,
+            labelRes = R.string.tile_dev_options_label,
+            iconRes = R.drawable.ic_qs_dev_options,
+            onResult = onResult
+        )
+    }
+
+    fun requestAddKeepAwakeTile(
+        context: Context,
+        onResult: (TileAddOutcome) -> Unit
+    ) {
+        requestAddTileInternal(
+            context = context,
+            tileClass = KeepAwakeTileService::class.java,
+            labelRes = R.string.tile_keep_awake_label,
+            iconRes = R.drawable.ic_qs_keep_awake,
+            onResult = onResult
+        )
+    }
+
+    /** Refreshes the home widget and all four Quick Settings tile services. */
+    fun syncAllSurfaces(context: Context) {
+        val appContext = context.applicationContext ?: context
+        UsbDebugWidgetProvider.updateAllWidgets(appContext)
+        TILE_SERVICES.forEach { tileClass ->
+            runCatching {
+                TileService.requestListeningState(
+                    appContext,
+                    ComponentName(appContext, tileClass)
+                )
+            }
+        }
     }
 
     internal fun mapTileAddResultCode(resultCode: Int, tileLabel: String): TileAddOutcome {

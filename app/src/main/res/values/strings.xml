@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">USB Debug Switch</string>
+    <string name="app_name">VibeADB</string>
     <string name="app_subtitle">Quick USB Debugging monitor &amp; shortcut</string>
 
     <!-- Quick Settings Tiles, Home Widget & App Shortcuts -->
     <string name="tile_label">USB Debug</string>
     <string name="tile_wireless_label">Wireless Debug</string>
+    <string name="tile_dev_options_label">Developer Options</string>
+    <string name="tile_keep_awake_label">Keep Awake</string>
     <string name="tile_subtitle_on">ON</string>
     <string name="tile_subtitle_off">OFF</string>
     <string name="tile_subtitle_unsupported">Android 11+</string>
+    <string name="tile_subtitle_blocked">Blocked by policy</string>
+    <string name="tile_subtitle_awake_charging">While charging</string>
+    <string name="tile_subtitle_auto_off_in">Auto off in %dm</string>
 
     <string name="widget_label">USB Debug</string>
     <string name="widget_description">Check and switch USB Debugging from your home screen.</string>
@@ -24,7 +29,20 @@
     <string name="shortcut_dev_off_short">Dev Mode Off</string>
     <string name="shortcut_dev_off_long">Turn off Developer Options</string>
 
-    <!-- In-App Quick Surfaces Card -->
+    <!-- Safe Launch Contracts -->
+    <string name="safe_launch_shortcut_long">%s (Debug Off)</string>
+    <string name="safe_launch_toast_clean">Debugging turned off. Opening %s…</string>
+    <string name="safe_launch_toast_need_perm">Enable 1-tap mode in Setup first (opening Developer Options).</string>
+    <string name="safe_launch_toast_blocked">Debugging is blocked by device policy.</string>
+    <string name="safe_launch_toast_not_found">App not found.</string>
+    <string name="safe_launch_not_listed">This app is not in your Safe Launch list.</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_shortcuts">Shortcuts</string>
+    <string name="nav_setup">Setup</string>
+
+    <!-- Quick Surfaces & Feedback -->
     <string name="quick_surfaces_title">Quick Shortcuts (Quick Settings &amp; Home)</string>
     <string name="quick_surfaces_subtitle">Add a toggle next to Wi-Fi / Flashlight in your top shade or pin a widget to your home screen in 1 tap.</string>
     <string name="btn_add_qs_usb">Add USB Debug to Quick Settings (Wi-Fi bar)</string>
@@ -48,10 +66,58 @@
     <string name="status_off">OFF</string>
     <string name="label_usb_debugging">USB Debugging</string>
     <string name="label_wireless_debugging">Wireless Debugging</string>
-    <string name="label_developer_mode">Developer Mode</string>
+    <string name="label_developer_mode">Developer Options</string>
+    <string name="label_keep_awake">Keep Awake</string>
     <string name="status_hero_title">Current Device Status</string>
 
-    <!-- State A1: Unprivileged & Developer Mode OFF -->
+    <!-- Home Tab -->
+    <string name="home_device_line">Android %1$s · API %2$d · %3$s</string>
+    <string name="cd_refresh">Refresh status</string>
+    <string name="toast_refreshed">Status refreshed</string>
+    <string name="banner_policy_title">Managed by device policy</string>
+    <string name="banner_policy_body">Debugging features are disabled by your organization (DISALLOW_DEBUGGING_FEATURES).</string>
+    <string name="strip_one_tap_active">1-Tap Mode active • WRITE_SECURE_SETTINGS granted</string>
+    <string name="strip_mode_a_active">Quick-open mode · No PC required</string>
+    <string name="action_enable_one_tap">Enable 1-Tap</string>
+
+    <string name="usb_hero_label">USB DEBUGGING</string>
+    <string name="state_on_caps">ON</string>
+    <string name="state_off_caps">OFF</string>
+    <string name="cd_toggle_usb">Toggle USB Debugging</string>
+    <string name="usb_sub_blocked">Locked off by device policy.</string>
+    <string name="usb_sub_on_auto_off">On · Auto-off at %s</string>
+    <string name="usb_sub_on_manual">On · No auto-off timer</string>
+    <string name="usb_sub_off_one_tap">Off · Tap the power button to turn on</string>
+    <string name="usb_sub_mode_a_dev_off">Developer Mode is off · Tap button to unlock</string>
+    <string name="usb_sub_mode_a_on">On · Tap button to go turn off</string>
+    <string name="usb_sub_mode_a_off">Off · Tap button to go turn on</string>
+
+    <string name="chip_auto_off_min">Auto-off: %d min</string>
+    <string name="chip_auto_off_off">Auto-off: off</string>
+    <string name="chip_auto_jump_on">Quick-jump: On</string>
+    <string name="chip_auto_jump_off">Quick-jump: Off</string>
+    <string name="toast_auto_off_enabled">Auto-off enabled: %d min</string>
+    <string name="toast_auto_off_disabled">Auto-off disabled</string>
+    <string name="toast_auto_jump_on">Auto-jump on launch enabled</string>
+    <string name="toast_auto_jump_off">Auto-jump on launch disabled</string>
+
+    <string name="section_controls">Controls</string>
+    <string name="wireless_sub_on">On · Debug over Wi-Fi</string>
+    <string name="wireless_sub_off_one_tap">Off · Tap to toggle</string>
+    <string name="wireless_sub_mode_a">Tap to open Wireless Debugging in Settings</string>
+    <string name="dev_menu_visible">Menu visible</string>
+    <string name="dev_menu_hidden">Menu hidden</string>
+    <string name="awake_while_charging">While charging</string>
+    <string name="awake_off">Off</string>
+    <string name="awake_mode_a_hint">Open Settings</string>
+
+    <string name="section_banking_helper">Banking &amp; Digital ID</string>
+    <string name="banking_helper_mode_a_title">VNeID / banking app blocked?</string>
+    <string name="banking_helper_mode_a_sub">Open top of Developer Options to turn it off</string>
+    <string name="banking_helper_mode_b_title">Open VNeID / banking cleanly</string>
+    <string name="banking_helper_mode_b_sub">1-tap Safe Launch turns off Developer Options automatically</string>
+
+    <!-- OEM Unlock Guide (State A1: Unprivileged & Dev OFF) -->
     <string name="dev_off_banner_title">Developer Mode is OFF</string>
     <string name="dev_off_banner_subtitle">Unlock it once in Settings to access the USB Debugging switch.</string>
     <string name="guide_card_title">Unlock Guide for %1$s</string>
@@ -76,7 +142,7 @@
     <string name="btn_open_build_number">Open Build Number Screen</string>
     <string name="note_pin_and_back">Enter your screen lock PIN/password if prompted, then press Back to return here.</string>
 
-    <!-- State A2: Unprivileged & Developer Mode ON -->
+    <!-- Legacy/Quick Jump & Banking -->
     <string name="btn_go_turn_on_adb">Go to Turn ON USB Debugging</string>
     <string name="btn_go_turn_off_adb">Go to Turn OFF USB Debugging</string>
     <string name="adb_jump_hint">Opens Developer Options and highlights the USB debugging switch.</string>
@@ -85,8 +151,8 @@
     <string name="banking_card_body">Some banking or digital ID apps require turning off the master Developer Options switch at the top of the screen (you will need to tap Build number 7 times next time unless 1-tap mode is enabled).</string>
     <string name="btn_open_dev_options_top">Open top of Developer Options to turn off</string>
 
-    <string name="pref_auto_jump_title">Auto-jump to USB Debugging toggle on launch</string>
-    <string name="pref_auto_jump_subtitle">Immediately open the highlighted USB Debugging setting when you launch this app.</string>
+    <string name="pref_auto_jump_title">Auto-jump to USB Debugging on launch</string>
+    <string name="pref_auto_jump_subtitle">Immediately open the highlighted USB Debugging setting when launching in quick-open mode.</string>
     <string name="auto_jump_countdown_notice">Opening USB Debugging setting…</string>
     <string name="action_cancel">Cancel</string>
 
@@ -96,7 +162,7 @@
     <string name="switch_usb_desc">Auto-enables Developer Mode if currently off</string>
     <string name="switch_wireless_desc">Debug over Wi-Fi on Android 11 and newer</string>
     <string name="switch_dev_options_desc">Turn off cleanly for banking or ID apps</string>
-    <string name="btn_open_system_dev_settings">Open Android Developer Options (RSA keys / Wi-Fi pairing)</string>
+    <string name="btn_open_system_dev_settings">Open System Developer Options</string>
 
     <!-- Confirmation Dialogs (Mode B) -->
     <string name="dialog_turn_off_usb_title">Turn off USB Debugging?</string>
@@ -107,13 +173,88 @@
     <string name="dialog_turn_off_dev_body">This will turn off USB Debugging, Wireless Debugging, and Developer Options together so banking and ID apps pass checks cleanly. You can re-enable everything in 1 tap anytime.</string>
     <string name="action_confirm_turn_off">Turn Off</string>
 
-    <!-- Collapsible Technician Footer -->
+    <!-- Shortcuts Tab -->
+    <string name="shortcuts_title">Shortcuts</string>
+    <string name="shortcuts_subtitle">Add Quick Settings tiles, pin home controls, or launch banking apps without debugging.</string>
+    <string name="section_qs_tiles">Quick Settings Tiles</string>
+    <string name="tile_usb_desc">Toggle or open USB Debugging directly from the top shade.</string>
+    <string name="tile_wireless_desc">Quick toggle for Wi-Fi debugging on Android 11+.</string>
+    <string name="tile_dev_options_desc">Show or hide the system Developer Options menu.</string>
+    <string name="tile_keep_awake_desc">Keep screen awake while plugged in for testing.</string>
+    <string name="action_add_tile">Add</string>
+
+    <string name="section_home_surfaces">Home Screen</string>
+    <string name="section_safe_launch">Open Without Debugging</string>
+    <string name="safe_launch_desc">1-tap disables Developer Options before launching banking or digital ID apps — no background service, no Usage Access, no Accessibility service.</string>
+    <string name="safe_launch_empty">No apps added yet. Add VNeID or banking apps that warn about Developer Options.</string>
+    <string name="safe_launch_add_btn">+ Add banking / VNeID app</string>
+    <string name="safe_launch_open_now">Open now</string>
+    <string name="safe_launch_pin">Pin</string>
+    <string name="cd_remove_app">Remove %s</string>
+    <string name="safe_launch_mode_a_hint">1-Tap Mode (Setup tab) is needed for automatic disable. Right now, tapping Open opens Developer Options so you can turn it off first.</string>
+    <string name="safe_launch_pin_ok">Confirm on the launcher prompt to pin \"%s\" to your home screen.</string>
+    <string name="safe_launch_pin_unsupported">Your launcher does not support pinning app shortcuts.</string>
+
+    <string name="dialog_pick_app_title">Add app for Safe Launch</string>
+    <string name="hint_search_apps">Search by name or package…</string>
+    <string name="loading_apps">Loading installed apps…</string>
+    <string name="no_matching_apps">No matching apps found.</string>
+    <string name="badge_banking_suggested">Banking / VNeID</string>
+    <string name="badge_added">Added</string>
+    <string name="action_close">Close</string>
+
+    <!-- Setup Tab -->
+    <string name="setup_tab_title">Setup</string>
+    <string name="setup_tab_subtitle">Unlock 1-tap switches once from a computer, configure safety timers, and customize appearance.</string>
+    <string name="section_one_tap_setup">1-Tap Setup</string>
+    <string name="setup_checklist_dev">Developer Mode</string>
+    <string name="setup_checklist_perm">Secure Settings Permission</string>
+    <string name="setup_dev_on">Enabled</string>
+    <string name="setup_dev_off">Tap to unlock</string>
+    <string name="setup_perm_granted">Granted</string>
+    <string name="setup_perm_missing">Not granted</string>
+    <string name="setup_already_ready">1-Tap Mode is ready! Direct switches, Safe Launch, and Quick Settings tiles work instantly without leaving the app.</string>
+
+    <string name="setup_coloros_title">ColorOS / OxygenOS / Realme UI</string>
+    <string name="setup_coloros_body">ColorOS &amp; OxygenOS 15–16+ block \"pm grant\" with SecurityException. Run this reinstall-with-grant command from a computer (all your data stays intact):</string>
+    <string name="setup_coloros_legacy_note">On older OxygenOS / ColorOS: turn ON \"Disable permission monitoring\" near the bottom of Developer Options, then run standard \"pm grant\":</string>
+    <string name="setup_standard_intro">Plug into a computer with ADB platform-tools and run once:</string>
+    <string name="setup_xiaomi_warning">HyperOS / MIUI note: first enable \"USB debugging (Security settings)\" in Developer Options before running pm grant.</string>
+    <string name="setup_reinstall_fallback">If \"pm grant\" fails with SecurityException, run this in an empty folder on your computer to reinstall with the permission granted:</string>
+    <string name="btn_recheck_permission">Re-check permission</string>
+    <string name="toast_perm_granted_now">Permission granted! 1-Tap Mode is active.</string>
+    <string name="toast_perm_still_missing">Permission not granted yet. Run the ADB command, then check again.</string>
+
+    <string name="section_safety_timer">Safety Auto-Off Timer</string>
+    <string name="auto_off_title">Auto-off USB Debugging</string>
+    <string name="auto_off_subtitle">Automatically turns off USB Debugging after the chosen delay.</string>
+    <string name="auto_off_duration_label">Turn off after</string>
+    <string name="minutes_option">%d min</string>
+    <string name="auto_off_inexact_note">Uses Android\'s battery-friendly scheduler without extra permissions; actual turn-off triggers within ~1–10 min of the target time when closed.</string>
+
+    <string name="section_appearance">Appearance &amp; Behavior</string>
+    <string name="pref_theme_label">Theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
+    <string name="pref_language_label">Language</string>
+    <string name="language_system">System</string>
+    <string name="language_vi">Tiếng Việt</string>
+    <string name="language_en">English</string>
+
+    <string name="section_privacy_about">Privacy &amp; About</string>
+    <string name="privacy_card_title">Zero Network · Zero Background Services</string>
+    <string name="privacy_card_body">No INTERNET permission, no ads, no analytics, and no persistent background services. Only updates Android developer flags on your explicit tap.</string>
+    <string name="label_app_version">Version</string>
+
+    <!-- Legacy Technician / Copy Strings -->
     <string name="tech_footer_header">For technicians (Enable 1-tap mode)</string>
     <string name="tech_perm_label">WRITE_SECURE_SETTINGS status:</string>
     <string name="tech_perm_granted">Granted</string>
     <string name="tech_perm_not_granted">Not granted</string>
     <string name="tech_cmd_intro">Run once from a computer with ADB (or via Shizuku) to unlock direct 1-tap switches:</string>
     <string name="action_copy_command">Copy ADB command</string>
+    <string name="action_copy">Copy</string>
     <string name="action_copied">Copied</string>
     <string name="tech_note_oneplus">• OnePlus / OPPO / Realme (OxygenOS / ColorOS): Turn ON \"Disable permission monitoring\" near the bottom of Developer Options before running pm grant, then turn it back off.</string>
     <string name="tech_note_xiaomi">• Xiaomi / Redmi / POCO (HyperOS / MIUI): Turn ON \"USB debugging (Security settings)\" in Developer Options before running pm grant.</string>

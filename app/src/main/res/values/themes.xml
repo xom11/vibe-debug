@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.UsbDebugSwitch" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.UsbDebugSwitch" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#0E1113</item>
+        <item name="android:colorAccent">#7EE2A8</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
 
     <style name="Theme.UsbDebugSwitch.Translucent" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowIsTranslucent">true</item>

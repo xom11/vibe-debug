@@ -6,8 +6,15 @@
         android:name="android.permission.WRITE_SECURE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
 
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:localeConfig="@xml/locales_config"
@@ -40,6 +47,19 @@
             android:taskAffinity=""
             android:theme="@style/Theme.UsbDebugSwitch.Translucent" />
 
+        <activity
+            android:name=".shortcut.SafeLaunchActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.UsbDebugSwitch.Translucent">
+            <intent-filter>
+                <action android:name="io.github.l3n4k4.usbdebugswitch.ACTION_SAFE_LAUNCH" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <service
             android:name=".tile.UsbDebugTileService"
             android:exported="true"
@@ -49,6 +69,9 @@
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
         </service>
 
         <service
@@ -60,7 +83,42 @@
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
         </service>
+
+        <service
+            android:name=".tile.DevOptionsTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_qs_dev_options"
+            android:label="@string/tile_dev_options_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+        </service>
+
+        <service
+            android:name=".tile.KeepAwakeTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_qs_keep_awake"
+            android:label="@string/tile_keep_awake_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
+        </service>
+
+        <receiver
+            android:name=".data.AutoOffReceiver"
+            android:exported="false" />
 
         <receiver
             android:name=".widget.UsbDebugWidgetProvider"

@@ -73,4 +73,12 @@ class SettingsIntentsTest {
         assertNull(intent.getStringExtra(SettingsIntents.EXTRA_FRAGMENT_ARG_KEY))
         assertNull(intent.getBundleExtra(SettingsIntents.EXTRA_SHOW_FRAGMENT_ARGS))
     }
+
+    @Test
+    fun `ADB_REINSTALL_GRANT_COMMAND preserves clean reinstall grant command`() {
+        assertEquals(
+            "adb shell pm path io.github.l3n4k4.usbdebugswitch | tr -d '\\r' | sed 's/package://' | xargs -n1 adb pull && adb install-multiple -r -g *.apk",
+            SettingsIntents.ADB_REINSTALL_GRANT_COMMAND
+        )
+    }
 }

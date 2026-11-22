@@ -1,19 +1,21 @@
 package io.github.l3n4k4.usbdebugswitch
 
-import android.content.ComponentName
 import android.content.Intent
 import android.database.ContentObserver
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.service.quicksettings.TileService
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -22,16 +24,15 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import io.github.l3n4k4.usbdebugswitch.data.AndroidSettingsGateway
 import io.github.l3n4k4.usbdebugswitch.data.AppPreferences
+import io.github.l3n4k4.usbdebugswitch.data.AutoOffManager
 import io.github.l3n4k4.usbdebugswitch.data.DevSettingsController
 import io.github.l3n4k4.usbdebugswitch.debug.DebugPreviewConfig
 import io.github.l3n4k4.usbdebugswitch.model.OemBrandDetector
 import io.github.l3n4k4.usbdebugswitch.navigation.SettingsIntents
 import io.github.l3n4k4.usbdebugswitch.shortcut.QuickSurfaceHelper
-import io.github.l3n4k4.usbdebugswitch.tile.UsbDebugTileService
-import io.github.l3n4k4.usbdebugswitch.tile.WirelessDebugTileService
 import io.github.l3n4k4.usbdebugswitch.ui.UsbDebugScreen
 import io.github.l3n4k4.usbdebugswitch.ui.theme.UsbDebugSwitchTheme
-import io.github.l3n4k4.usbdebugswitch.widget.UsbDebugWidgetProvider
+import io.github.l3n4k4.usbdebugswitch.ui.theme.resolveIsDarkTheme
 import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
@@ -39,6 +40,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var gateway: AndroidSettingsGateway
     private lateinit var controller: DevSettingsController
     private lateinit var preferences: AppPreferences
+    private lateinit var autoOffManager: AutoOffManager
 
     private var currentPreviewConfig by mutableStateOf<DebugPreviewConfig?>(null)
 
@@ -49,6 +51,7 @@ class MainActivity : ComponentActivity() {
         gateway = AndroidSettingsGateway(applicationContext)
         controller = DevSettingsController(gateway)
         preferences = AppPreferences(applicationContext)
+        autoOffManager = AutoOffManager(applicationContext, preferences)
         currentPreviewConfig = DebugPreviewConfig.fromIntent(intent)
 
         setContent {
@@ -56,14 +59,24 @@ class MainActivity : ComponentActivity() {
             var liveState by remember { mutableStateOf(controller.readState()) }
             var livePermission by remember { mutableStateOf(controller.hasWritePermission()) }
             var previewState by remember(preview) { mutableStateOf(preview?.simulatedState) }
+
             var autoJumpEnabled by remember { mutableStateOf(preferences.autoJumpToUsbDebugging) }
             var autoJumpConsumedForSession by remember { mutableStateOf(savedInstanceState != null) }
             var autoJumpPending by remember { mutableStateOf(false) }
 
+            var themePreference by remember { mutableStateOf(preferences.themePreference) }
+            var autoOffEnabled by remember { mutableStateOf(preferences.autoOffEnabled) }
+            var autoOffMinutes by remember { mutableIntStateOf(preferences.autoOffMinutes) }
+            var autoOffTargetAtMs by remember { mutableLongStateOf(preferences.autoOffTargetAtMs) }
+            var safeLaunchPackages by remember { mutableStateOf(preferences.safeLaunchPackages) }
+
             val refreshLiveState = {
-                liveState = controller.readState()
+                val updated = controller.readState()
+                liveState = updated
                 livePermission = controller.hasWritePermission()
-                syncExternalSurfaces()
+                autoOffManager.resync(updated.adbEnabled)
+                autoOffTargetAtMs = preferences.autoOffTargetAtMs
+                QuickSurfaceHelper.syncAllSurfaces(applicationContext)
             }
 
             DisposableEffect(Unit) {
@@ -83,6 +96,7 @@ class MainActivity : ComponentActivity() {
                 val lifecycleObserver = LifecycleEventObserver { _, event ->
                     if (event == Lifecycle.Event.ON_RESUME) {
                         refreshLiveState()
+                        safeLaunchPackages = preferences.safeLaunchPackages
                     }
                 }
                 lifecycleOwner.lifecycle.addObserver(lifecycleObserver)
@@ -91,19 +105,52 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            val isDark = resolveIsDarkTheme(themePreference)
+            LaunchedEffect(isDark) {
+                enableEdgeToEdge(
+                    statusBarStyle = if (isDark) {
+                        SystemBarStyle.dark(Color.TRANSPARENT)
+                    } else {
+                        SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+                    },
+                    navigationBarStyle = if (isDark) {
+                        SystemBarStyle.dark(Color.TRANSPARENT)
+                    } else {
+                        SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+                    },
+                )
+            }
+
             val effectiveState = previewState ?: liveState
             val effectivePermission = preview?.hasWritePermission ?: livePermission
             val detectedBrand = remember(preview) {
                 preview?.brandOverride ?: OemBrandDetector.detect(Build.MANUFACTURER, Build.BRAND)
             }
+            val effectiveAutoOffTargetAtMs = if (previewState != null) {
+                if (effectivePermission && effectiveState.adbEnabled && autoOffEnabled) {
+                    autoOffTargetAtMs.takeIf { it > 0L }
+                        ?: (System.currentTimeMillis() + autoOffMinutes * 60_000L)
+                } else {
+                    0L
+                }
+            } else {
+                autoOffTargetAtMs
+            }
 
-            LaunchedEffect(preview, autoJumpEnabled, effectivePermission, effectiveState.devOptionsEnabled) {
+            LaunchedEffect(
+                preview,
+                autoJumpEnabled,
+                effectivePermission,
+                effectiveState.devOptionsEnabled,
+                effectiveState.blockedByPolicy,
+            ) {
                 if (
                     preview == null &&
                     !autoJumpConsumedForSession &&
                     autoJumpEnabled &&
                     !effectivePermission &&
-                    effectiveState.devOptionsEnabled
+                    effectiveState.devOptionsEnabled &&
+                    !effectiveState.blockedByPolicy
                 ) {
                     autoJumpPending = true
                     delay(1200)
@@ -117,14 +164,25 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            UsbDebugSwitchTheme {
+            UsbDebugSwitchTheme(themePreference = themePreference) {
                 UsbDebugScreen(
                     devState = effectiveState,
                     hasWritePermission = effectivePermission,
                     detectedBrand = detectedBrand,
                     autoJumpEnabled = autoJumpEnabled,
                     autoJumpPending = autoJumpPending,
+                    autoOffEnabled = autoOffEnabled,
+                    autoOffMinutes = autoOffMinutes,
+                    autoOffTargetAtMs = effectiveAutoOffTargetAtMs,
+                    themePreference = themePreference,
+                    safeLaunchPackages = safeLaunchPackages,
+                    initialTab = preview?.initialTab,
                     debugPreviewBanner = preview?.bannerText,
+                    onRefreshState = { refreshLiveState() },
+                    onRecheckPermission = {
+                        refreshLiveState()
+                        livePermission
+                    },
                     onCancelAutoJump = {
                         autoJumpPending = false
                         autoJumpConsumedForSession = true
@@ -135,11 +193,56 @@ class MainActivity : ComponentActivity() {
                         autoJumpConsumedForSession = true
                         autoJumpPending = false
                     },
+                    onAutoOffEnabledChanged = { enabled ->
+                        autoOffEnabled = enabled
+                        preferences.autoOffEnabled = enabled
+                        if (previewState == null) {
+                            if (enabled) {
+                                autoOffManager.scheduleIfEnabled(liveState.adbEnabled)
+                            } else {
+                                autoOffManager.cancel()
+                            }
+                            autoOffTargetAtMs = preferences.autoOffTargetAtMs
+                            QuickSurfaceHelper.syncAllSurfaces(applicationContext)
+                        } else {
+                            autoOffTargetAtMs = if (enabled && effectiveState.adbEnabled) {
+                                System.currentTimeMillis() + autoOffMinutes * 60_000L
+                            } else {
+                                0L
+                            }
+                        }
+                    },
+                    onAutoOffMinutesChanged = { minutes ->
+                        autoOffMinutes = minutes
+                        preferences.autoOffMinutes = minutes
+                        if (previewState == null && autoOffEnabled && liveState.adbEnabled && livePermission) {
+                            autoOffManager.start(minutes)
+                            autoOffTargetAtMs = preferences.autoOffTargetAtMs
+                            QuickSurfaceHelper.syncAllSurfaces(applicationContext)
+                        } else if (previewState != null && autoOffEnabled && effectiveState.adbEnabled) {
+                            autoOffTargetAtMs = System.currentTimeMillis() + minutes * 60_000L
+                        }
+                    },
+                    onThemePreferenceChanged = { pref ->
+                        themePreference = pref
+                        preferences.themePreference = pref
+                    },
+                    onAddSafeLaunchPackage = { pkg ->
+                        preferences.addSafeLaunchPackage(pkg)
+                        safeLaunchPackages = preferences.safeLaunchPackages
+                    },
+                    onRemoveSafeLaunchPackage = { pkg ->
+                        preferences.removeSafeLaunchPackage(pkg)
+                        safeLaunchPackages = preferences.safeLaunchPackages
+                    },
                     onOpenBuildNumberScreen = {
                         SettingsIntents.launchBuildNumberScreen(this@MainActivity)
                     },
                     onOpenEnableAdbScreen = {
                         SettingsIntents.launchEnableAdbScreen(this@MainActivity)
+                    },
+                    onOpenEnableWirelessAdbScreen = {
+                        SettingsIntents.launchEnableWirelessAdbScreen(this@MainActivity)
                     },
                     onOpenDeveloperOptionsTop = {
                         SettingsIntents.launchDeveloperOptionsTopScreen(this@MainActivity)
@@ -150,6 +253,12 @@ class MainActivity : ComponentActivity() {
                     onAddWirelessQuickTile = { onResult ->
                         QuickSurfaceHelper.requestAddWirelessTile(this@MainActivity, onResult)
                     },
+                    onAddDevOptionsQuickTile = { onResult ->
+                        QuickSurfaceHelper.requestAddDevOptionsTile(this@MainActivity, onResult)
+                    },
+                    onAddKeepAwakeQuickTile = { onResult ->
+                        QuickSurfaceHelper.requestAddKeepAwakeTile(this@MainActivity, onResult)
+                    },
                     onPinHomeWidget = {
                         QuickSurfaceHelper.requestPinUsbWidget(this@MainActivity)
                     },
@@ -159,22 +268,33 @@ class MainActivity : ComponentActivity() {
                     onSetUsbDebugging = { enabled ->
                         val sim = previewState
                         if (sim != null) {
-                            previewState = sim.copy(
-                                devOptionsEnabled = if (enabled) true else sim.devOptionsEnabled,
-                                adbEnabled = enabled
-                            )
+                            if (!sim.blockedByPolicy) {
+                                previewState = sim.copy(
+                                    devOptionsEnabled = if (enabled) true else sim.devOptionsEnabled,
+                                    adbEnabled = enabled,
+                                )
+                                autoOffTargetAtMs = if (enabled && autoOffEnabled) {
+                                    System.currentTimeMillis() + autoOffMinutes * 60_000L
+                                } else {
+                                    0L
+                                }
+                            }
                         } else {
-                            controller.setUsbDebugging(enabled)
+                            if (controller.setUsbDebugging(enabled)) {
+                                autoOffManager.scheduleIfEnabled(controller.readState().adbEnabled)
+                            }
                             refreshLiveState()
                         }
                     },
                     onSetWirelessDebugging = { enabled ->
                         val sim = previewState
                         if (sim != null) {
-                            previewState = sim.copy(
-                                devOptionsEnabled = if (enabled) true else sim.devOptionsEnabled,
-                                wirelessAdbEnabled = enabled
-                            )
+                            if (!sim.blockedByPolicy) {
+                                previewState = sim.copy(
+                                    devOptionsEnabled = if (enabled) true else sim.devOptionsEnabled,
+                                    wirelessAdbEnabled = enabled,
+                                )
+                            }
                         } else {
                             controller.setWirelessDebugging(enabled)
                             refreshLiveState()
@@ -183,20 +303,34 @@ class MainActivity : ComponentActivity() {
                     onSetDeveloperOptions = { enabled ->
                         val sim = previewState
                         if (sim != null) {
-                            previewState = if (enabled) {
-                                sim.copy(devOptionsEnabled = true)
-                            } else {
-                                sim.copy(
-                                    devOptionsEnabled = false,
-                                    adbEnabled = false,
-                                    wirelessAdbEnabled = false
-                                )
+                            if (!sim.blockedByPolicy) {
+                                previewState = if (enabled) {
+                                    sim.copy(devOptionsEnabled = true)
+                                } else {
+                                    autoOffTargetAtMs = 0L
+                                    sim.copy(
+                                        devOptionsEnabled = false,
+                                        adbEnabled = false,
+                                        wirelessAdbEnabled = false,
+                                    )
+                                }
                             }
                         } else {
-                            controller.setDeveloperOptions(enabled)
+                            if (controller.setDeveloperOptions(enabled) && !enabled) {
+                                autoOffManager.cancel()
+                            }
                             refreshLiveState()
                         }
-                    }
+                    },
+                    onSetKeepAwake = { enabled ->
+                        val sim = previewState
+                        if (sim != null) {
+                            previewState = sim.copy(keepAwakeEnabled = enabled)
+                        } else {
+                            controller.setKeepAwake(enabled)
+                            refreshLiveState()
+                        }
+                    },
                 )
             }
         }
@@ -206,21 +340,5 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         currentPreviewConfig = DebugPreviewConfig.fromIntent(intent)
-    }
-
-    private fun syncExternalSurfaces() {
-        UsbDebugWidgetProvider.updateAllWidgets(applicationContext)
-        runCatching {
-            TileService.requestListeningState(
-                applicationContext,
-                ComponentName(applicationContext, UsbDebugTileService::class.java)
-            )
-        }
-        runCatching {
-            TileService.requestListeningState(
-                applicationContext,
-                ComponentName(applicationContext, WirelessDebugTileService::class.java)
-            )
-        }
     }
 }

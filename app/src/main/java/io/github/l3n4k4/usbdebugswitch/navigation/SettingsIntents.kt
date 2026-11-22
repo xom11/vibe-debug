@@ -17,6 +17,9 @@ object SettingsIntents {
     const val ADB_GRANT_COMMAND =
         "adb shell pm grant io.github.l3n4k4.usbdebugswitch android.permission.WRITE_SECURE_SETTINGS"
 
+    const val ADB_REINSTALL_GRANT_COMMAND =
+        "adb shell pm path io.github.l3n4k4.usbdebugswitch | tr -d '\\r' | sed 's/package://' | xargs -n1 adb pull && adb install-multiple -r -g *.apk"
+
     fun buildBuildNumberIntent(): Intent {
         return Intent(Settings.ACTION_DEVICE_INFO_SETTINGS).apply {
             applyFragmentHighlight(ARG_BUILD_NUMBER)
