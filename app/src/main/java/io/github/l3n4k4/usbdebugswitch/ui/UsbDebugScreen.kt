@@ -42,6 +42,8 @@ import io.github.l3n4k4.usbdebugswitch.R
 import io.github.l3n4k4.usbdebugswitch.data.ThemePreference
 import io.github.l3n4k4.usbdebugswitch.model.DevState
 import io.github.l3n4k4.usbdebugswitch.model.OemBrand
+import io.github.l3n4k4.usbdebugswitch.shortcut.QuickSurfaceState
+import io.github.l3n4k4.usbdebugswitch.shortcut.QuickTileType
 import io.github.l3n4k4.usbdebugswitch.shortcut.TileAddOutcome
 import io.github.l3n4k4.usbdebugswitch.ui.theme.AppTheme
 import io.github.l3n4k4.usbdebugswitch.ui.theme.MonoFont
@@ -60,6 +62,7 @@ fun UsbDebugScreen(
     autoOffTargetAtMs: Long,
     themePreference: ThemePreference,
     safeLaunchPackages: List<String>,
+    quickSurfaceState: QuickSurfaceState = QuickSurfaceState(),
     initialTab: String? = null,
     debugPreviewBanner: String?,
     onRefreshState: () -> Unit,
@@ -79,8 +82,11 @@ fun UsbDebugScreen(
     onAddWirelessQuickTile: ((TileAddOutcome) -> Unit) -> Unit,
     onAddDevOptionsQuickTile: ((TileAddOutcome) -> Unit) -> Unit,
     onAddKeepAwakeQuickTile: ((TileAddOutcome) -> Unit) -> Unit,
+    onRemoveQuickTile: (QuickTileType) -> String = { "" },
     onPinHomeWidget: () -> Boolean,
     onPinHomeShortcut: () -> Boolean,
+    onScheduleSurfaceRefresh: () -> Unit = {},
+    onOpenHomeScreen: () -> Unit = {},
     onSetUsbDebugging: (Boolean) -> Unit,
     onSetWirelessDebugging: (Boolean) -> Unit,
     onSetDeveloperOptions: (Boolean) -> Unit,
@@ -222,14 +228,18 @@ fun UsbDebugScreen(
                             devState = devState,
                             hasWritePermission = hasWritePermission,
                             safeLaunchPackages = safeLaunchPackages,
+                            quickSurfaceState = quickSurfaceState,
                             onShowSnackbar = showSnackbar,
                             onShowManualTileDialog = { manualQsTileLabel = it },
                             onAddUsbTile = onAddUsbQuickTile,
                             onAddWirelessTile = onAddWirelessQuickTile,
                             onAddDevOptionsTile = onAddDevOptionsQuickTile,
                             onAddKeepAwakeTile = onAddKeepAwakeQuickTile,
+                            onRemoveTile = onRemoveQuickTile,
                             onPinHomeWidget = onPinHomeWidget,
                             onPinHomeShortcut = onPinHomeShortcut,
+                            onScheduleSurfaceRefresh = onScheduleSurfaceRefresh,
+                            onOpenHomeScreen = onOpenHomeScreen,
                             onAddSafeLaunchPackage = onAddSafeLaunchPackage,
                             onRemoveSafeLaunchPackage = onRemoveSafeLaunchPackage,
                             onOpenDeveloperOptionsTop = onOpenDeveloperOptionsTop,

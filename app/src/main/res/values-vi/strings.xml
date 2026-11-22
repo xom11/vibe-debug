@@ -48,10 +48,13 @@
     <string name="btn_add_qs_usb">Thêm nút Gỡ lỗi USB lên thanh Wi-Fi</string>
     <string name="btn_add_qs_wireless">Thêm nút Gỡ lỗi không dây lên thanh Wi-Fi</string>
     <string name="btn_pin_home_widget">Thêm Widget (2×1)</string>
+    <string name="btn_remove_home_widget">Gỡ Widget (2×1)</string>
     <string name="btn_pin_home_shortcut">Ghim lối tắt (1×1)</string>
+    <string name="btn_unpin_home_shortcut">Gỡ lối tắt (1×1)</string>
 
     <string name="feedback_tile_added">Đã thêm nút \"%1$s\" vào thanh Cài đặt nhanh!</string>
     <string name="feedback_tile_already_added">Nút \"%1$s\" đã có sẵn trên thanh Cài đặt nhanh — kéo từ trên xuống để dùng ngay.</string>
+    <string name="feedback_tile_removed">Đã gỡ nút \"%1$s\" khỏi thanh Cài đặt nhanh.</string>
     <string name="feedback_widget_pin_requested">Bấm Thêm trên hộp thoại của máy để đặt Widget 2×1 ra màn hình chính.</string>
     <string name="feedback_widget_unsupported">Màn hình chính hiện tại không hỗ trợ ghim tự động. Hãy nhấn giữ khoảng trống ngoài màn hình chính rồi chọn Tiện ích (Widgets).</string>
     <string name="feedback_shortcut_pin_requested">Bấm Thêm trên hộp thoại của máy để đặt lối tắt 1×1 ra màn hình chính.</string>
@@ -173,14 +176,22 @@
     <string name="tile_dev_options_desc">Hiện hoặc ẩn cả menu Tuỳ chọn nhà phát triển.</string>
     <string name="tile_keep_awake_desc">Giữ màn hình sáng trong lúc cắm sạc kiểm thử.</string>
     <string name="action_add_tile">Thêm</string>
+    <string name="action_remove_tile">Gỡ</string>
 
     <string name="section_home_surfaces">Màn hình chính</string>
+    <string name="dialog_remove_widget_title">Gỡ Widget ngoài màn hình chính</string>
+    <string name="dialog_remove_widget_body">Android chỉ cho phép gỡ tiện ích trực tiếp ngoài màn hình chính:\n\n1. Ra màn hình chính của máy.\n2. Nhấn giữ Widget VibeADB (2×1) rồi chọn Gỡ / Xoá.</string>
+    <string name="dialog_remove_shortcut_title">Gỡ lối tắt ngoài màn hình chính</string>
+    <string name="dialog_remove_shortcut_body">Android chỉ cho phép gỡ biểu tượng đã ghim trực tiếp ngoài màn hình chính:\n\n1. Ra màn hình chính của máy.\n2. Nhấn giữ biểu tượng \"%1$s\" rồi chọn Gỡ / Xoá.</string>
+    <string name="action_go_home">Ra màn hình chính</string>
+
     <string name="section_safe_launch">Mở không cần gỡ lỗi</string>
     <string name="safe_launch_desc">1 chạm tắt sạch Chế độ nhà phát triển rồi mở thẳng app ngân hàng/VNeID — không chạy nền, không quyền Usage Access, không dịch vụ trợ năng.</string>
     <string name="safe_launch_empty">Chưa có app nào. Thêm VNeID hoặc các app ngân hàng báo lỗi Chế độ nhà phát triển.</string>
     <string name="safe_launch_add_btn">+ Thêm app ngân hàng / VNeID</string>
     <string name="safe_launch_open_now">Mở ngay</string>
     <string name="safe_launch_pin">Ghim</string>
+    <string name="safe_launch_unpin">Gỡ ghim</string>
     <string name="cd_remove_app">Xoá %s</string>
     <string name="safe_launch_mode_a_hint">Cần chế độ 1 chạm (tab Thiết lập) để tự động tắt. Hiện tại bấm Mở sẽ đi tới đầu trang Tuỳ chọn nhà phát triển để bạn tự tắt.</string>
     <string name="safe_launch_pin_ok">Xác nhận trên hộp thoại để ghim \"%s\" ra màn hình chính.</string>

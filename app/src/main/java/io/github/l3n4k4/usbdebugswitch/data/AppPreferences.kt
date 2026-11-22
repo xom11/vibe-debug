@@ -1,6 +1,7 @@
 package io.github.l3n4k4.usbdebugswitch.data
 
 import android.content.Context
+import android.content.SharedPreferences
 
 /** User-selectable app theme preference. */
 enum class ThemePreference(val key: String) {
@@ -83,6 +84,43 @@ class AppPreferences(context: Context) {
         safeLaunchPackages = safeLaunchPackages.filterNot { it == normalized }
     }
 
+    var addedQsTileKeys: Set<String>
+        get() {
+            val raw = prefs.getString(KEY_ADDED_QS_TILES, null).orEmpty()
+            if (raw.isEmpty()) return emptySet()
+            return raw.split(PACKAGE_DELIMITER)
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .toSet()
+        }
+        set(value) {
+            val sanitized = value
+                .map { it.replace("\r", "").replace("\n", "").trim() }
+                .filter { it.isNotEmpty() }
+                .distinct()
+            prefs.edit().putString(KEY_ADDED_QS_TILES, sanitized.joinToString(PACKAGE_DELIMITER)).apply()
+        }
+
+    fun isQsTileAdded(prefKey: String): Boolean = prefKey.trim() in addedQsTileKeys
+
+    fun setQsTileAdded(prefKey: String, added: Boolean) {
+        val normalized = prefKey.replace("\r", "").replace("\n", "").trim()
+        if (normalized.isEmpty()) return
+        val current = addedQsTileKeys
+        val updated = if (added) current + normalized else current - normalized
+        if (updated != current) {
+            addedQsTileKeys = updated
+        }
+    }
+
+    fun registerChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+    }
+
+    fun unregisterChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+        prefs.unregisterOnSharedPreferenceChangeListener(listener)
+    }
+
     private fun normalizeAutoOffMinutes(minutes: Int): Int =
         if (minutes in VALID_AUTO_OFF_MINUTES) minutes else DEFAULT_AUTO_OFF_MINUTES
 
@@ -94,6 +132,7 @@ class AppPreferences(context: Context) {
         private const val KEY_AUTO_OFF_MINUTES = "auto_off_minutes"
         private const val KEY_AUTO_OFF_TARGET_AT_MS = "auto_off_target_at_ms"
         private const val KEY_SAFE_LAUNCH_PACKAGES = "safe_launch_packages"
+        private const val KEY_ADDED_QS_TILES = "added_qs_tiles"
         private const val PACKAGE_DELIMITER = "\n"
         private const val DEFAULT_AUTO_OFF_MINUTES = 30
         private val VALID_AUTO_OFF_MINUTES = setOf(15, 30, 60)

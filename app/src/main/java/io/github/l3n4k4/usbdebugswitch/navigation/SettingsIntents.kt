@@ -50,6 +50,17 @@ object SettingsIntents {
         return Intent(Settings.ACTION_SETTINGS)
     }
 
+    fun buildHomeLauncherIntent(): Intent {
+        return Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+    }
+
+    fun launchHomeScreen(context: Context): Boolean {
+        return launchWithFallbacks(
+            context = context,
+            candidates = listOf(::buildHomeLauncherIntent)
+        )
+    }
+
     fun launchBuildNumberScreen(context: Context): Boolean {
         return launchWithFallbacks(
             context = context,

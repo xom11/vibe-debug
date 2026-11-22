@@ -70,11 +70,11 @@ The app uses a 3-tab bottom-navigation layout (`HomeTab`, `ShortcutsTab`, `Setup
   - Mode B: navigates straight to the Safe Launch section in ShortcutsTab.
 
 ### Tab 2: Shortcuts (`ShortcutsTab`)
-- **Quick Settings Tiles:** 1-tap `StatusBarManager.requestAddTileService` buttons (Android 13+, or manual instructions dialog on older Android) for all 4 tiles: USB Debug, Wireless Debug (Android 11+), Developer Options, Keep Awake.
-- **Home Screen Surfaces:** Equal-height buttons for 2×1 Widget pinning and 1×1 Shortcut pinning.
+- **Quick Settings Tiles:** Live added-state tracking (`QuickSurfaceHelper.readSurfaceState`, `BaseDebugTileService`, `AppPreferences`) switching each tile action between `+ Add` (`ic_add`) and `Remove` (`ic_trash`, disabling the tile component / clearing `sysui_qs_tiles` best-effort so SystemUI drops the tile immediately). Uses 1-tap `StatusBarManager.requestAddTileService` (Android 13+, or manual instructions dialog on older Android) for all 4 tiles: USB Debug, Wireless Debug (Android 11+), Developer Options, Keep Awake.
+- **Home Screen Surfaces:** Equal-height buttons for 2×1 Widget and 1×1 Shortcut that detect active widget IDs (`AppWidgetManager`) and pinned shortcuts (`ShortcutManager`), dynamically switching between `+ Add` / `+ Pin` (`ic_add`) and `Remove` (`ic_trash`, guiding users to their Home screen where Android enforces manual unpin/removal).
 - **Banking / VNeID Safe Launch (`SafeLaunchHelper` + `SafeLaunchActivity`):**
   - Searchable launcher app picker loaded off the main thread (`Dispatchers.IO`), prioritizing detected Vietnamese banking / digital ID apps (`VNeID`, `Vietcombank`, `VPBank`, `VietinBank`, `BIDV`, `Techcombank`, `MB`, `TPBank`, `ACB`, `MoMo`, `ZaloPay`, `Cake`, `Viettel Money`).
-  - Each saved app card supports **Open now** and **Pin to Home** (192×192 badged app icon with `#0E1113`/`#7EE2A8` ring).
+  - Each saved app card supports **Open now** and **Pin / Remove shortcut** (192×192 badged app icon with `#0E1113`/`#7EE2A8` ring), tracking pinned shortcut status via `ShortcutManager.pinnedShortcuts`.
   - `SafeLaunchActivity` validates the requested package against the user's saved `safeLaunchPackages` allowlist before calling `controller.setDeveloperOptions(false)`, cancelling Auto-Off, syncing surfaces, and starting the app (Mode B), or directing to Developer Options top (Mode A).
 
 ### Tab 3: Setup (`SetupTab`)

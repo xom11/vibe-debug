@@ -1,6 +1,7 @@
 package io.github.l3n4k4.usbdebugswitch
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import io.github.l3n4k4.usbdebugswitch.data.AppPreferences
 import io.github.l3n4k4.usbdebugswitch.data.AutoOffManager
@@ -64,6 +65,36 @@ class AutoOffAndPreferencesTest {
 
         prefs.removeSafeLaunchPackage("com.VCB")
         assertEquals(listOf("com.vnid"), AppPreferences(context).safeLaunchPackages)
+    }
+
+    @Test
+    fun `addedQsTileKeys persists deduplicated state and notifies change listener`() {
+        var notifications = 0
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> notifications++ }
+        prefs.registerChangeListener(listener)
+
+        assertTrue(prefs.addedQsTileKeys.isEmpty())
+        assertFalse(prefs.isQsTileAdded("usb_debug"))
+
+        prefs.setQsTileAdded("usb_debug", true)
+        assertTrue(prefs.isQsTileAdded("usb_debug"))
+        assertEquals(setOf("usb_debug"), AppPreferences(context).addedQsTileKeys)
+        assertEquals(1, notifications)
+
+        // Setting the same value again should not re-notify listeners.
+        prefs.setQsTileAdded("usb_debug", true)
+        assertEquals(1, notifications)
+
+        prefs.setQsTileAdded("wireless_debug", true)
+        assertEquals(setOf("usb_debug", "wireless_debug"), AppPreferences(context).addedQsTileKeys)
+        assertEquals(2, notifications)
+
+        prefs.setQsTileAdded("usb_debug", false)
+        assertFalse(AppPreferences(context).isQsTileAdded("usb_debug"))
+        assertEquals(setOf("wireless_debug"), AppPreferences(context).addedQsTileKeys)
+        assertEquals(3, notifications)
+
+        prefs.unregisterChangeListener(listener)
     }
 
     @Test

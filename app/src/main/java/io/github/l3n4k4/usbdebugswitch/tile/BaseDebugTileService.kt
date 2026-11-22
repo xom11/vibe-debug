@@ -17,6 +17,7 @@ import io.github.l3n4k4.usbdebugswitch.data.AppPreferences
 import io.github.l3n4k4.usbdebugswitch.data.AutoOffManager
 import io.github.l3n4k4.usbdebugswitch.data.DevSettingsController
 import io.github.l3n4k4.usbdebugswitch.shortcut.QuickSurfaceHelper
+import io.github.l3n4k4.usbdebugswitch.shortcut.QuickTileType
 
 /**
  * Shared Quick Settings tile base handling live [ContentObserver] updates,
@@ -34,8 +35,24 @@ abstract class BaseDebugTileService : TileService() {
 
     private var settingsObserver: ContentObserver? = null
 
+    override fun onTileAdded() {
+        super.onTileAdded()
+        if (QuickSurfaceHelper.isTileComponentEnabled(applicationContext, this::class.java)) {
+            syncAddedPreference(true)
+        }
+        refreshTile()
+    }
+
+    override fun onTileRemoved() {
+        syncAddedPreference(false)
+        super.onTileRemoved()
+    }
+
     override fun onStartListening() {
         super.onStartListening()
+        if (QuickSurfaceHelper.isTileComponentEnabled(applicationContext, this::class.java)) {
+            syncAddedPreference(true)
+        }
         refreshTile()
         if (settingsObserver == null) {
             val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
@@ -45,6 +62,12 @@ abstract class BaseDebugTileService : TileService() {
             }
             settingsGateway.registerObserver(observer)
             settingsObserver = observer
+        }
+    }
+
+    private fun syncAddedPreference(added: Boolean) {
+        QuickTileType.fromServiceClass(this::class.java)?.let { tile ->
+            AppPreferences(applicationContext).setQsTileAdded(tile.prefKey, added)
         }
     }
 

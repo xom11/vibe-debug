@@ -1,6 +1,7 @@
 package io.github.l3n4k4.usbdebugswitch
 
 import android.content.Intent
+import android.content.SharedPreferences
 import android.database.ContentObserver
 import android.graphics.Color
 import android.os.Build
@@ -18,6 +19,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -34,6 +36,7 @@ import io.github.l3n4k4.usbdebugswitch.ui.UsbDebugScreen
 import io.github.l3n4k4.usbdebugswitch.ui.theme.UsbDebugSwitchTheme
 import io.github.l3n4k4.usbdebugswitch.ui.theme.resolveIsDarkTheme
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -43,6 +46,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var autoOffManager: AutoOffManager
 
     private var currentPreviewConfig by mutableStateOf<DebugPreviewConfig?>(null)
+    private var windowFocusTick by mutableIntStateOf(0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,6 +73,23 @@ class MainActivity : ComponentActivity() {
             var autoOffMinutes by remember { mutableIntStateOf(preferences.autoOffMinutes) }
             var autoOffTargetAtMs by remember { mutableLongStateOf(preferences.autoOffTargetAtMs) }
             var safeLaunchPackages by remember { mutableStateOf(preferences.safeLaunchPackages) }
+            var quickSurfaceState by remember {
+                mutableStateOf(QuickSurfaceHelper.readSurfaceState(applicationContext, preferences))
+            }
+            val surfaceRefreshScope = rememberCoroutineScope()
+
+            val refreshSurfaceState = {
+                quickSurfaceState = QuickSurfaceHelper.readSurfaceState(applicationContext, preferences)
+            }
+
+            val schedulePostPinRefresh: () -> Unit = {
+                surfaceRefreshScope.launch {
+                    listOf(500L, 1000L, 1500L).forEach { delayMs ->
+                        delay(delayMs)
+                        refreshSurfaceState()
+                    }
+                }
+            }
 
             val refreshLiveState = {
                 val updated = controller.readState()
@@ -77,6 +98,7 @@ class MainActivity : ComponentActivity() {
                 autoOffManager.resync(updated.adbEnabled)
                 autoOffTargetAtMs = preferences.autoOffTargetAtMs
                 QuickSurfaceHelper.syncAllSurfaces(applicationContext)
+                refreshSurfaceState()
             }
 
             DisposableEffect(Unit) {
@@ -85,9 +107,24 @@ class MainActivity : ComponentActivity() {
                         refreshLiveState()
                     }
                 }
+                val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
+                    refreshSurfaceState()
+                }
                 gateway.registerObserver(observer)
+                preferences.registerChangeListener(prefListener)
                 onDispose {
                     gateway.unregisterObserver(observer)
+                    preferences.unregisterChangeListener(prefListener)
+                }
+            }
+
+            LaunchedEffect(windowFocusTick) {
+                if (windowFocusTick > 0) {
+                    refreshSurfaceState()
+                    delay(400L)
+                    refreshSurfaceState()
+                    delay(900L)
+                    refreshSurfaceState()
                 }
             }
 
@@ -176,6 +213,7 @@ class MainActivity : ComponentActivity() {
                     autoOffTargetAtMs = effectiveAutoOffTargetAtMs,
                     themePreference = themePreference,
                     safeLaunchPackages = safeLaunchPackages,
+                    quickSurfaceState = quickSurfaceState,
                     initialTab = preview?.initialTab,
                     debugPreviewBanner = preview?.bannerText,
                     onRefreshState = { refreshLiveState() },
@@ -259,11 +297,24 @@ class MainActivity : ComponentActivity() {
                     onAddKeepAwakeQuickTile = { onResult ->
                         QuickSurfaceHelper.requestAddKeepAwakeTile(this@MainActivity, onResult)
                     },
+                    onRemoveQuickTile = { tile ->
+                        val label = QuickSurfaceHelper.removeQsTile(this@MainActivity, tile)
+                        refreshSurfaceState()
+                        label
+                    },
                     onPinHomeWidget = {
-                        QuickSurfaceHelper.requestPinUsbWidget(this@MainActivity)
+                        val requested = QuickSurfaceHelper.requestPinUsbWidget(this@MainActivity)
+                        if (requested) schedulePostPinRefresh()
+                        requested
                     },
                     onPinHomeShortcut = {
-                        QuickSurfaceHelper.requestPinUsbShortcut(this@MainActivity)
+                        val requested = QuickSurfaceHelper.requestPinUsbShortcut(this@MainActivity)
+                        if (requested) schedulePostPinRefresh()
+                        requested
+                    },
+                    onScheduleSurfaceRefresh = schedulePostPinRefresh,
+                    onOpenHomeScreen = {
+                        SettingsIntents.launchHomeScreen(this@MainActivity)
                     },
                     onSetUsbDebugging = { enabled ->
                         val sim = previewState
@@ -333,6 +384,13 @@ class MainActivity : ComponentActivity() {
                     },
                 )
             }
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            windowFocusTick++
         }
     }
 

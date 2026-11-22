@@ -3,6 +3,7 @@ package io.github.l3n4k4.usbdebugswitch.shortcut
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.pm.ShortcutManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -165,7 +166,12 @@ object SafeLaunchHelper {
             putExtra(EXTRA_PACKAGE, packageName)
         }
 
-        val shortcut = ShortcutInfoCompat.Builder(context, "safe_launch_$packageName")
+        val shortcutId = "${QuickSurfaceHelper.SAFE_LAUNCH_SHORTCUT_PREFIX}$packageName"
+        runCatching {
+            context.getSystemService(ShortcutManager::class.java)?.enableShortcuts(listOf(shortcutId))
+        }
+
+        val shortcut = ShortcutInfoCompat.Builder(context, shortcutId)
             .setShortLabel(label)
             .setLongLabel(context.getString(R.string.safe_launch_shortcut_long, label))
             .setIcon(iconCompat)

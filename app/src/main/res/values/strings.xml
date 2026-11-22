@@ -48,10 +48,13 @@
     <string name="btn_add_qs_usb">Add USB Debug to Quick Settings (Wi-Fi bar)</string>
     <string name="btn_add_qs_wireless">Add Wireless Debug to Quick Settings</string>
     <string name="btn_pin_home_widget">Add Widget (2×1)</string>
+    <string name="btn_remove_home_widget">Remove Widget (2×1)</string>
     <string name="btn_pin_home_shortcut">Pin Shortcut (1×1)</string>
+    <string name="btn_unpin_home_shortcut">Remove Shortcut (1×1)</string>
 
     <string name="feedback_tile_added">Added \"%1$s\" tile to your Quick Settings panel!</string>
     <string name="feedback_tile_already_added">\"%1$s\" is already in Quick Settings — swipe down from the top to use it.</string>
+    <string name="feedback_tile_removed">Removed \"%1$s\" tile from Quick Settings.</string>
     <string name="feedback_widget_pin_requested">Confirm on the launcher prompt to place the 2×1 widget.</string>
     <string name="feedback_widget_unsupported">Your launcher does not support 1-tap widget pinning. Long-press your home screen and choose Widgets.</string>
     <string name="feedback_shortcut_pin_requested">Confirm on the launcher prompt to place the 1×1 shortcut.</string>
@@ -173,14 +176,22 @@
     <string name="tile_dev_options_desc">Show or hide the system Developer Options menu.</string>
     <string name="tile_keep_awake_desc">Keep screen awake while plugged in for testing.</string>
     <string name="action_add_tile">Add</string>
+    <string name="action_remove_tile">Remove</string>
 
     <string name="section_home_surfaces">Home Screen</string>
+    <string name="dialog_remove_widget_title">Remove Home Screen Widget</string>
+    <string name="dialog_remove_widget_body">Android only allows removing widgets directly on your Home screen:\n\n1. Go to your Home screen.\n2. Long-press the VibeADB 2×1 widget and tap Remove.</string>
+    <string name="dialog_remove_shortcut_title">Remove Home Screen Shortcut</string>
+    <string name="dialog_remove_shortcut_body">Android only allows removing pinned icons directly on your Home screen:\n\n1. Go to your Home screen.\n2. Long-press the \"%1$s\" icon and tap Remove.</string>
+    <string name="action_go_home">Go to Home screen</string>
+
     <string name="section_safe_launch">Open Without Debugging</string>
     <string name="safe_launch_desc">1-tap disables Developer Options before launching banking or digital ID apps — no background service, no Usage Access, no Accessibility service.</string>
     <string name="safe_launch_empty">No apps added yet. Add VNeID or banking apps that warn about Developer Options.</string>
     <string name="safe_launch_add_btn">+ Add banking / VNeID app</string>
     <string name="safe_launch_open_now">Open now</string>
     <string name="safe_launch_pin">Pin</string>
+    <string name="safe_launch_unpin">Remove shortcut</string>
     <string name="cd_remove_app">Remove %s</string>
     <string name="safe_launch_mode_a_hint">1-Tap Mode (Setup tab) is needed for automatic disable. Right now, tapping Open opens Developer Options so you can turn it off first.</string>
     <string name="safe_launch_pin_ok">Confirm on the launcher prompt to pin \"%s\" to your home screen.</string>
