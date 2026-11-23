@@ -1,4 +1,4 @@
-VibeADB is a lightweight, zero-internet, zero-ad Android utility for checking and switching USB Debugging, Wireless Debugging, Developer Options, and Keep Awake without digging through nested Settings menus.
+Vibe Debug is a lightweight, zero-internet, zero-ad Android utility for checking and switching USB Debugging, Wireless Debugging, Developer Options, and Keep Awake without digging through nested Settings menus.
 
 Key features:
 

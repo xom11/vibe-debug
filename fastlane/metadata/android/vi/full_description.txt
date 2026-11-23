@@ -1,4 +1,4 @@
-VibeADB là tiện ích Android nhẹ, không quyền Internet và không quảng cáo, giúp kiểm tra và bật/tắt nhanh Gỡ lỗi USB, Gỡ lỗi không dây, Tuỳ chọn nhà phát triển và Giữ màn hình sáng mà không phải tìm sâu trong Cài đặt.
+Vibe Debug là tiện ích Android nhẹ, không quyền Internet và không quảng cáo, giúp kiểm tra và bật/tắt nhanh Gỡ lỗi USB, Gỡ lỗi không dây, Tuỳ chọn nhà phát triển và Giữ màn hình sáng mà không phải tìm sâu trong Cài đặt.
 
 Tính năng nổi bật:
 

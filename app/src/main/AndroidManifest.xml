@@ -55,7 +55,7 @@
             android:taskAffinity=""
             android:theme="@style/Theme.UsbDebugSwitch.Translucent">
             <intent-filter>
-                <action android:name="io.github.l3n4k4.usbdebugswitch.ACTION_SAFE_LAUNCH" />
+                <action android:name="io.github.xom11.vibedebug.ACTION_SAFE_LAUNCH" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>

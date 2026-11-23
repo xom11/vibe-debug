@@ -36,11 +36,11 @@ val hasReleaseSigning = releaseStoreFile?.isFile == true &&
     !releaseKeyPassword.isNullOrBlank()
 
 android {
-    namespace = "io.github.l3n4k4.usbdebugswitch"
+    namespace = "io.github.xom11.vibedebug"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "io.github.l3n4k4.usbdebugswitch"
+        applicationId = "io.github.xom11.vibedebug"
         minSdk = 26
         targetSdk = 36
         versionCode = 3

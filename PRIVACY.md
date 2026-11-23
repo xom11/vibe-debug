@@ -1,11 +1,11 @@
-# Privacy Policy — VibeADB (USB Debug Switch)
+# Privacy Policy — Vibe Debug (USB Debug Switch)
 
 **Effective date:** 2026-11-23  
 **License:** GPL-3.0-or-later  
 
 ## English
 
-**VibeADB** does **not** collect, store remotely, transmit, track, sell, or share any personal or device data.
+**Vibe Debug** does **not** collect, store remotely, transmit, track, sell, or share any personal or device data.
 
 1. **Zero Network Access:** The app does not declare `android.permission.INTERNET` or `android.permission.ACCESS_NETWORK_STATE`. It cannot make network requests and contains zero analytics, crash-reporting SDKs, or advertising libraries.
 2. **Local-Only Settings Inspection & Control:**
@@ -21,7 +21,7 @@
 
 ## Tiếng Việt
 
-**VibeADB** **không** thu thập, lưu trữ từ xa, truyền tải, theo dõi, mua bán hay chia sẻ bất kỳ dữ liệu cá nhân hoặc thông tin thiết bị nào.
+**Vibe Debug** **không** thu thập, lưu trữ từ xa, truyền tải, theo dõi, mua bán hay chia sẻ bất kỳ dữ liệu cá nhân hoặc thông tin thiết bị nào.
 
 1. **Không truy cập Internet:** Ứng dụng không khai báo quyền `INTERNET` hay `ACCESS_NETWORK_STATE`, không thể kết nối mạng và hoàn toàn không chứa SDK phân tích, theo dõi hay quảng cáo.
 2. **Kiểm tra & điều khiển hoàn toàn cục bộ trên máy:**

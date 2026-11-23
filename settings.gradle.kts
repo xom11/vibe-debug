@@ -20,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "usb-debug-switch"
+rootProject.name = "vibe-debug"
 include(":app")

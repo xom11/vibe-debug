@@ -8,9 +8,9 @@
         android:shortcutLongLabel="@string/shortcut_usb_long"
         android:shortcutShortLabel="@string/shortcut_usb_short">
         <intent
-            android:action="io.github.l3n4k4.usbdebugswitch.SHORTCUT_USB_DEBUG"
-            android:targetClass="io.github.l3n4k4.usbdebugswitch.shortcut.ShortcutDispatchActivity"
-            android:targetPackage="io.github.l3n4k4.usbdebugswitch" />
+            android:action="io.github.xom11.vibedebug.SHORTCUT_USB_DEBUG"
+            android:targetClass="io.github.xom11.vibedebug.shortcut.ShortcutDispatchActivity"
+            android:targetPackage="io.github.xom11.vibedebug" />
     </shortcut>
 
     <shortcut
@@ -21,9 +21,9 @@
         android:shortcutLongLabel="@string/shortcut_wireless_long"
         android:shortcutShortLabel="@string/shortcut_wireless_short">
         <intent
-            android:action="io.github.l3n4k4.usbdebugswitch.SHORTCUT_WIRELESS_DEBUG"
-            android:targetClass="io.github.l3n4k4.usbdebugswitch.shortcut.ShortcutDispatchActivity"
-            android:targetPackage="io.github.l3n4k4.usbdebugswitch" />
+            android:action="io.github.xom11.vibedebug.SHORTCUT_WIRELESS_DEBUG"
+            android:targetClass="io.github.xom11.vibedebug.shortcut.ShortcutDispatchActivity"
+            android:targetPackage="io.github.xom11.vibedebug" />
     </shortcut>
 
     <shortcut
@@ -34,8 +34,8 @@
         android:shortcutLongLabel="@string/shortcut_dev_off_long"
         android:shortcutShortLabel="@string/shortcut_dev_off_short">
         <intent
-            android:action="io.github.l3n4k4.usbdebugswitch.SHORTCUT_DEV_TOP"
-            android:targetClass="io.github.l3n4k4.usbdebugswitch.shortcut.ShortcutDispatchActivity"
-            android:targetPackage="io.github.l3n4k4.usbdebugswitch" />
+            android:action="io.github.xom11.vibedebug.SHORTCUT_DEV_TOP"
+            android:targetClass="io.github.xom11.vibedebug.shortcut.ShortcutDispatchActivity"
+            android:targetPackage="io.github.xom11.vibedebug" />
     </shortcut>
 </shortcuts>

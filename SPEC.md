@@ -2,7 +2,7 @@
 
 ## 1. App Identity & Google Play Compliance
 
-- **Package Name:** `io.github.l3n4k4.usbdebugswitch`
+- **Package Name:** `io.github.xom11.vibedebug`
 - **Version:** `2.0.0` (`versionCode = 3`)
 - **App Name:**
   - English (`res/values/strings.xml`): `Vibe Debug`
@@ -81,7 +81,7 @@ The app uses a responsive 3-tab layout (`HomeTab`, `ShortcutsTab`, `SetupTab`) s
 - **1-Tap Mode Setup Checklist & OEM ADB Guide:**
   - 2-step checklist (Developer Mode + `WRITE_SECURE_SETTINGS` permission status) and `"Re-check permission"` button.
   - OEM-tailored ADB instructions with full-width `CommandCopyBox` (monospace command + bottom-right Copy button):
-    - **OPPO / OnePlus / Realme:** Highlights `adb shell pm path io.github.l3n4k4.usbdebugswitch | tr -d '\r' | sed 's/package://' | xargs -n1 adb pull && adb install-multiple -r -g *.apk` first for ColorOS/OxygenOS 15–16+ (where `pm grant` throws `SecurityException`), with collapsible legacy *Disable permission monitoring* + `pm grant` note.
+    - **OPPO / OnePlus / Realme:** Highlights `adb shell pm path io.github.xom11.vibedebug | tr -d '\r' | sed 's/package://' | xargs -n1 adb pull && adb install-multiple -r -g *.apk` first for ColorOS/OxygenOS 15–16+ (where `pm grant` throws `SecurityException`), with collapsible legacy *Disable permission monitoring* + `pm grant` note.
     - **Xiaomi / Redmi / POCO:** Shows `pm grant`, HyperOS/MIUI *"USB debugging (Security settings)"* note, and reinstall fallback.
     - **Other brands:** Shows `pm grant` plus reinstall fallback.
 - **Safety Auto-Off Timer (Mode B only):**

@@ -1,6 +1,6 @@
 # Vibe Debug — USB Debug Switch for Android
 
-A clean, zero-ad, zero-internet-permission Android utility (**Vibe Debug**, `io.github.l3n4k4.usbdebugswitch`) built for everyday users and developers to inspect and switch **USB Debugging** without digging through nested Settings menus.
+A clean, zero-ad, zero-internet-permission Android utility (**Vibe Debug**, `io.github.xom11.vibedebug`) built for everyday users and developers to inspect and switch **USB Debugging** without digging through nested Settings menus.
 
 ## Key Capabilities
 

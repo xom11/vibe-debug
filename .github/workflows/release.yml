@@ -26,6 +26,9 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Accept Android SDK licenses
+        run: yes | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+
       - name: Verify signing secrets are configured
         env:
           SIGNING_KEY_BASE64: ${{ secrets.SIGNING_KEY_BASE64 }}
@@ -62,12 +65,12 @@ jobs:
             VERSION=$(grep -m1 'versionName' app/build.gradle.kts | sed -E 's/.*"([^"]+)".*/\1/')
           fi
           mkdir -p dist
-          cp app/build/outputs/apk/release/app-release.apk "dist/app-${VERSION}.apk"
-          cp app/build/outputs/bundle/release/app-release.aab "dist/app-${VERSION}.aab"
-          (cd dist && sha256sum "app-${VERSION}.apk" "app-${VERSION}.aab" > SHA256SUMS.txt)
+          cp app/build/outputs/apk/release/app-release.apk "dist/vibe-debug-${VERSION}.apk"
+          cp app/build/outputs/bundle/release/app-release.aab "dist/vibe-debug-${VERSION}.aab"
+          (cd dist && sha256sum "vibe-debug-${VERSION}.apk" "vibe-debug-${VERSION}.aab" > SHA256SUMS.txt)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "apk_path=dist/app-${VERSION}.apk" >> "$GITHUB_OUTPUT"
-          echo "aab_path=dist/app-${VERSION}.aab" >> "$GITHUB_OUTPUT"
+          echo "apk_path=dist/vibe-debug-${VERSION}.apk" >> "$GITHUB_OUTPUT"
+          echo "aab_path=dist/vibe-debug-${VERSION}.aab" >> "$GITHUB_OUTPUT"
 
       - name: Upload AAB artifact (for Google Play Console)
         uses: actions/upload-artifact@v4
