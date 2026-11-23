@@ -1,7 +1,7 @@
 package io.github.xom11.vibedebug.ui
 
 import android.content.Context
-import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -81,10 +81,8 @@ fun ShortcutsTab(
     onShowManualTileDialog: (String) -> Unit,
     onAddUsbTile: ((TileAddOutcome) -> Unit) -> Unit,
     onAddWirelessTile: ((TileAddOutcome) -> Unit) -> Unit,
-    onAddDevOptionsTile: ((TileAddOutcome) -> Unit) -> Unit,
-    onAddKeepAwakeTile: ((TileAddOutcome) -> Unit) -> Unit,
     onRemoveTile: (QuickTileType) -> String = { "" },
-    onPinWidget: (QuickTileType) -> Boolean,
+    onPinHomeWidget: () -> Boolean = { false },
     onScheduleSurfaceRefresh: () -> Unit = {},
     onOpenHomeScreen: () -> Unit = {},
     onAddSafeLaunchPackage: (String) -> Unit,
@@ -120,12 +118,12 @@ fun ShortcutsTab(
         onShowSnackbar(context.getString(R.string.feedback_tile_removed, label))
     }
 
-    fun handlePinWidget(tile: QuickTileType) {
-        val label = context.getString(tile.labelRes)
-        if (tile in quickSurfaceState.addedWidgets) {
+    fun handlePinHomeWidget() {
+        val label = context.getString(R.string.widget_hub_label)
+        if (quickSurfaceState.isHomeWidgetAdded) {
             removeWidgetDialogLabel = label
         } else {
-            val requested = onPinWidget(tile)
+            val requested = onPinHomeWidget()
             onShowSnackbar(
                 if (requested) context.getString(R.string.feedback_widget_pin_requested, label)
                 else context.getString(R.string.feedback_widget_unsupported)
@@ -134,76 +132,30 @@ fun ShortcutsTab(
     }
 
     val qsTilesAndHomeSurfacesSection: @Composable () -> Unit = {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            // Section 1: Quick Controls (Quick Settings + 1x1 Home Widgets)
-            SectionLabel(stringResource(R.string.section_qs_tiles))
-            SurfaceCard(modifier = Modifier.testTag("card_qs_tiles")) {
-                QuickControlSurfaceRow(
-                    tile = QuickTileType.USB_DEBUG,
-                    title = stringResource(R.string.tile_label),
-                    isControlOn = devState.adbEnabled && !devState.blockedByPolicy,
-                    isQsAdded = QuickTileType.USB_DEBUG in quickSurfaceState.addedTiles,
-                    isWidgetAdded = QuickTileType.USB_DEBUG in quickSurfaceState.addedWidgets,
-                    onToggleQs = {
-                        if (QuickTileType.USB_DEBUG in quickSurfaceState.addedTiles) {
-                            removeTile(QuickTileType.USB_DEBUG)
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SectionLabel(stringResource(R.string.section_qs_tiles))
+                QuickSettingsGridCard(
+                    supportsWirelessAdb = devState.supportsWirelessAdb,
+                    addedTiles = quickSurfaceState.addedTiles,
+                    onToggleTile = { tile ->
+                        if (tile in quickSurfaceState.addedTiles) {
+                            removeTile(tile)
                         } else {
-                            onAddUsbTile(::handleTileOutcome)
-                        }
-                    },
-                    onToggleWidget = { handlePinWidget(QuickTileType.USB_DEBUG) },
-                )
-                if (devState.supportsWirelessAdb) {
-                    RowDivider()
-                    QuickControlSurfaceRow(
-                        tile = QuickTileType.WIRELESS_DEBUG,
-                        title = stringResource(R.string.tile_wireless_label),
-                        isControlOn = devState.supportsWirelessAdb &&
-                            devState.wirelessAdbEnabled &&
-                            !devState.blockedByPolicy,
-                        isQsAdded = QuickTileType.WIRELESS_DEBUG in quickSurfaceState.addedTiles,
-                        isWidgetAdded = QuickTileType.WIRELESS_DEBUG in quickSurfaceState.addedWidgets,
-                        onToggleQs = {
-                            if (QuickTileType.WIRELESS_DEBUG in quickSurfaceState.addedTiles) {
-                                removeTile(QuickTileType.WIRELESS_DEBUG)
-                            } else {
-                                onAddWirelessTile(::handleTileOutcome)
+                            when (tile) {
+                                QuickTileType.USB_DEBUG -> onAddUsbTile(::handleTileOutcome)
+                                QuickTileType.WIRELESS_DEBUG -> onAddWirelessTile(::handleTileOutcome)
                             }
-                        },
-                        onToggleWidget = { handlePinWidget(QuickTileType.WIRELESS_DEBUG) },
-                    )
-                }
-                RowDivider()
-                QuickControlSurfaceRow(
-                    tile = QuickTileType.DEV_OPTIONS,
-                    title = stringResource(R.string.tile_dev_options_label),
-                    isControlOn = devState.devOptionsEnabled && !devState.blockedByPolicy,
-                    isQsAdded = QuickTileType.DEV_OPTIONS in quickSurfaceState.addedTiles,
-                    isWidgetAdded = QuickTileType.DEV_OPTIONS in quickSurfaceState.addedWidgets,
-                    onToggleQs = {
-                        if (QuickTileType.DEV_OPTIONS in quickSurfaceState.addedTiles) {
-                            removeTile(QuickTileType.DEV_OPTIONS)
-                        } else {
-                            onAddDevOptionsTile(::handleTileOutcome)
                         }
                     },
-                    onToggleWidget = { handlePinWidget(QuickTileType.DEV_OPTIONS) },
                 )
-                RowDivider()
-                QuickControlSurfaceRow(
-                    tile = QuickTileType.KEEP_AWAKE,
-                    title = stringResource(R.string.tile_keep_awake_label),
-                    isControlOn = devState.keepAwakeEnabled,
-                    isQsAdded = QuickTileType.KEEP_AWAKE in quickSurfaceState.addedTiles,
-                    isWidgetAdded = QuickTileType.KEEP_AWAKE in quickSurfaceState.addedWidgets,
-                    onToggleQs = {
-                        if (QuickTileType.KEEP_AWAKE in quickSurfaceState.addedTiles) {
-                            removeTile(QuickTileType.KEEP_AWAKE)
-                        } else {
-                            onAddKeepAwakeTile(::handleTileOutcome)
-                        }
-                    },
-                    onToggleWidget = { handlePinWidget(QuickTileType.KEEP_AWAKE) },
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SectionLabel(stringResource(R.string.section_home_widgets))
+                HomeWidgetsCard(
+                    isWidgetAdded = quickSurfaceState.isHomeWidgetAdded,
+                    onPinWidget = ::handlePinHomeWidget,
                 )
             }
         }
@@ -443,141 +395,202 @@ private fun RemoveHomeSurfaceDialog(
     )
 }
 
-@Composable
-private fun QuickControlSurfaceRow(
-    tile: QuickTileType,
-    title: String,
-    isControlOn: Boolean,
-    isQsAdded: Boolean,
-    isWidgetAdded: Boolean,
-    onToggleQs: () -> Unit,
-    onToggleWidget: () -> Unit,
-) {
-    val palette = AppTheme.palette
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        WidgetPreviewIconBox(
-            icon = tile.iconRes,
-            isOn = isControlOn,
-        )
+private data class SurfaceControlSpec(
+    val tile: QuickTileType,
+    @StringRes val shortLabelRes: Int,
+)
 
+private fun buildSurfaceSpecs(supportsWirelessAdb: Boolean): List<SurfaceControlSpec> = buildList {
+    add(SurfaceControlSpec(QuickTileType.USB_DEBUG, R.string.widget_short_usb))
+    if (supportsWirelessAdb) {
+        add(SurfaceControlSpec(QuickTileType.WIRELESS_DEBUG, R.string.widget_short_wireless))
+    }
+}
+
+@Composable
+private fun QuickSettingsGridCard(
+    supportsWirelessAdb: Boolean,
+    addedTiles: Set<QuickTileType>,
+    onToggleTile: (QuickTileType) -> Unit,
+) {
+    val rows = remember(supportsWirelessAdb) { buildSurfaceSpecs(supportsWirelessAdb).chunked(2) }
+    SurfaceCard(modifier = Modifier.testTag("card_qs_tiles")) {
         Column(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text(
-                text = title,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = palette.text,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(IntrinsicSize.Max),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                SurfacePillButton(
-                    text = stringResource(R.string.legend_qs_tile),
-                    isAdded = isQsAdded,
-                    contentDescription = stringResource(R.string.cd_toggle_qs_tile, title),
-                    tag = "btn_qs_${tile.prefKey}",
-                    onClick = onToggleQs,
+            rows.forEach { rowItems ->
+                Row(
                     modifier = Modifier
-                        .weight(1.3f)
-                        .fillMaxHeight(),
-                )
-                SurfacePillButton(
-                    text = stringResource(R.string.legend_home_widget),
-                    isAdded = isWidgetAdded,
-                    contentDescription = stringResource(R.string.cd_toggle_home_widget, title),
-                    tag = "btn_widget_${tile.prefKey}",
-                    onClick = onToggleWidget,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                )
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Max),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    rowItems.forEach { spec ->
+                        QsSurfaceGridTile(
+                            tile = spec.tile,
+                            shortLabel = stringResource(spec.shortLabelRes),
+                            isAdded = spec.tile in addedTiles,
+                            onClick = { onToggleTile(spec.tile) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                        )
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun WidgetPreviewIconBox(
-    @DrawableRes icon: Int,
-    isOn: Boolean,
-) {
-    val shape = RoundedCornerShape(16.dp)
-    val bg = if (isOn) Color(0xFF7EE2A8) else Color(0xFF161A1D)
-    val border = if (isOn) Color(0xFFA4F4C4) else Color(0xFF2E3740)
-    val borderWidth = if (isOn) 1.dp else 1.2.dp
-    val fg = if (isOn) Color(0xFF0B1F14) else Color(0xFFE9EDF0)
-    Box(
-        modifier = Modifier
-            .size(54.dp)
-            .clip(shape)
-            .background(bg)
-            .border(borderWidth, border, shape),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null,
-            modifier = Modifier.size(26.dp),
-            tint = fg,
-        )
-    }
-}
-
-@Composable
-private fun SurfacePillButton(
-    text: String,
+private fun QsSurfaceGridTile(
+    tile: QuickTileType,
+    shortLabel: String,
     isAdded: Boolean,
-    contentDescription: String,
-    tag: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val palette = AppTheme.palette
-    val shape = RoundedCornerShape(10.dp)
-    val fg = if (isAdded) palette.mint else palette.text
+    val shape = RoundedCornerShape(12.dp)
+    val fullTitle = stringResource(tile.labelRes)
+    val contentDesc = stringResource(R.string.cd_toggle_qs_tile, fullTitle)
     val fill = if (isAdded) palette.mintBg else palette.surface2
     val border = if (isAdded) palette.mintBorder else palette.line
+    val labelColor = if (isAdded) palette.mint else palette.text
+    val iconColor = if (isAdded) palette.mint else palette.soft
+
     Row(
         modifier = modifier
-            .heightIn(min = 34.dp)
-            .testTag(tag)
+            .heightIn(min = 46.dp)
+            .testTag("btn_qs_${tile.prefKey}")
             .clip(shape)
             .background(fill)
             .border(1.dp, border, shape)
-            .clickable(onClickLabel = contentDescription, role = Role.Button, onClick = onClick)
-            .semantics { this.contentDescription = contentDescription }
-            .padding(horizontal = 8.dp, vertical = 5.dp),
+            .clickable(onClickLabel = contentDesc, role = Role.Button, onClick = onClick)
+            .semantics { this.contentDescription = contentDesc }
+            .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        Icon(
+            painter = painterResource(tile.iconRes),
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+            tint = iconColor,
+        )
+        Text(
+            text = shortLabel,
+            modifier = Modifier.weight(1f),
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = labelColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
         Icon(
             painter = painterResource(if (isAdded) R.drawable.ic_check else R.drawable.ic_add),
             contentDescription = null,
             modifier = Modifier.size(14.dp),
             tint = if (isAdded) palette.mint else palette.muted,
         )
+    }
+}
+
+@Composable
+private fun HomeWidgetsCard(
+    isWidgetAdded: Boolean,
+    onPinWidget: () -> Unit,
+) {
+    val palette = AppTheme.palette
+
+    SurfaceCard(modifier = Modifier.testTag("card_widget_hub")) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(role = Role.Button, onClick = onPinWidget)
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            IconTile(
+                icon = R.drawable.ic_surface_widget,
+                bg = if (isWidgetAdded) palette.mintDim else palette.surface2,
+                fg = if (isWidgetAdded) palette.mint else palette.soft,
+                size = 38.dp,
+            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.widget_hub_label),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = palette.text,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (isWidgetAdded) {
+                    Text(
+                        text = stringResource(R.string.widget_hub_compact_sub),
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp,
+                        color = palette.muted,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            HubPinPillButton(
+                isAdded = isWidgetAdded,
+                onClick = onPinWidget,
+                modifier = Modifier.testTag("btn_pin_hub_widget"),
+            )
+        }
+    }
+}
+
+@Composable
+private fun HubPinPillButton(
+    isAdded: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val palette = AppTheme.palette
+    val shape = RoundedCornerShape(10.dp)
+    val label = stringResource(if (isAdded) R.string.action_remove_tile else R.string.action_add_tile)
+    val fill = if (isAdded) palette.surface2 else palette.mintBg
+    val border = if (isAdded) palette.line else palette.mintBorder
+    val contentColor = if (isAdded) palette.soft else palette.mint
+    Row(
+        modifier = modifier
+            .heightIn(min = 34.dp)
+            .clip(shape)
+            .background(fill)
+            .border(1.dp, border, shape)
+            .clickable(onClickLabel = label, role = Role.Button, onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+    ) {
+        if (!isAdded) {
+            Icon(
+                painter = painterResource(R.drawable.ic_add),
+                contentDescription = null,
+                modifier = Modifier.size(14.dp),
+                tint = contentColor,
+            )
+        }
         Text(
-            text = text,
+            text = label,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color = fg,
+            color = contentColor,
             maxLines = 1,
             softWrap = false,
-            overflow = TextOverflow.Ellipsis,
         )
     }
 }

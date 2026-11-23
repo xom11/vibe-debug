@@ -3,7 +3,7 @@
 ## 1. App Identity & Google Play Compliance
 
 - **Package Name:** `io.github.xom11.vibedebug`
-- **Version:** `2.0.0` (`versionCode = 3`)
+- **Version:** `2.1.0` (`versionCode = 4`)
 - **App Name:**
   - English (`res/values/strings.xml`): `Vibe Debug`
   - Vietnamese (`res/values-vi/strings.xml`): `Vibe Debug`
@@ -27,7 +27,7 @@
   - Custom vector adaptive icon (`ic_launcher_foreground`, `ic_launcher_background`, and Android 13+ `monochrome` layer) depicting a stylized USB plug + toggle switch.
   - Do **not** reuse or imitate the Android green robot or stock Android Settings gear icon.
 - **Play Store Quality Safeguards:**
-  - Must never lock controls or appear as a thin wrapper when opened without ADB permission: default **Mode A** delivers full live monitoring, OEM-aware onboarding, deep-link highlighting, 4 Quick Settings tiles, and 4 1×1 icon-style Home Screen widgets out of the box.
+  - Must never lock controls or appear as a thin wrapper when opened without ADB permission: default **Mode A** delivers full live monitoring, OEM-aware onboarding, deep-link highlighting, 2 focused Quick Settings tiles (`USB Debug` and `Wireless Debug`), and 1 unified multi-size Home Screen widget (`UsbDebugWidgetProvider`, scaling `1×1 → 2×1 → 4×1 → 2×2 → 4×2`) out of the box.
   - Auto-jump to Settings on app launch remains **OFF by default** and is only displayed/active in Mode A.
 
 ---
@@ -67,10 +67,11 @@ The app uses a responsive 3-tab layout (`HomeTab`, `ShortcutsTab`, `SetupTab`) s
   - **Wireless Debugging wide card** (Android 11+): instant 1-tap switch in Mode B; jumps to `toggle_adb_wireless` (or Build Number if Dev OFF) in Mode A.
   - **Equal-height 2-column cards (`IntrinsicSize.Max`):**
     - **Developer Options:** instant 1-tap cascade off (`adb_enabled=0`, `adb_wifi_enabled=0`, `development_settings_enabled=0`) in Mode B; jumps to top of Developer Options in Mode A (with a concise subtitle hint when ON in Mode A: *"On · Turn off if an app blocks debug"*).
-    - **Keep Awake (`stay_on_while_plugged_in`):** 1-tap toggle in Mode B; opens Developer Options in Mode A.
+    - **Awake on USB Debug (`keepAwakeOnUsb`):** 1-tap toggle in Mode B that automatically turns `stay_on_while_plugged_in` (`7`) ON while USB Debugging is active and restores `0` as soon as USB Debugging turns off; opens Developer Options in Mode A.
 
 ### Tab 2: Shortcuts (`ShortcutsTab`)
-- **Quick Controls (Quick Settings Tiles + 1×1 Icon Home Widgets):** Unified card where every control (**USB Debug**, **Wireless Debug** on Android 11+, **Developer Options**, **Keep Awake**) pairs its title/description with two aligned 50%/50% labeled pill buttons (`Quick Settings` | `Widget 1×1`). Quick Settings buttons use live added-state tracking (`QuickSurfaceHelper.readSurfaceState`, `BaseDebugTileService`, `AppPreferences`) and toggle via `StatusBarManager.requestAddTileService` (or manual instructions dialog pre-API 33) and component disable + `sysui_qs_tiles` cleanup. Widget buttons track active `AppWidgetManager` IDs per `QuickTileType` and pin via `AppWidgetManager.requestPinAppWidget` or guide users to long-press their Home screen to remove.
+- **Quick Settings Shade (`card_qs_tiles`):** Clean 2-switch row (**USB Debug**, **Wireless Debug** on Android 11+) with live added-state tracking (`QuickSurfaceHelper.readSurfaceState`, `BaseDebugTileService`, `AppPreferences`). Toggles via `StatusBarManager.requestAddTileService` (or manual instructions dialog pre-API 33) and component disable + `sysui_qs_tiles` cleanup.
+- **Home Screen Widget (`card_widget_hub`):** Single unified widget card (`UsbDebugWidgetProvider`, title `USB & Wi-Fi`) showing `+ Add` (`btn_pin_hub_widget`) when not yet placed and `Remove` + concise Home-screen removal subtitle (`Added · Long-press widget on Home screen to remove`) when active on `AppWidgetManager`.
 - **Turn Off Debug & Launch (`SafeLaunchHelper` + `SafeLaunchActivity`):**
   - **Empty state:** Compact `SurfaceCard` explaining strict-app Clean Launch with a `"Choose apps"` button.
   - **Populated state:** Concise 1-line hint above saved app cards (**Open now** and **Pin / Remove shortcut** with 192×192 badged app icon with `#0E1113`/`#7EE2A8` ring), followed by `"Add / edit apps"`.
@@ -84,8 +85,9 @@ The app uses a responsive 3-tab layout (`HomeTab`, `ShortcutsTab`, `SetupTab`) s
     - **OPPO / OnePlus / Realme:** Highlights `adb shell pm path io.github.xom11.vibedebug | tr -d '\r' | sed 's/package://' | xargs -n1 adb pull && adb install-multiple -r -g *.apk` first for ColorOS/OxygenOS 15–16+ (where `pm grant` throws `SecurityException`), with collapsible legacy *Disable permission monitoring* + `pm grant` note.
     - **Xiaomi / Redmi / POCO:** Shows `pm grant`, HyperOS/MIUI *"USB debugging (Security settings)"* note, and reinstall fallback.
     - **Other brands:** Shows `pm grant` plus reinstall fallback.
-- **Safety Auto-Off Timer (Mode B only):**
-  - Toggle + `15 / 30 / 60 min` segmented control (disabled with clear *"Requires 1-Tap Mode"* helper text in Mode A). Uses standard inexact `AlarmManager.setWindow` via `AutoOffManager` & `AutoOffReceiver`.
+- **USB Debug Automation (Mode B only):**
+  - `Keep screen awake while USB Debugging` (`keepAwakeOnUsb`): automatically sets `stay_on_while_plugged_in = 7` and `FLAG_KEEP_SCREEN_ON` when USB Debugging turns ON, and restores `0` when USB Debugging turns OFF across all surfaces.
+  - Auto-Off timer toggle + `15 / 30 / 60 min` segmented control (disabled with clear *"Requires 1-Tap Mode"* helper text in Mode A). Uses standard inexact `AlarmManager.setWindow` via `AutoOffManager` & `AutoOffReceiver`.
 - **Appearance & Behavior:**
   - Theme selector (`System` | `Dark` | `Light`).
   - In-app Language selector (`System` | `Tiếng Việt` | `English`) on Android 13+.
@@ -97,11 +99,9 @@ The app uses a responsive 3-tab layout (`HomeTab`, `ShortcutsTab`, `SetupTab`) s
 ## 4. Quick Settings Tiles & Home Screen Widget
 
 - **`BaseDebugTileService`:** Shared `TileService` base registering a `ContentObserver` on all 4 global keys during `onStartListening` and using `unlockAndRun` + API 34 `PendingIntent` / pre-34 `Intent` `startActivityAndCollapse`.
-  - `UsbDebugTileService` (Mode B toggles + triggers `AutoOffManager.scheduleIfEnabled`, displays remaining minutes in subtitle; Mode A highlights `enable_adb`)
-  - `WirelessDebugTileService` (Android 11+, handles pre-Android 11 gracefully)
-  - `DevOptionsTileService` (Mode B cascades off debugging + cancels Auto-Off; Mode A opens top of Developer Options)
-  - `KeepAwakeTileService` (Mode B toggles `stay_on_while_plugged_in`; Mode A opens Developer Options)
-- **`BaseDebugWidgetProvider` (`UsbDebugWidgetProvider`, `WirelessDebugWidgetProvider`, `DevOptionsWidgetProvider`, `KeepAwakeWidgetProvider`) + `WidgetToggleReceiver` (`android:exported="false"`):** Pure `AppWidgetProvider` + `RemoteViews` 1×1 icon-style Obsidian & Mint squircle widgets for all 4 controls, synced across app, tiles, and `AutoOffReceiver`. Privileged toggle actions are dispatched exclusively to the non-exported `WidgetToggleReceiver` so third-party apps cannot trigger privileged toggles via exported widget broadcasts.
+  - `UsbDebugTileService` (Mode B toggles + triggers `AutoOffManager.scheduleIfEnabled` & `syncKeepAwakeWithUsb`, displays remaining minutes in subtitle; Mode A highlights `enable_adb`)
+  - `WirelessDebugTileService` (Android 11+, warns clearly when Wi-Fi is off/disconnected on mobile data, handles pre-Android 11 gracefully)
+- **`UsbDebugWidgetProvider`:** Single unified pure `AppWidgetProvider` + `RemoteViews` Obsidian & Mint Home Screen widget adapting dynamically across 7 responsive size tiers: icon-only (`1×1`, `1×2`, default `2×1` slim capsule), icon + label on the right (`3×1` wide pill, `4×1` full strip with status), and icon + label + status below (`2×2` twin cards, `4×2` dashboard with header status, Mode badge, Auto-Off/Keep Awake subtitle, and Refresh button via `ACTION_WIDGET_REFRESH`). Uses Android 12+ `RemoteViews(Map<SizeF, RemoteViews>)` and `onAppWidgetOptionsChanged` fallback on API 26–30, cleanly adapts when Wireless Debugging is unsupported pre-Android 11, dispatches Mode B 1-tap toggles through non-exported `WidgetToggleReceiver` (including `syncKeepAwakeWithUsb` + `AutoOffManager` and the Wi-Fi guard + Toast for Wireless Debugging), and routes Mode A taps via `ShortcutDispatchActivity`. All surfaces remain synced across app, tiles, widget, `SafeLaunchHelper`, and `AutoOffReceiver`.
 
 ---
 

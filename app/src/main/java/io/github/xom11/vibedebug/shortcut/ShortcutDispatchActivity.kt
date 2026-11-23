@@ -44,6 +44,14 @@ class ShortcutDispatchActivity : Activity() {
                 }
             }
 
+            ACTION_SHORTCUT_KEEP_AWAKE -> {
+                if (blockedOrNeedsMain) {
+                    openMainApp()
+                } else {
+                    SettingsIntents.launchDeveloperOptionsTopScreen(this)
+                }
+            }
+
             else -> openMainApp()
         }
 
@@ -62,5 +70,6 @@ class ShortcutDispatchActivity : Activity() {
         const val ACTION_SHORTCUT_USB = "io.github.xom11.vibedebug.SHORTCUT_USB_DEBUG"
         const val ACTION_SHORTCUT_WIRELESS = "io.github.xom11.vibedebug.SHORTCUT_WIRELESS_DEBUG"
         const val ACTION_SHORTCUT_DEV_TOP = "io.github.xom11.vibedebug.SHORTCUT_DEV_TOP"
+        const val ACTION_SHORTCUT_KEEP_AWAKE = "io.github.xom11.vibedebug.SHORTCUT_KEEP_AWAKE"
     }
 }

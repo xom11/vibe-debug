@@ -88,34 +88,6 @@
                 android:value="true" />
         </service>
 
-        <service
-            android:name=".tile.DevOptionsTileService"
-            android:exported="true"
-            android:icon="@drawable/ic_qs_dev_options"
-            android:label="@string/tile_dev_options_label"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
-            <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
-                android:value="true" />
-        </service>
-
-        <service
-            android:name=".tile.KeepAwakeTileService"
-            android:exported="true"
-            android:icon="@drawable/ic_qs_keep_awake"
-            android:label="@string/tile_keep_awake_label"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
-            <intent-filter>
-                <action android:name="android.service.quicksettings.action.QS_TILE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
-                android:value="true" />
-        </service>
-
         <receiver
             android:name=".data.AutoOffReceiver"
             android:exported="false" />
@@ -127,49 +99,13 @@
         <receiver
             android:name=".widget.UsbDebugWidgetProvider"
             android:exported="true"
-            android:label="@string/widget_label">
+            android:label="@string/widget_hub_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/usb_debug_widget_info" />
-        </receiver>
-
-        <receiver
-            android:name=".widget.WirelessDebugWidgetProvider"
-            android:exported="true"
-            android:label="@string/tile_wireless_label">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/wireless_debug_widget_info" />
-        </receiver>
-
-        <receiver
-            android:name=".widget.DevOptionsWidgetProvider"
-            android:exported="true"
-            android:label="@string/tile_dev_options_label">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/dev_options_widget_info" />
-        </receiver>
-
-        <receiver
-            android:name=".widget.KeepAwakeWidgetProvider"
-            android:exported="true"
-            android:label="@string/tile_keep_awake_label">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/keep_awake_widget_info" />
         </receiver>
 
     </application>

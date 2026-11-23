@@ -50,6 +50,12 @@ class AppPreferences(context: Context) {
             prefs.edit().putLong(KEY_AUTO_OFF_TARGET_AT_MS, value.coerceAtLeast(0L)).apply()
         }
 
+    var keepAwakeOnUsb: Boolean
+        get() = prefs.getBoolean(KEY_KEEP_AWAKE_ON_USB, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_KEEP_AWAKE_ON_USB, value).apply()
+        }
+
     var safeLaunchPackages: List<String>
         get() {
             val raw = prefs.getString(KEY_SAFE_LAUNCH_PACKAGES, null).orEmpty()
@@ -131,6 +137,7 @@ class AppPreferences(context: Context) {
         private const val KEY_AUTO_OFF_ENABLED = "auto_off_enabled"
         private const val KEY_AUTO_OFF_MINUTES = "auto_off_minutes"
         private const val KEY_AUTO_OFF_TARGET_AT_MS = "auto_off_target_at_ms"
+        private const val KEY_KEEP_AWAKE_ON_USB = "keep_awake_on_usb"
         private const val KEY_SAFE_LAUNCH_PACKAGES = "safe_launch_packages"
         private const val KEY_ADDED_QS_TILES = "added_qs_tiles"
         private const val PACKAGE_DELIMITER = "\n"

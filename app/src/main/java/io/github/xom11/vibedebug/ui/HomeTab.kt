@@ -70,10 +70,13 @@ fun HomeTab(
     autoOffEnabled: Boolean,
     autoOffMinutes: Int,
     autoOffTargetAtMs: Long,
+    keepAwakeOnUsb: Boolean = false,
+    wirelessWifiWarning: Boolean = false,
     onRefreshState: () -> Unit,
     onNavigateTab: (AppTab) -> Unit,
     onAutoJumpChanged: (Boolean) -> Unit,
     onToggleAutoOff: (Boolean) -> Unit,
+    onKeepAwakeOnUsbChanged: (Boolean) -> Unit = {},
     onOpenBuildNumberScreen: () -> Unit,
     onOpenEnableAdbScreen: () -> Unit,
     onOpenEnableWirelessAdbScreen: () -> Unit,
@@ -81,7 +84,7 @@ fun HomeTab(
     onSetUsbDebugging: (Boolean) -> Unit,
     onSetWirelessDebugging: (Boolean) -> Unit,
     onSetDeveloperOptions: (Boolean) -> Unit,
-    onSetKeepAwake: (Boolean) -> Unit,
+    @Suppress("UNUSED_PARAMETER") onSetKeepAwake: (Boolean) -> Unit = {},
 ) {
     val palette = AppTheme.palette
     val context = LocalContext.current
@@ -284,14 +287,19 @@ fun HomeTab(
                 if (devState.devOptionsEnabled) onOpenDeveloperOptionsTop() else onOpenBuildNumberScreen()
             }
         }
+        val keepAwakeActive = if (hasWritePermission) keepAwakeOnUsb else devState.keepAwakeEnabled
         val keepAwakeSubtitle = when {
-            devState.keepAwakeEnabled -> stringResource(R.string.awake_while_charging)
+            hasWritePermission && keepAwakeOnUsb && devState.adbEnabled && !devState.blockedByPolicy ->
+                stringResource(R.string.usb_awake_sub_active)
+            hasWritePermission && keepAwakeOnUsb ->
+                stringResource(R.string.usb_awake_sub_armed)
             hasWritePermission -> stringResource(R.string.awake_off)
+            devState.keepAwakeEnabled -> stringResource(R.string.awake_while_charging)
             else -> stringResource(R.string.awake_mode_a_hint)
         }
         val onKeepAwakeClick = {
             if (hasWritePermission) {
-                onSetKeepAwake(!devState.keepAwakeEnabled)
+                onKeepAwakeOnUsbChanged(!keepAwakeOnUsb)
             } else {
                 if (devState.devOptionsEnabled) onOpenDeveloperOptionsTop() else onOpenBuildNumberScreen()
             }
@@ -302,6 +310,7 @@ fun HomeTab(
                 WirelessDebugCard(
                     devState = devState,
                     hasWritePermission = hasWritePermission,
+                    wirelessWifiWarning = wirelessWifiWarning,
                     onClick = {
                         if (hasWritePermission) {
                             onSetWirelessDebugging(!devState.wirelessAdbEnabled)
@@ -355,11 +364,11 @@ fun HomeTab(
 
                             SmallControlCard(
                                 icon = R.drawable.ic_qs_keep_awake,
-                                title = stringResource(R.string.label_keep_awake),
+                                title = stringResource(R.string.usb_awake_card_title),
                                 subtitle = keepAwakeSubtitle,
-                                isOn = devState.keepAwakeEnabled,
+                                isOn = keepAwakeActive,
                                 hasWritePermission = hasWritePermission,
-                                enabled = !devState.blockedByPolicy || hasWritePermission,
+                                enabled = !devState.blockedByPolicy || !hasWritePermission,
                                 modifier = Modifier
                                     .weight(1f)
                                     .fillMaxHeight()
@@ -383,11 +392,11 @@ fun HomeTab(
 
                         SmallControlCard(
                             icon = R.drawable.ic_qs_keep_awake,
-                            title = stringResource(R.string.label_keep_awake),
+                            title = stringResource(R.string.usb_awake_card_title),
                             subtitle = keepAwakeSubtitle,
-                            isOn = devState.keepAwakeEnabled,
+                            isOn = keepAwakeActive,
                             hasWritePermission = hasWritePermission,
-                            enabled = !devState.blockedByPolicy || hasWritePermission,
+                            enabled = !devState.blockedByPolicy || !hasWritePermission,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("card_keep_awake"),
@@ -425,11 +434,11 @@ fun HomeTab(
 
                     SmallControlCard(
                         icon = R.drawable.ic_qs_keep_awake,
-                        title = stringResource(R.string.label_keep_awake),
+                        title = stringResource(R.string.usb_awake_card_title),
                         subtitle = keepAwakeSubtitle,
-                        isOn = devState.keepAwakeEnabled,
+                        isOn = keepAwakeActive,
                         hasWritePermission = hasWritePermission,
-                        enabled = !devState.blockedByPolicy || hasWritePermission,
+                        enabled = !devState.blockedByPolicy || !hasWritePermission,
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight()
@@ -453,11 +462,11 @@ fun HomeTab(
 
                 SmallControlCard(
                     icon = R.drawable.ic_qs_keep_awake,
-                    title = stringResource(R.string.label_keep_awake),
+                    title = stringResource(R.string.usb_awake_card_title),
                     subtitle = keepAwakeSubtitle,
-                    isOn = devState.keepAwakeEnabled,
+                    isOn = keepAwakeActive,
                     hasWritePermission = hasWritePermission,
-                    enabled = !devState.blockedByPolicy || hasWritePermission,
+                    enabled = !devState.blockedByPolicy || !hasWritePermission,
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("card_keep_awake"),
@@ -618,11 +627,13 @@ private fun UsbHeroCard(
 private fun WirelessDebugCard(
     devState: DevState,
     hasWritePermission: Boolean,
+    wirelessWifiWarning: Boolean = false,
     onClick: () -> Unit,
 ) {
     val palette = AppTheme.palette
     val on = devState.wirelessAdbEnabled && !devState.blockedByPolicy
     val enabled = !devState.blockedByPolicy
+    val showWifiWarning = hasWritePermission && !on && (wirelessWifiWarning || !devState.isWifiEnabled)
     val shape = RoundedCornerShape(18.dp)
 
     val rowModifier = if (hasWritePermission) {
@@ -638,7 +649,7 @@ private fun WirelessDebugCard(
             .alpha(if (enabled) 1f else 0.55f)
             .clip(shape)
             .background(palette.surface)
-            .border(1.dp, palette.line, shape)
+            .border(1.dp, if (showWifiWarning && wirelessWifiWarning) palette.amberBorder else palette.line, shape)
             .then(rowModifier)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -659,12 +670,13 @@ private fun WirelessDebugCard(
             Text(
                 text = when {
                     hasWritePermission && on -> stringResource(R.string.wireless_sub_on)
+                    showWifiWarning -> stringResource(R.string.wireless_sub_need_wifi)
                     hasWritePermission -> stringResource(R.string.wireless_sub_off_one_tap)
                     else -> stringResource(R.string.wireless_sub_mode_a)
                 },
                 fontSize = 12.sp,
                 lineHeight = 17.sp,
-                color = palette.muted,
+                color = if (showWifiWarning) palette.amberText else palette.muted,
             )
         }
         if (hasWritePermission) {

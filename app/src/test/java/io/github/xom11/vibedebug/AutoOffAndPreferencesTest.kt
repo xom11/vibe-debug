@@ -115,6 +115,15 @@ class AutoOffAndPreferencesTest {
     }
 
     @Test
+    fun `keepAwakeOnUsb defaults to false and persists across reloads`() {
+        assertFalse(prefs.keepAwakeOnUsb)
+        prefs.keepAwakeOnUsb = true
+        assertTrue(AppPreferences(context).keepAwakeOnUsb)
+        prefs.keepAwakeOnUsb = false
+        assertFalse(AppPreferences(context).keepAwakeOnUsb)
+    }
+
+    @Test
     fun `AutoOffManager start remainingMinutes cancel and resync manage deadline cleanly`() {
         assertNull(autoOffManager.remainingMinutes())
 

@@ -1,0 +1,4 @@
+• Unified adaptive USB & Wi-Fi Home Screen widget scaling across 1x1, 2x1, 3x1, 4x1, 2x2, and 4x2 sizes
+• Streamlined Quick Settings to 2 focused tiles: USB Debug and Wireless Debug
+• Added option to keep screen awake and unlocked automatically while USB Debugging is active
+• Clear warning when toggling Wireless Debugging on mobile data (5G/4G) without Wi-Fi

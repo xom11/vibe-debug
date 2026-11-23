@@ -7,7 +7,8 @@ Key features:
   - Displays live status for USB Debugging, Wireless Debugging (Android 11+), Developer Options, and Keep Awake, and highlights the exact toggle inside System Settings.
 
 • 1-Tap Mode (with WRITE_SECURE_SETTINGS):
-  - Grant WRITE_SECURE_SETTINGS once via ADB or Shizuku (including the reinstall-with-grant command for ColorOS / OxygenOS 15–16+) to unlock instant 1-tap switching inside the app, across 4 Quick Settings tiles, and across 4 1×1 Home Screen widgets.
+  - Grant WRITE_SECURE_SETTINGS once via ADB or Shizuku (including the reinstall-with-grant command for ColorOS / OxygenOS 15–16+) to unlock instant 1-tap switching inside the app, across 2 focused Quick Settings tiles (USB Debug & Wireless Debug), and via 1 adaptive multi-size Home Screen widget (scaling from compact 1×1 / 2×1 icon controls to labeled 3×1 / 4×1 / 2×2 / 4×2 cards).
+  - Includes automatic Keep Screen Awake & Unlocked while USB Debugging is active and a clear warning when toggling Wireless Debugging on mobile data (5G/4G) without Wi-Fi.
 
 • Clean Launch (Turn Off Debug & Launch):
   - Pick banking, digital ID, e-wallet, enterprise, or security-sensitive apps that refuse to run while Developer Options is active. Launching them from Shortcuts or a badged 1×1 home shortcut turns off Developer Options cleanly first.

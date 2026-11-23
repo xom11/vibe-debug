@@ -14,20 +14,46 @@
     <string name="tile_subtitle_blocked">Bị chính sách chặn</string>
     <string name="tile_subtitle_awake_charging">Khi đang sạc</string>
     <string name="tile_subtitle_auto_off_in">Tự tắt sau %d phút</string>
+    <string name="tile_subtitle_need_wifi">Cần kết nối Wi-Fi</string>
+    <string name="widget_state_need_wifi">Cần Wi-Fi</string>
 
     <string name="widget_label">Gỡ lỗi USB</string>
     <string name="widget_short_usb">Gỡ lỗi USB</string>
     <string name="widget_short_wireless">Gỡ lỗi Wi-Fi</string>
     <string name="widget_short_dev">Dev Mode</string>
     <string name="widget_short_awake">Giữ sáng</string>
-    <string name="widget_description">Xem trạng thái và bật/tắt nhanh Gỡ lỗi USB ngay từ màn hình chính.</string>
-    <string name="widget_wireless_description">Xem trạng thái và bật/tắt nhanh Gỡ lỗi Wi-Fi từ màn hình chính.</string>
-    <string name="widget_dev_options_description">Hiện hoặc tắt nhanh Tuỳ chọn nhà phát triển từ màn hình chính.</string>
-    <string name="widget_keep_awake_description">Bật/tắt Giữ màn hình sáng khi cắm sạc từ màn hình chính.</string>
+    <string name="widget_description">Xem trạng thái và bật/tắt nhanh Gỡ lỗi USB từ màn hình chính (kéo giãn 1×1 / 2×1).</string>
+    <string name="widget_wireless_description">Xem trạng thái và bật/tắt nhanh Gỡ lỗi Wi-Fi từ màn hình chính (kéo giãn 1×1 / 2×1).</string>
+    <string name="widget_dev_options_description">Hiện hoặc tắt nhanh Tuỳ chọn nhà phát triển từ màn hình chính (kéo giãn 1×1 / 2×1).</string>
+    <string name="widget_keep_awake_description">Bật/tắt Giữ màn hình sáng khi cắm sạc từ màn hình chính (kéo giãn 1×1 / 2×1).</string>
     <string name="widget_state_on">BẬT</string>
     <string name="widget_state_off">TẮT</string>
     <string name="widget_hint_one_tap">Chạm để bật/tắt</string>
     <string name="widget_hint_open">Chạm để mở</string>
+    <string name="widget_hub_label">Gỡ lỗi USB &amp; Wi-Fi</string>
+    <string name="widget_hub_description">Bật/tắt nhanh Gỡ lỗi USB và Wi-Fi ngay trên màn hình chính.</string>
+    <string name="widget_hub_card_title">Bảng điều khiển đa năng</string>
+    <string name="widget_hub_card_desc">Ghim 1 widget duy nhất, nắm viền kéo giãn tùy ý (2×1 · 4×1 · 2×2 · 4×2) để hiện đủ 4 nút bấm và thông tin hẹn giờ.</string>
+    <string name="widget_hub_pin_btn">Thêm Widget Bảng điều khiển</string>
+    <string name="widget_hub_added_btn">Đã thêm Bảng điều khiển · Cách gỡ</string>
+    <string name="widget_resize_hint">Mẹo: Các widget lẻ mặc định 1×1 nhưng có thể nắm kéo rộng thành thanh 2×1 ngoài màn hình chính.</string>
+    <string name="widget_btn_usb">USB</string>
+    <string name="widget_btn_wireless">Wi-Fi</string>
+    <string name="widget_btn_dev">Dev</string>
+    <string name="widget_btn_awake">Giữ sáng</string>
+    <string name="widget_mode_one_tap">1-CHẠM</string>
+    <string name="widget_mode_settings">MỞ NHANH</string>
+    <string name="widget_mode_blocked">BỊ CHẶN</string>
+    <string name="widget_sub_auto_off_at">Tự tắt %1$s</string>
+    <string name="widget_sub_usb_awake">Đang bật · Giữ sáng màn hình</string>
+    <string name="widget_sub_one_tap_on">Đang bật · 1 chạm</string>
+    <string name="widget_sub_one_tap_off">Đang tắt · 1 chạm</string>
+    <string name="widget_sub_mode_a">Chạm mở trong Cài đặt</string>
+    <string name="widget_sub_dev_unlock">Chạm mở khoá Dev Mode</string>
+    <string name="widget_hub_usb_status">Gỡ lỗi USB · %1$s</string>
+    <string name="widget_hub_sub_ready">Chế độ 1 chạm · Chạm nút để bật/tắt</string>
+    <string name="widget_hub_sub_auto_off">1 chạm · Tự tắt lúc %1$s</string>
+    <string name="widget_hub_sub_mode_a">Mở nhanh · Chạm nút để vào Cài đặt</string>
 
     <string name="shortcut_usb_short">Gỡ lỗi USB</string>
     <string name="shortcut_usb_long">Mở nhanh Gỡ lỗi USB</string>
@@ -115,12 +141,19 @@
     <string name="wireless_sub_on">Đang bật · Gỡ lỗi qua Wi-Fi</string>
     <string name="wireless_sub_off_one_tap">Đang tắt · Chạm để bật</string>
     <string name="wireless_sub_mode_a">Chạm để mở Gỡ lỗi không dây trong Cài đặt</string>
+    <string name="wireless_sub_need_wifi">Không bật được trên 5G/4G · Cần kết nối Wi-Fi</string>
+    <string name="wireless_err_need_wifi">Không bật được Gỡ lỗi Wi-Fi khi đang dùng 5G/4G — hãy kết nối mạng Wi-Fi trước.</string>
     <string name="dev_menu_visible">Đang hiện menu</string>
     <string name="dev_menu_visible_mode_a">Đang bật · Tắt nếu có app chặn</string>
     <string name="dev_menu_hidden">Đang ẩn menu</string>
     <string name="awake_while_charging">Khi đang sạc</string>
     <string name="awake_off">Đang tắt</string>
     <string name="awake_mode_a_hint">Mở Cài đặt</string>
+    <string name="usb_awake_card_title">Giữ sáng khi gỡ lỗi</string>
+    <string name="usb_awake_sub_active">Đang giữ sáng · Không khoá máy</string>
+    <string name="usb_awake_sub_armed">Tự bật khi cắm Gỡ lỗi USB</string>
+    <string name="usb_awake_setup_title">Giữ sáng &amp; không khoá khi cắm Gỡ lỗi USB</string>
+    <string name="usb_awake_setup_subtitle">Giữ màn hình luôn sáng, không tự khoá máy khi đang bật Gỡ lỗi USB và cắm cáp; tự trả về bình thường ngay khi tắt Gỡ lỗi USB.</string>
 
     <!-- OEM Unlock Guide (State A1: Unprivileged & Dev OFF) -->
     <string name="dev_off_banner_title">Chế độ nhà phát triển đang TẮT</string>
@@ -171,8 +204,12 @@
 
     <!-- Shortcuts Tab -->
     <string name="shortcuts_title">Lối tắt</string>
-    <string name="shortcuts_subtitle">Đặt nút lên thanh kéo xuống (Cài đặt nhanh), ra màn hình chính (Widget) hoặc mở app sạch gỡ lỗi.</string>
-    <string name="section_qs_tiles">Công tắc nhanh</string>
+    <string name="shortcuts_subtitle">Bật/tắt nhanh không cần mở ứng dụng.</string>
+    <string name="section_qs_tiles">Thanh Cài đặt nhanh</string>
+    <string name="section_home_widgets">Widget màn hình chính</string>
+    <string name="widget_hub_compact_sub">Đã thêm · Nhấn giữ ngoài màn hình để xoá</string>
+    <string name="widget_single_row_label">Hoặc ghim từng nút lẻ (1×1 · 2×1)</string>
+    <string name="action_pin_short">Ghim</string>
     <string name="legend_qs_tile">Cài đặt nhanh</string>
     <string name="legend_home_widget">Widget</string>
     <string name="cd_toggle_qs_tile">Ô Cài đặt nhanh: %1$s</string>
@@ -182,11 +219,11 @@
     <string name="tile_dev_options_desc">Hiện hoặc tắt sạch toàn bộ Chế độ nhà phát triển.</string>
     <string name="tile_keep_awake_desc">Giữ màn hình luôn sáng trong lúc cắm sạc.</string>
     <string name="action_add_tile">Thêm</string>
-    <string name="action_remove_tile">Gỡ</string>
+    <string name="action_remove_tile">Xoá</string>
 
     <string name="section_home_surfaces">Màn hình chính</string>
-    <string name="dialog_remove_widget_title">Gỡ Widget ngoài màn hình chính</string>
-    <string name="dialog_remove_widget_body">Android chỉ cho phép gỡ tiện ích trực tiếp ngoài màn hình chính:\n\n1. Ra màn hình chính của máy.\n2. Nhấn giữ biểu tượng Widget \"%1$s\" rồi chọn Gỡ / Xoá.</string>
+    <string name="dialog_remove_widget_title">Xoá Widget ngoài màn hình chính</string>
+    <string name="dialog_remove_widget_body">Nhấn giữ widget \"%1$s\" trên màn hình chính rồi chọn Xoá / Gỡ.</string>
     <string name="dialog_remove_shortcut_title">Gỡ lối tắt ngoài màn hình chính</string>
     <string name="dialog_remove_shortcut_body">Android chỉ cho phép gỡ biểu tượng đã ghim trực tiếp ngoài màn hình chính:\n\n1. Ra màn hình chính của máy.\n2. Nhấn giữ biểu tượng \"%1$s\" rồi chọn Gỡ / Xoá.</string>
     <string name="action_go_home">Ra màn hình chính</string>
@@ -235,7 +272,7 @@
     <string name="toast_perm_granted_now">Đã cấp quyền! Chế độ 1 chạm đang hoạt động.</string>
     <string name="toast_perm_still_missing">Chưa thấy quyền. Hãy chạy lệnh ADB trên máy tính rồi kiểm tra lại.</string>
 
-    <string name="section_safety_timer">Hẹn giờ tự tắt (An toàn)</string>
+    <string name="section_safety_timer">Tự động theo Gỡ lỗi USB</string>
     <string name="auto_off_title">Tự tắt Gỡ lỗi USB</string>
     <string name="auto_off_subtitle">Tự động tắt Gỡ lỗi USB sau khoảng thời gian đã chọn để tránh quên.</string>
     <string name="auto_off_requires_one_tap">Cần bật chế độ 1 chạm (cấp quyền WRITE_SECURE_SETTINGS ở trên).</string>

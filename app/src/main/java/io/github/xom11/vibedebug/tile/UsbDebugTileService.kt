@@ -2,6 +2,7 @@ package io.github.xom11.vibedebug.tile
 
 import android.service.quicksettings.Tile
 import io.github.xom11.vibedebug.R
+import io.github.xom11.vibedebug.data.AppPreferences
 import io.github.xom11.vibedebug.navigation.SettingsIntents
 
 /** Quick Settings tile for USB Debugging with policy-block and auto-off countdown awareness. */
@@ -39,7 +40,9 @@ class UsbDebugTileService : BaseDebugTileService() {
         }
         if (controller.hasWritePermission()) {
             if (controller.toggleUsbDebugging()) {
+                val prefs = AppPreferences(applicationContext)
                 createAutoOffManager().scheduleIfEnabled(controller.readState().adbEnabled)
+                controller.syncKeepAwakeWithUsb(prefs.keepAwakeOnUsb)
             }
             syncAllSurfaces()
         } else {

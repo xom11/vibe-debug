@@ -8,6 +8,8 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -28,6 +30,7 @@ import io.github.xom11.vibedebug.data.AndroidSettingsGateway
 import io.github.xom11.vibedebug.data.AppPreferences
 import io.github.xom11.vibedebug.data.AutoOffManager
 import io.github.xom11.vibedebug.data.DevSettingsController
+import io.github.xom11.vibedebug.data.WirelessSwitchResult
 import io.github.xom11.vibedebug.debug.DebugPreviewConfig
 import io.github.xom11.vibedebug.model.OemBrandDetector
 import io.github.xom11.vibedebug.navigation.SettingsIntents
@@ -74,10 +77,14 @@ class MainActivity : ComponentActivity() {
             var autoOffEnabled by remember { mutableStateOf(preferences.autoOffEnabled) }
             var autoOffMinutes by remember { mutableIntStateOf(preferences.autoOffMinutes) }
             var autoOffTargetAtMs by remember { mutableLongStateOf(preferences.autoOffTargetAtMs) }
+            var keepAwakeOnUsb by remember { mutableStateOf(preferences.keepAwakeOnUsb) }
             var safeLaunchPackages by remember { mutableStateOf(preferences.safeLaunchPackages) }
             var quickSurfaceState by remember {
                 mutableStateOf(QuickSurfaceHelper.readSurfaceState(applicationContext, preferences))
             }
+            var wirelessWifiWarning by remember { mutableStateOf(false) }
+            var wirelessBlockedTick by remember { mutableIntStateOf(0) }
+            var pendingWirelessEnableAtMs by remember { mutableLongStateOf(0L) }
             val surfaceRefreshScope = rememberCoroutineScope()
 
             val refreshSurfaceState = {
@@ -94,9 +101,21 @@ class MainActivity : ComponentActivity() {
             }
 
             val refreshLiveState = {
+                controller.syncKeepAwakeWithUsb(preferences.keepAwakeOnUsb)
                 val updated = controller.readState()
                 liveState = updated
                 livePermission = controller.hasWritePermission()
+                if (updated.wirelessAdbEnabled) {
+                    wirelessWifiWarning = false
+                    pendingWirelessEnableAtMs = 0L
+                } else if (
+                    pendingWirelessEnableAtMs > 0L &&
+                    SystemClock.elapsedRealtime() - pendingWirelessEnableAtMs <= 2000L
+                ) {
+                    pendingWirelessEnableAtMs = 0L
+                    wirelessWifiWarning = true
+                    wirelessBlockedTick++
+                }
                 autoOffManager.resync(updated.adbEnabled)
                 autoOffTargetAtMs = preferences.autoOffTargetAtMs
                 QuickSurfaceHelper.syncAllSurfaces(applicationContext)
@@ -176,6 +195,16 @@ class MainActivity : ComponentActivity() {
                 autoOffTargetAtMs
             }
 
+            val keepScreenAwakeNow = !effectiveState.blockedByPolicy &&
+                ((keepAwakeOnUsb && effectiveState.adbEnabled) || effectiveState.keepAwakeEnabled)
+            LaunchedEffect(keepScreenAwakeNow) {
+                if (keepScreenAwakeNow) {
+                    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
+            }
+
             LaunchedEffect(
                 preview,
                 autoJumpEnabled,
@@ -213,9 +242,12 @@ class MainActivity : ComponentActivity() {
                     autoOffEnabled = autoOffEnabled,
                     autoOffMinutes = autoOffMinutes,
                     autoOffTargetAtMs = effectiveAutoOffTargetAtMs,
+                    keepAwakeOnUsb = keepAwakeOnUsb,
                     themePreference = themePreference,
                     safeLaunchPackages = safeLaunchPackages,
                     quickSurfaceState = quickSurfaceState,
+                    wirelessWifiWarning = wirelessWifiWarning,
+                    wirelessBlockedTick = wirelessBlockedTick,
                     initialTab = preview?.initialTab,
                     debugPreviewBanner = preview?.bannerText,
                     onRefreshState = { refreshLiveState() },
@@ -261,6 +293,21 @@ class MainActivity : ComponentActivity() {
                             QuickSurfaceHelper.syncAllSurfaces(applicationContext)
                         } else if (previewState != null && autoOffEnabled && effectiveState.adbEnabled) {
                             autoOffTargetAtMs = System.currentTimeMillis() + minutes * 60_000L
+                        }
+                    },
+                    onKeepAwakeOnUsbChanged = { enabled ->
+                        keepAwakeOnUsb = enabled
+                        preferences.keepAwakeOnUsb = enabled
+                        val sim = previewState
+                        if (sim != null) {
+                            previewState = sim.copy(keepAwakeEnabled = enabled && sim.adbEnabled)
+                        } else {
+                            if (enabled) {
+                                controller.syncKeepAwakeWithUsb(true)
+                            } else {
+                                controller.setKeepAwake(false)
+                            }
+                            refreshLiveState()
                         }
                     },
                     onThemePreferenceChanged = { pref ->
@@ -327,19 +374,13 @@ class MainActivity : ComponentActivity() {
                     onAddWirelessQuickTile = { onResult ->
                         QuickSurfaceHelper.requestAddWirelessTile(this@MainActivity, onResult)
                     },
-                    onAddDevOptionsQuickTile = { onResult ->
-                        QuickSurfaceHelper.requestAddDevOptionsTile(this@MainActivity, onResult)
-                    },
-                    onAddKeepAwakeQuickTile = { onResult ->
-                        QuickSurfaceHelper.requestAddKeepAwakeTile(this@MainActivity, onResult)
-                    },
                     onRemoveQuickTile = { tile ->
                         val label = QuickSurfaceHelper.removeQsTile(this@MainActivity, tile)
                         refreshSurfaceState()
                         label
                     },
-                    onPinWidget = { tile ->
-                        val requested = QuickSurfaceHelper.requestPinWidget(this@MainActivity, tile)
+                    onPinHomeWidget = {
+                        val requested = QuickSurfaceHelper.requestPinUsbWidget(this@MainActivity)
                         if (requested) schedulePostPinRefresh()
                         requested
                     },
@@ -364,6 +405,7 @@ class MainActivity : ComponentActivity() {
                         } else {
                             if (controller.setUsbDebugging(enabled)) {
                                 autoOffManager.scheduleIfEnabled(controller.readState().adbEnabled)
+                                controller.syncKeepAwakeWithUsb(preferences.keepAwakeOnUsb)
                             }
                             refreshLiveState()
                         }
@@ -377,9 +419,47 @@ class MainActivity : ComponentActivity() {
                                     wirelessAdbEnabled = enabled,
                                 )
                             }
-                        } else {
-                            controller.setWirelessDebugging(enabled)
+                        } else if (!enabled) {
+                            pendingWirelessEnableAtMs = 0L
+                            wirelessWifiWarning = false
+                            controller.setWirelessDebugging(false)
                             refreshLiveState()
+                        } else {
+                            when (controller.setWirelessDebuggingWithResult(true)) {
+                                WirelessSwitchResult.WIFI_NOT_CONNECTED -> {
+                                    pendingWirelessEnableAtMs = 0L
+                                    wirelessWifiWarning = true
+                                    wirelessBlockedTick++
+                                    refreshLiveState()
+                                }
+                                WirelessSwitchResult.UPDATED -> {
+                                    val attemptAt = SystemClock.elapsedRealtime()
+                                    pendingWirelessEnableAtMs = attemptAt
+                                    refreshLiveState()
+                                    surfaceRefreshScope.launch {
+                                        listOf(250L, 650L).forEach { delayMs ->
+                                            delay(delayMs)
+                                            if (pendingWirelessEnableAtMs == attemptAt) {
+                                                val check = controller.readState()
+                                                if (!check.wirelessAdbEnabled) {
+                                                    pendingWirelessEnableAtMs = 0L
+                                                    wirelessWifiWarning = true
+                                                    wirelessBlockedTick++
+                                                    refreshLiveState()
+                                                }
+                                            }
+                                        }
+                                        if (
+                                            pendingWirelessEnableAtMs == attemptAt &&
+                                            controller.readState().wirelessAdbEnabled
+                                        ) {
+                                            pendingWirelessEnableAtMs = 0L
+                                            wirelessWifiWarning = false
+                                        }
+                                    }
+                                }
+                                WirelessSwitchResult.UNAVAILABLE -> refreshLiveState()
+                            }
                         }
                     },
                     onSetDeveloperOptions = { enabled ->
@@ -401,15 +481,7 @@ class MainActivity : ComponentActivity() {
                             if (controller.setDeveloperOptions(enabled) && !enabled) {
                                 autoOffManager.cancel()
                             }
-                            refreshLiveState()
-                        }
-                    },
-                    onSetKeepAwake = { enabled ->
-                        val sim = previewState
-                        if (sim != null) {
-                            previewState = sim.copy(keepAwakeEnabled = enabled)
-                        } else {
-                            controller.setKeepAwake(enabled)
+                            controller.syncKeepAwakeWithUsb(preferences.keepAwakeOnUsb)
                             refreshLiveState()
                         }
                     },

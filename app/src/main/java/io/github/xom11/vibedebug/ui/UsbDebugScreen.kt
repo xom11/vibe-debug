@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -72,9 +73,12 @@ fun UsbDebugScreen(
     autoOffEnabled: Boolean,
     autoOffMinutes: Int,
     autoOffTargetAtMs: Long,
+    keepAwakeOnUsb: Boolean = false,
     themePreference: ThemePreference,
     safeLaunchPackages: List<String>,
     quickSurfaceState: QuickSurfaceState = QuickSurfaceState(),
+    wirelessWifiWarning: Boolean = false,
+    wirelessBlockedTick: Int = 0,
     initialTab: String? = null,
     debugPreviewBanner: String?,
     onRefreshState: () -> Unit,
@@ -83,6 +87,7 @@ fun UsbDebugScreen(
     onAutoJumpChanged: (Boolean) -> Unit,
     onAutoOffEnabledChanged: (Boolean) -> Unit,
     onAutoOffMinutesChanged: (Int) -> Unit,
+    onKeepAwakeOnUsbChanged: (Boolean) -> Unit = {},
     onThemePreferenceChanged: (ThemePreference) -> Unit,
     onAddSafeLaunchPackage: (String) -> Unit,
     onRemoveSafeLaunchPackage: (String) -> Unit,
@@ -93,16 +98,14 @@ fun UsbDebugScreen(
     onOpenDeveloperOptionsTop: () -> Unit,
     onAddUsbQuickTile: ((TileAddOutcome) -> Unit) -> Unit,
     onAddWirelessQuickTile: ((TileAddOutcome) -> Unit) -> Unit,
-    onAddDevOptionsQuickTile: ((TileAddOutcome) -> Unit) -> Unit,
-    onAddKeepAwakeQuickTile: ((TileAddOutcome) -> Unit) -> Unit,
     onRemoveQuickTile: (QuickTileType) -> String = { "" },
-    onPinWidget: (QuickTileType) -> Boolean,
+    onPinHomeWidget: () -> Boolean = { false },
     onScheduleSurfaceRefresh: () -> Unit = {},
     onOpenHomeScreen: () -> Unit = {},
     onSetUsbDebugging: (Boolean) -> Unit,
     onSetWirelessDebugging: (Boolean) -> Unit,
     onSetDeveloperOptions: (Boolean) -> Unit,
-    onSetKeepAwake: (Boolean) -> Unit,
+    onSetKeepAwake: (Boolean) -> Unit = {},
 ) {
     val palette = AppTheme.palette
     val context = LocalContext.current
@@ -118,6 +121,12 @@ fun UsbDebugScreen(
         scope.launch {
             snackbarHostState.currentSnackbarData?.dismiss()
             snackbarHostState.showSnackbar(message)
+        }
+    }
+
+    LaunchedEffect(wirelessBlockedTick) {
+        if (wirelessBlockedTick > 0) {
+            showSnackbar(context.getString(R.string.wireless_err_need_wifi))
         }
     }
 
@@ -247,10 +256,13 @@ fun UsbDebugScreen(
                                     autoOffEnabled = autoOffEnabled,
                                     autoOffMinutes = autoOffMinutes,
                                     autoOffTargetAtMs = autoOffTargetAtMs,
+                                    keepAwakeOnUsb = keepAwakeOnUsb,
+                                    wirelessWifiWarning = wirelessWifiWarning,
                                     onRefreshState = onRefreshState,
                                     onNavigateTab = { currentTab = it },
                                     onAutoJumpChanged = onAutoJumpChanged,
                                     onToggleAutoOff = onAutoOffEnabledChanged,
+                                    onKeepAwakeOnUsbChanged = onKeepAwakeOnUsbChanged,
                                     onOpenBuildNumberScreen = onOpenBuildNumberScreen,
                                     onOpenEnableAdbScreen = onOpenEnableAdbScreen,
                                     onOpenEnableWirelessAdbScreen = onOpenEnableWirelessAdbScreen,
@@ -272,10 +284,8 @@ fun UsbDebugScreen(
                                     onShowManualTileDialog = { manualQsTileLabel = it },
                                     onAddUsbTile = onAddUsbQuickTile,
                                     onAddWirelessTile = onAddWirelessQuickTile,
-                                    onAddDevOptionsTile = onAddDevOptionsQuickTile,
-                                    onAddKeepAwakeTile = onAddKeepAwakeQuickTile,
                                     onRemoveTile = onRemoveQuickTile,
-                                    onPinWidget = onPinWidget,
+                                    onPinHomeWidget = onPinHomeWidget,
                                     onScheduleSurfaceRefresh = onScheduleSurfaceRefresh,
                                     onOpenHomeScreen = onOpenHomeScreen,
                                     onAddSafeLaunchPackage = onAddSafeLaunchPackage,
@@ -293,12 +303,14 @@ fun UsbDebugScreen(
                                     detectedBrand = detectedBrand,
                                     autoOffEnabled = autoOffEnabled,
                                     autoOffMinutes = autoOffMinutes,
+                                    keepAwakeOnUsb = keepAwakeOnUsb,
                                     themePreference = themePreference,
                                     autoJumpEnabled = autoJumpEnabled,
                                     onOpenBuildNumberScreen = onOpenBuildNumberScreen,
                                     onRecheckPermission = onRecheckPermission,
                                     onAutoOffEnabledChanged = onAutoOffEnabledChanged,
                                     onAutoOffMinutesChanged = onAutoOffMinutesChanged,
+                                    onKeepAwakeOnUsbChanged = onKeepAwakeOnUsbChanged,
                                     onThemePreferenceChanged = onThemePreferenceChanged,
                                     onAutoJumpChanged = onAutoJumpChanged,
                                 )

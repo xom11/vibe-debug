@@ -1,0 +1,4 @@
+• Gộp thành 1 Widget USB & Wi-Fi tự co giãn thông minh theo kích thước ô (từ 1x1, 2x1 đến 4x2)
+• Tinh gọn Cài đặt nhanh còn 2 ô trọng tâm: Gỡ lỗi USB và Gỡ lỗi Wi-Fi
+• Thêm tuỳ chọn tự giữ màn hình sáng, không khoá máy khi đang bật Gỡ lỗi USB
+• Cảnh báo rõ ràng khi bật Gỡ lỗi không dây lúc đang dùng 5G/4G chưa kết nối Wi-Fi

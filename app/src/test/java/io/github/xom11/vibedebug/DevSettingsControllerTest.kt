@@ -2,6 +2,7 @@ package io.github.xom11.vibedebug
 
 import io.github.xom11.vibedebug.data.DevSettingsController
 import io.github.xom11.vibedebug.data.SettingsGateway
+import io.github.xom11.vibedebug.data.WirelessSwitchResult
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -16,7 +17,8 @@ class DevSettingsControllerTest {
         var adb: Boolean = false,
         var wirelessAdb: Boolean = false,
         var keepAwake: Boolean = false,
-        var blockedByPolicy: Boolean = false
+        var blockedByPolicy: Boolean = false,
+        var wifiEnabled: Boolean = true
     ) : SettingsGateway {
         val writeLog = mutableListOf<Pair<String, Boolean>>()
 
@@ -25,6 +27,7 @@ class DevSettingsControllerTest {
         override fun isAdbEnabled(): Boolean = adb
         override fun isWirelessAdbEnabled(): Boolean = wirelessAdb
         override fun isKeepAwakeEnabled(): Boolean = keepAwake
+        override fun isWifiEnabled(): Boolean = wifiEnabled
         override fun isDebuggingBlockedByPolicy(): Boolean = blockedByPolicy
 
         override fun putDevOptionsEnabled(enabled: Boolean): Boolean {
@@ -287,5 +290,60 @@ class DevSettingsControllerTest {
         assertFalse(controller.toggleWirelessDebugging())
         assertFalse(controller.toggleDeveloperOptions())
         assertTrue(gateway.writeLog.isEmpty())
+    }
+
+    @Test
+    fun `setWirelessDebuggingWithResult warns and skips write when Wi-Fi is off while still allowing turn-off`() {
+        val gateway = FakeSettingsGateway(
+            supportsWirelessAdb = true,
+            hasPermission = true,
+            devOptions = true,
+            wirelessAdb = false,
+            wifiEnabled = false
+        )
+        val controller = DevSettingsController(gateway)
+
+        assertFalse(controller.readState().isWifiEnabled)
+        assertEquals(WirelessSwitchResult.WIFI_NOT_CONNECTED, controller.setWirelessDebuggingWithResult(true))
+        assertTrue(gateway.writeLog.isEmpty())
+        assertFalse(controller.readState().wirelessAdbEnabled)
+
+        gateway.wirelessAdb = true
+        assertEquals(WirelessSwitchResult.UPDATED, controller.setWirelessDebuggingWithResult(false))
+        assertEquals(listOf("adb_wifi_enabled" to false), gateway.writeLog)
+        assertFalse(controller.readState().wirelessAdbEnabled)
+    }
+
+    @Test
+    fun `syncKeepAwakeWithUsb enables stay_on when USB is ON disables when OFF and avoids redundant writes`() {
+        val gateway = FakeSettingsGateway(
+            hasPermission = true,
+            devOptions = true,
+            adb = true,
+            keepAwake = false
+        )
+        val controller = DevSettingsController(gateway)
+
+        controller.syncKeepAwakeWithUsb(keepAwakeOnUsb = false)
+        assertTrue(gateway.writeLog.isEmpty())
+
+        controller.syncKeepAwakeWithUsb(keepAwakeOnUsb = true)
+        assertEquals(listOf("stay_on_while_plugged_in" to true), gateway.writeLog)
+        assertTrue(controller.readState().keepAwakeEnabled)
+
+        // Calling sync again when already matching should not write redundantly.
+        controller.syncKeepAwakeWithUsb(keepAwakeOnUsb = true)
+        assertEquals(1, gateway.writeLog.size)
+
+        gateway.adb = false
+        controller.syncKeepAwakeWithUsb(keepAwakeOnUsb = true)
+        assertEquals(
+            listOf(
+                "stay_on_while_plugged_in" to true,
+                "stay_on_while_plugged_in" to false
+            ),
+            gateway.writeLog
+        )
+        assertFalse(controller.readState().keepAwakeEnabled)
     }
 }

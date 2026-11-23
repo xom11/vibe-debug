@@ -121,8 +121,10 @@ object SafeLaunchHelper {
         val launchIntent = appContext.packageManager.getLaunchIntentForPackage(packageName)
             ?: return SafeLaunchResult.AppNotFound
 
+        val prefs = AppPreferences(appContext)
         controller.setDeveloperOptions(false)
-        AutoOffManager(appContext, AppPreferences(appContext)).cancel()
+        controller.syncKeepAwakeWithUsb(prefs.keepAwakeOnUsb)
+        AutoOffManager(appContext, prefs).cancel()
         QuickSurfaceHelper.syncAllSurfaces(appContext)
 
         launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

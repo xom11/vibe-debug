@@ -6,7 +6,8 @@ data class DevState(
     val wirelessAdbEnabled: Boolean,
     val keepAwakeEnabled: Boolean = false,
     val supportsWirelessAdb: Boolean = true,
-    val blockedByPolicy: Boolean = false
+    val blockedByPolicy: Boolean = false,
+    val isWifiEnabled: Boolean = true
 )
 
 enum class OemBrand(val id: String) {

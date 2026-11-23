@@ -14,20 +14,46 @@
     <string name="tile_subtitle_blocked">Blocked by policy</string>
     <string name="tile_subtitle_awake_charging">While charging</string>
     <string name="tile_subtitle_auto_off_in">Auto off in %dm</string>
+    <string name="tile_subtitle_need_wifi">Connect Wi-Fi</string>
+    <string name="widget_state_need_wifi">No Wi-Fi</string>
 
     <string name="widget_label">USB Debug</string>
     <string name="widget_short_usb">USB Debug</string>
     <string name="widget_short_wireless">Wi-Fi Debug</string>
     <string name="widget_short_dev">Dev Mode</string>
     <string name="widget_short_awake">Keep Awake</string>
-    <string name="widget_description">Check and switch USB Debugging from your home screen.</string>
-    <string name="widget_wireless_description">Check and switch Wireless Debugging from your home screen.</string>
-    <string name="widget_dev_options_description">Show or turn off Developer Options from your home screen.</string>
-    <string name="widget_keep_awake_description">Toggle Keep Awake while charging from your home screen.</string>
+    <string name="widget_description">Check and switch USB Debugging from your home screen (1×1 / 2×1 resizable).</string>
+    <string name="widget_wireless_description">Check and switch Wireless Debugging from your home screen (1×1 / 2×1 resizable).</string>
+    <string name="widget_dev_options_description">Show or turn off Developer Options from your home screen (1×1 / 2×1 resizable).</string>
+    <string name="widget_keep_awake_description">Toggle Keep Awake while charging from your home screen (1×1 / 2×1 resizable).</string>
     <string name="widget_state_on">ON</string>
     <string name="widget_state_off">OFF</string>
     <string name="widget_hint_one_tap">Tap to switch</string>
     <string name="widget_hint_open">Tap to open</string>
+    <string name="widget_hub_label">USB &amp; Wi-Fi</string>
+    <string name="widget_hub_description">Switch USB and Wi-Fi debugging right from your Home screen.</string>
+    <string name="widget_hub_card_title">Multi-Size Control Panel</string>
+    <string name="widget_hub_card_desc">Pin one widget and drag its edges (2×1 · 4×1 · 2×2 · 4×2) to get all 4 switches and live timer info on your Home screen.</string>
+    <string name="widget_hub_pin_btn">Add Control Panel Widget</string>
+    <string name="widget_hub_added_btn">Control Panel added · Remove</string>
+    <string name="widget_resize_hint">Tip: Individual 1×1 widgets can also be stretched horizontally into 2×1 status pills on your Home screen.</string>
+    <string name="widget_btn_usb">USB</string>
+    <string name="widget_btn_wireless">Wi-Fi</string>
+    <string name="widget_btn_dev">Dev</string>
+    <string name="widget_btn_awake">Awake</string>
+    <string name="widget_mode_one_tap">1-TAP</string>
+    <string name="widget_mode_settings">OPEN</string>
+    <string name="widget_mode_blocked">LOCKED</string>
+    <string name="widget_sub_auto_off_at">Auto-off %1$s</string>
+    <string name="widget_sub_usb_awake">On · Keeping screen awake</string>
+    <string name="widget_sub_one_tap_on">On · 1-tap switch</string>
+    <string name="widget_sub_one_tap_off">Off · 1-tap switch</string>
+    <string name="widget_sub_mode_a">Tap to open in Settings</string>
+    <string name="widget_sub_dev_unlock">Tap to unlock Dev Mode</string>
+    <string name="widget_hub_usb_status">USB Debug · %1$s</string>
+    <string name="widget_hub_sub_ready">1-Tap Mode · Tap any switch</string>
+    <string name="widget_hub_sub_auto_off">1-Tap · Auto-off at %1$s</string>
+    <string name="widget_hub_sub_mode_a">Quick-open · Tap switch for Settings</string>
 
     <string name="shortcut_usb_short">USB Debug</string>
     <string name="shortcut_usb_long">Open USB Debugging</string>
@@ -115,12 +141,19 @@
     <string name="wireless_sub_on">On · Debug over Wi-Fi</string>
     <string name="wireless_sub_off_one_tap">Off · Tap to toggle</string>
     <string name="wireless_sub_mode_a">Tap to open Wireless Debugging in Settings</string>
+    <string name="wireless_sub_need_wifi">Unavailable on mobile data · Connect to Wi-Fi</string>
+    <string name="wireless_err_need_wifi">Cannot turn on Wireless Debugging on mobile data (5G/4G) — connect to a Wi-Fi network first.</string>
     <string name="dev_menu_visible">Menu visible</string>
     <string name="dev_menu_visible_mode_a">On · Turn off if an app blocks debug</string>
     <string name="dev_menu_hidden">Menu hidden</string>
     <string name="awake_while_charging">While charging</string>
     <string name="awake_off">Off</string>
     <string name="awake_mode_a_hint">Open Settings</string>
+    <string name="usb_awake_card_title">Awake on USB Debug</string>
+    <string name="usb_awake_sub_active">Active · Screen stays unlocked</string>
+    <string name="usb_awake_sub_armed">Auto when USB Debug is on</string>
+    <string name="usb_awake_setup_title">Keep screen awake while USB Debugging</string>
+    <string name="usb_awake_setup_subtitle">Prevents screen sleep and lock while plugged in with USB Debugging ON, then restores normal sleep when USB Debugging turns OFF.</string>
 
     <!-- OEM Unlock Guide (State A1: Unprivileged & Dev OFF) -->
     <string name="dev_off_banner_title">Developer Mode is OFF</string>
@@ -171,8 +204,12 @@
 
     <!-- Shortcuts Tab -->
     <string name="shortcuts_title">Shortcuts</string>
-    <string name="shortcuts_subtitle">Place switches in your top pull-down shade (Quick Settings), on your Home screen (Widget), or launch strict apps cleanly.</string>
-    <string name="section_qs_tiles">Quick Controls</string>
+    <string name="shortcuts_subtitle">One-tap controls outside the app.</string>
+    <string name="section_qs_tiles">Quick Settings Shade</string>
+    <string name="section_home_widgets">Home Screen Widget</string>
+    <string name="widget_hub_compact_sub">Added · Long-press widget on Home screen to remove</string>
+    <string name="widget_single_row_label">Or pin individual switches (1×1 · 2×1)</string>
+    <string name="action_pin_short">Pin</string>
     <string name="legend_qs_tile">Quick Settings</string>
     <string name="legend_home_widget">Widget</string>
     <string name="cd_toggle_qs_tile">Quick Settings tile: %1$s</string>
@@ -186,7 +223,7 @@
 
     <string name="section_home_surfaces">Home Screen</string>
     <string name="dialog_remove_widget_title">Remove Home Screen Widget</string>
-    <string name="dialog_remove_widget_body">Android only allows removing widgets directly on your Home screen:\n\n1. Go to your Home screen.\n2. Long-press the \"%1$s\" widget icon and tap Remove.</string>
+    <string name="dialog_remove_widget_body">Long-press the \"%1$s\" widget on your Home screen and tap Remove.</string>
     <string name="dialog_remove_shortcut_title">Remove Home Screen Shortcut</string>
     <string name="dialog_remove_shortcut_body">Android only allows removing pinned icons directly on your Home screen:\n\n1. Go to your Home screen.\n2. Long-press the \"%1$s\" icon and tap Remove.</string>
     <string name="action_go_home">Go to Home screen</string>
@@ -235,7 +272,7 @@
     <string name="toast_perm_granted_now">Permission granted! 1-Tap Mode is active.</string>
     <string name="toast_perm_still_missing">Permission not granted yet. Run the ADB command, then check again.</string>
 
-    <string name="section_safety_timer">Safety Auto-Off Timer</string>
+    <string name="section_safety_timer">USB Debug Automation</string>
     <string name="auto_off_title">Auto-off USB Debugging</string>
     <string name="auto_off_subtitle">Automatically turns off USB Debugging after the chosen delay.</string>
     <string name="auto_off_requires_one_tap">Requires 1-Tap Mode (grant WRITE_SECURE_SETTINGS above).</string>

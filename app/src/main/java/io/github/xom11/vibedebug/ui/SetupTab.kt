@@ -63,12 +63,14 @@ fun SetupTab(
     detectedBrand: OemBrand,
     autoOffEnabled: Boolean,
     autoOffMinutes: Int,
+    keepAwakeOnUsb: Boolean = false,
     themePreference: ThemePreference,
     autoJumpEnabled: Boolean,
     onOpenBuildNumberScreen: () -> Unit,
     onRecheckPermission: () -> Boolean,
     onAutoOffEnabledChanged: (Boolean) -> Unit,
     onAutoOffMinutesChanged: (Int) -> Unit,
+    onKeepAwakeOnUsbChanged: (Boolean) -> Unit = {},
     onThemePreferenceChanged: (ThemePreference) -> Unit,
     onAutoJumpChanged: (Boolean) -> Unit,
 ) {
@@ -257,6 +259,20 @@ fun SetupTab(
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(Modifier.fillMaxWidth()) {
+                SwitchRow(
+                    title = stringResource(R.string.usb_awake_setup_title),
+                    checked = keepAwakeOnUsb && canUseAutoOff,
+                    onChange = onKeepAwakeOnUsbChanged,
+                    modifier = Modifier
+                        .alpha(if (canUseAutoOff) 1f else 0.65f)
+                        .testTag("row_keep_awake_usb_switch"),
+                    sub = stringResource(
+                        if (canUseAutoOff) R.string.usb_awake_setup_subtitle
+                        else R.string.auto_off_requires_one_tap
+                    ),
+                    enabled = canUseAutoOff,
+                )
+                RowDivider()
                 SwitchRow(
                     title = stringResource(R.string.auto_off_title),
                     checked = autoOffEnabled && canUseAutoOff,

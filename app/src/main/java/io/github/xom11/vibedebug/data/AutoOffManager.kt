@@ -103,11 +103,13 @@ class AutoOffReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         if (intent?.action != ACTION_AUTO_OFF) return
         val appContext = context.applicationContext ?: context
+        val prefs = AppPreferences(appContext)
         val controller = DevSettingsController(AndroidSettingsGateway(appContext))
         if (controller.hasWritePermission() && controller.readState().adbEnabled) {
             controller.setUsbDebugging(false)
         }
-        AutoOffManager(appContext, AppPreferences(appContext)).cancel()
+        controller.syncKeepAwakeWithUsb(prefs.keepAwakeOnUsb)
+        AutoOffManager(appContext, prefs).cancel()
         QuickSurfaceHelper.syncAllSurfaces(appContext)
     }
 
