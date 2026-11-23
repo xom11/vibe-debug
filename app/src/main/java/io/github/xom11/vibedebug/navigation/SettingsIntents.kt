@@ -3,6 +3,7 @@ package io.github.xom11.vibedebug.navigation
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 
@@ -52,6 +53,28 @@ object SettingsIntents {
 
     fun buildHomeLauncherIntent(): Intent {
         return Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+    }
+
+    fun buildUsageAccessAppIntent(packageName: String): Intent {
+        return Intent(
+            Settings.ACTION_USAGE_ACCESS_SETTINGS,
+            Uri.fromParts("package", packageName, null)
+        )
+    }
+
+    fun buildUsageAccessFallbackIntent(): Intent {
+        return Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+    }
+
+    fun launchUsageAccessScreen(context: Context): Boolean {
+        return launchWithFallbacks(
+            context = context,
+            candidates = listOf(
+                { buildUsageAccessAppIntent(context.packageName) },
+                ::buildUsageAccessFallbackIntent,
+                ::buildRootSettingsFallbackIntent
+            )
+        )
     }
 
     fun launchHomeScreen(context: Context): Boolean {

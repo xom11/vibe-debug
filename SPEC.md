@@ -3,7 +3,7 @@
 ## 1. App Identity & Google Play Compliance
 
 - **Package Name:** `io.github.xom11.vibedebug`
-- **Version:** `2.1.0` (`versionCode = 4`)
+- **Version:** `2.2.0` (`versionCode = 5`)
 - **App Name:**
   - English (`res/values/strings.xml`): `Vibe Debug`
   - Vietnamese (`res/values-vi/strings.xml`): `Vibe Debug`
@@ -16,13 +16,20 @@
 - **Permissions & Manifest (`AndroidManifest.xml`):**
   - `android:allowBackup="false"`
   - Standard `<queries>` for `ACTION_MAIN` + `CATEGORY_LAUNCHER` (allows Safe Launch app picker without `QUERY_ALL_PACKAGES`).
-  - ONLY declare:
+  - Declare only local-utility permissions:
     ```xml
     <uses-permission
         android:name="android.permission.WRITE_SECURE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     ```
-  - **Strict prohibitions:** ZERO `INTERNET`, ZERO `ACCESS_NETWORK_STATE`, ZERO `FOREGROUND_SERVICE`, ZERO `SYSTEM_ALERT_WINDOW`, ZERO `PACKAGE_USAGE_STATS`, ZERO `SCHEDULE_EXACT_ALARM`, ZERO `POST_NOTIFICATIONS`, ZERO `WAKE_LOCK`, ZERO `RECEIVE_BOOT_COMPLETED`, ZERO `QUERY_ALL_PACKAGES`, ZERO ads, ZERO analytics/telemetry SDKs.
+  - **Strict prohibitions:** ZERO `INTERNET`, ZERO `ACCESS_NETWORK_STATE`, ZERO `SYSTEM_ALERT_WINDOW`, ZERO `AccessibilityService`, ZERO `SCHEDULE_EXACT_ALARM`, ZERO `WAKE_LOCK`, ZERO `QUERY_ALL_PACKAGES`, ZERO ads, ZERO analytics/telemetry SDKs.
 - **Launcher Icon:**
   - Custom vector adaptive icon (`ic_launcher_foreground`, `ic_launcher_background`, and Android 13+ `monochrome` layer) depicting a stylized USB plug + toggle switch.
   - Do **not** reuse or imitate the Android green robot or stock Android Settings gear icon.
@@ -72,11 +79,12 @@ The app uses a responsive 3-tab layout (`HomeTab`, `ShortcutsTab`, `SetupTab`) s
 ### Tab 2: Shortcuts (`ShortcutsTab`)
 - **Quick Settings Shade (`card_qs_tiles`):** Clean 2-switch row (**USB Debug**, **Wireless Debug** on Android 11+) with live added-state tracking (`QuickSurfaceHelper.readSurfaceState`, `BaseDebugTileService`, `AppPreferences`). Toggles via `StatusBarManager.requestAddTileService` (or manual instructions dialog pre-API 33) and component disable + `sysui_qs_tiles` cleanup.
 - **Home Screen Widget (`card_widget_hub`):** Single unified widget card (`UsbDebugWidgetProvider`, title `USB & Wi-Fi`) showing `+ Add` (`btn_pin_hub_widget`) when not yet placed and `Remove` + concise Home-screen removal subtitle (`Added · Long-press widget on Home screen to remove`) when active on `AppWidgetManager`.
-- **Turn Off Debug & Launch (`SafeLaunchHelper` + `SafeLaunchActivity`):**
-  - **Empty state:** Compact `SurfaceCard` explaining strict-app Clean Launch with a `"Choose apps"` button.
-  - **Populated state:** Concise 1-line hint above saved app cards (**Open now** and **Pin / Remove shortcut** with 192×192 badged app icon with `#0E1113`/`#7EE2A8` ring), followed by `"Add / edit apps"`.
+- **Turn Off Debug & Launch (`SafeLaunchHelper` + `SafeLaunchActivity` + `AppRuleEngine` + `AppWatcherService`):**
+  - **Auto-Off App Watcher (`card_auto_app_rules`):** Optional local foreground-app watcher (`UsageStatsManager` + `specialUse` `ForegroundService`, paused completely while screen is off, no `AccessibilityService`) that automatically turns debugging off when opening any listed app via its normal launcher icon and restores the saved flags ~8s after leaving (grace window for OTP switching), with prominent Usage Access disclosure dialog before opening system Usage Access settings.
+  - **Empty state:** Compact `SurfaceCard` explaining automatic & Clean Launch protection with a `"Choose apps"` button.
+  - **Populated state:** Concise hint above saved app cards (each offering per-app **Turn off Dev Mode** / **USB & Wi-Fi only** `SegmentedControl`, **Open now**, and **Pin / Remove shortcut** with 192×192 badged app icon with `#0E1113`/`#7EE2A8` ring), followed by `"Add / edit apps"`.
   - Searchable launcher app picker loaded off the main thread (`Dispatchers.IO`), prioritizing common strict Vietnamese banking / digital ID apps (`VNeID`, `Vietcombank`, `VPBank`, `VietinBank`, `BIDV`, `Techcombank`, `MB`, `TPBank`, `ACB`, `MoMo`, `ZaloPay`, `Cake`, `Viettel Money`) with a generic `"Suggested"` badge while supporting any installed app (useful for banking, digital ID, e-wallet, and security-sensitive apps).
-  - `SafeLaunchActivity` validates the requested package against the user's saved `safeLaunchPackages` allowlist before calling `controller.setDeveloperOptions(false)`, cancelling Auto-Off, syncing surfaces, and starting the app (Mode B), or directing to Developer Options top (Mode A).
+  - `SafeLaunchActivity` validates the requested package against the user's saved `safeLaunchPackages` allowlist before applying the per-app `AppRuleMode` via `AppRuleEngine`, syncing `AppWatcherService`, and starting the app (Mode B), or directing to Developer Options top (Mode A).
 
 ### Tab 3: Setup (`SetupTab`)
 - **1-Tap Mode Setup Checklist & OEM ADB Guide:**
@@ -118,9 +126,9 @@ Only active when `BuildConfig.DEBUG` is `true`:
 ## 6. Verification Requirements
 
 1. **Unit Tests (`./gradlew testDebugUnitTest`):**
-   - `DevSettingsControllerTest`, `OemBrandDetectorTest`, `SettingsIntentsTest`, `QuickSurfaceHelperTest`, `AutoOffAndPreferencesTest`.
+   - `DevSettingsControllerTest`, `OemBrandDetectorTest`, `SettingsIntentsTest`, `QuickSurfaceHelperTest`, `AutoOffAndPreferencesTest`, `AdaptiveLayoutTest`, `AppRuleEngineTest`.
 2. **Build & Manifest Verification:**
    - `./gradlew assembleDebug` and `./gradlew assembleRelease` succeed cleanly (R8 minification + resource shrinking + `lintVitalRelease`).
-   - Merged release manifest contains ONLY `WRITE_SECURE_SETTINGS` (+ standard AndroidX `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`), `allowBackup="false"`, and launcher `<queries>`.
+   - Merged release manifest contains zero `INTERNET` / `ACCESS_NETWORK_STATE` / `SYSTEM_ALERT_WINDOW` / `AccessibilityService` / `QUERY_ALL_PACKAGES` permissions, preserves `allowBackup="false"`, and declares `AppWatcherService` (`foregroundServiceType="specialUse"`) and launcher `<queries>`.
 3. **Live Hardware Verification:**
    - Install debug APK on test device, exercise `debug_preview_state` + `debug_brand` + `debug_tab` combinations, inspect screenshots / `uiautomator dump`, and test real Settings deep-link intents without turning off real `development_settings_enabled` or `adb_enabled`.

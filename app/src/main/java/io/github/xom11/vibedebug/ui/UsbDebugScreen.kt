@@ -51,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.xom11.vibedebug.R
+import io.github.xom11.vibedebug.data.AppRuleMode
 import io.github.xom11.vibedebug.data.ThemePreference
 import io.github.xom11.vibedebug.model.DevState
 import io.github.xom11.vibedebug.model.OemBrand
@@ -76,6 +77,10 @@ fun UsbDebugScreen(
     keepAwakeOnUsb: Boolean = false,
     themePreference: ThemePreference,
     safeLaunchPackages: List<String>,
+    autoAppRulesEnabled: Boolean = false,
+    autoRestoreOnExit: Boolean = true,
+    hasUsageAccess: Boolean = false,
+    appRuleModes: Map<String, AppRuleMode> = emptyMap(),
     quickSurfaceState: QuickSurfaceState = QuickSurfaceState(),
     wirelessWifiWarning: Boolean = false,
     wirelessBlockedTick: Int = 0,
@@ -91,6 +96,10 @@ fun UsbDebugScreen(
     onThemePreferenceChanged: (ThemePreference) -> Unit,
     onAddSafeLaunchPackage: (String) -> Unit,
     onRemoveSafeLaunchPackage: (String) -> Unit,
+    onAutoAppRulesEnabledChanged: (Boolean) -> Unit = {},
+    onAutoRestoreOnExitChanged: (Boolean) -> Unit = {},
+    onSetAppRuleMode: (String, AppRuleMode) -> Unit = { _, _ -> },
+    onOpenUsageAccessSettings: () -> Unit = {},
     onLaunchSafeApp: (String) -> SafeLaunchResult,
     onOpenBuildNumberScreen: () -> Unit,
     onOpenEnableAdbScreen: () -> Unit,
@@ -279,6 +288,10 @@ fun UsbDebugScreen(
                                     devState = devState,
                                     hasWritePermission = hasWritePermission,
                                     safeLaunchPackages = safeLaunchPackages,
+                                    autoAppRulesEnabled = autoAppRulesEnabled,
+                                    autoRestoreOnExit = autoRestoreOnExit,
+                                    hasUsageAccess = hasUsageAccess,
+                                    appRuleModes = appRuleModes,
                                     quickSurfaceState = quickSurfaceState,
                                     onShowSnackbar = showSnackbar,
                                     onShowManualTileDialog = { manualQsTileLabel = it },
@@ -290,6 +303,10 @@ fun UsbDebugScreen(
                                     onOpenHomeScreen = onOpenHomeScreen,
                                     onAddSafeLaunchPackage = onAddSafeLaunchPackage,
                                     onRemoveSafeLaunchPackage = onRemoveSafeLaunchPackage,
+                                    onAutoAppRulesEnabledChanged = onAutoAppRulesEnabledChanged,
+                                    onAutoRestoreOnExitChanged = onAutoRestoreOnExitChanged,
+                                    onSetAppRuleMode = onSetAppRuleMode,
+                                    onOpenUsageAccessSettings = onOpenUsageAccessSettings,
                                     onLaunchSafeApp = handleSafeLaunch,
                                     onOpenDeveloperOptionsTop = onOpenDeveloperOptionsTop,
                                     onRefreshState = onRefreshState,

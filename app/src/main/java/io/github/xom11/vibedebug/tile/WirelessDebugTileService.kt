@@ -4,6 +4,7 @@ import android.os.Handler
 import android.os.Looper
 import android.service.quicksettings.Tile
 import io.github.xom11.vibedebug.R
+import io.github.xom11.vibedebug.data.AppPreferences
 import io.github.xom11.vibedebug.data.WirelessSwitchResult
 import io.github.xom11.vibedebug.navigation.SettingsIntents
 import io.github.xom11.vibedebug.shortcut.QuickSurfaceHelper
@@ -43,6 +44,7 @@ class WirelessDebugTileService : BaseDebugTileService() {
             return
         }
         if (controller.hasWritePermission()) {
+            AppPreferences(applicationContext).clearRuleHold()
             if (state.wirelessAdbEnabled) {
                 controller.setWirelessDebugging(false)
                 syncAllSurfaces()

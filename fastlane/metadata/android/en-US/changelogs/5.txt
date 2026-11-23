@@ -1,0 +1,4 @@
+• Added optional Auto-turn off when opening apps: automatically disables Developer Options or USB/Wi-Fi debugging when you open a protected app from its regular icon (via local Usage Access, zero AccessibilityService)
+• Added optional auto-restore ~8s after leaving protected apps (with OTP switching grace period)
+• Added per-app mode selector (Turn off Dev Mode vs USB & Wi-Fi only) for each protected app
+• Re-syncs active auto-rules cleanly after reboot or app update

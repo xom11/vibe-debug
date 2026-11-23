@@ -25,6 +25,7 @@ import io.github.xom11.vibedebug.data.AutoOffManager
 import io.github.xom11.vibedebug.data.DevSettingsController
 import io.github.xom11.vibedebug.data.WirelessSwitchResult
 import io.github.xom11.vibedebug.model.DevState
+import io.github.xom11.vibedebug.rules.AppWatcherService
 import io.github.xom11.vibedebug.shortcut.QuickSurfaceHelper
 import io.github.xom11.vibedebug.shortcut.ShortcutDispatchActivity
 import java.text.DateFormat
@@ -71,6 +72,7 @@ class UsbDebugWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,
     ) {
+        AppWatcherService.sync(context.applicationContext ?: context)
         for (widgetId in appWidgetIds) {
             appWidgetManager.updateAppWidget(widgetId, buildRemoteViews(context, widgetId))
         }
@@ -92,6 +94,7 @@ class UsbDebugWidgetProvider : AppWidgetProvider() {
         if (controller.hasWritePermission() && !state.blockedByPolicy) {
             if (controller.toggleUsbDebugging()) {
                 val prefs = AppPreferences(appContext)
+                prefs.clearRuleHold()
                 AutoOffManager(appContext, prefs).scheduleIfEnabled(controller.readState().adbEnabled)
                 controller.syncKeepAwakeWithUsb(prefs.keepAwakeOnUsb)
             }
@@ -477,6 +480,7 @@ class WidgetToggleReceiver : BroadcastReceiver() {
             QuickSurfaceHelper.syncAllSurfaces(appContext)
             return
         }
+        AppPreferences(appContext).clearRuleHold()
         if (state.wirelessAdbEnabled) {
             controller.setWirelessDebugging(false)
             QuickSurfaceHelper.syncAllSurfaces(appContext)

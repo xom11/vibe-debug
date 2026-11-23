@@ -15,6 +15,17 @@ enum class ThemePreference(val key: String) {
     }
 }
 
+/** Per-app disable level when launching or entering a protected app. */
+enum class AppRuleMode(val key: String) {
+    DEV_OFF("dev"),
+    USB_OFF("usb");
+
+    companion object {
+        fun fromKey(raw: String?): AppRuleMode =
+            entries.firstOrNull { it.key == raw } ?: DEV_OFF
+    }
+}
+
 /** Persistent preferences stored in private SharedPreferences. */
 class AppPreferences(context: Context) {
 
@@ -83,11 +94,103 @@ class AppPreferences(context: Context) {
         }
     }
 
-    /** Removes [packageName] from the Safe Launch allowlist. */
+    /** Removes [packageName] from the Safe Launch allowlist and cleans up its per-app rule mode. */
     fun removeSafeLaunchPackage(packageName: String) {
         val normalized = packageName.trim()
         if (normalized.isEmpty()) return
         safeLaunchPackages = safeLaunchPackages.filterNot { it == normalized }
+        val modes = appRuleModes
+        if (normalized in modes) {
+            appRuleModes = modes - normalized
+        }
+    }
+
+    var autoAppRulesEnabled: Boolean
+        get() = prefs.getBoolean(KEY_AUTO_APP_RULES_ENABLED, true)
+        set(value) {
+            prefs.edit().putBoolean(KEY_AUTO_APP_RULES_ENABLED, value).apply()
+        }
+
+    var autoRestoreOnExit: Boolean
+        get() = prefs.getBoolean(KEY_AUTO_RESTORE_ON_EXIT, true)
+        set(value) {
+            prefs.edit().putBoolean(KEY_AUTO_RESTORE_ON_EXIT, value).apply()
+        }
+
+    var appRuleModes: Map<String, AppRuleMode>
+        get() {
+            val raw = prefs.getString(KEY_APP_RULE_MODES, null).orEmpty()
+            if (raw.isEmpty()) return emptyMap()
+            return buildMap {
+                raw.split(PACKAGE_DELIMITER).forEach { line ->
+                    val idx = line.indexOf('=')
+                    if (idx > 0) {
+                        val pkg = line.substring(0, idx).trim()
+                        val mode = AppRuleMode.fromKey(line.substring(idx + 1).trim())
+                        if (pkg.isNotEmpty()) {
+                            put(pkg, mode)
+                        }
+                    }
+                }
+            }
+        }
+        set(value) {
+            val serialized = value.entries
+                .mapNotNull { (pkg, mode) ->
+                    val normalized = pkg.replace("\r", "").replace("\n", "").replace("=", "").trim()
+                    if (normalized.isEmpty()) null else "$normalized=${mode.key}"
+                }
+                .distinct()
+                .joinToString(PACKAGE_DELIMITER)
+            prefs.edit().putString(KEY_APP_RULE_MODES, serialized).apply()
+        }
+
+    fun getAppRuleMode(packageName: String): AppRuleMode {
+        val normalized = packageName.trim()
+        if (normalized.isEmpty()) return AppRuleMode.DEV_OFF
+        return appRuleModes[normalized] ?: AppRuleMode.DEV_OFF
+    }
+
+    fun setAppRuleMode(packageName: String, mode: AppRuleMode) {
+        val normalized = packageName.replace("\r", "").replace("\n", "").replace("=", "").trim()
+        if (normalized.isEmpty()) return
+        val current = appRuleModes
+        if (current[normalized] != mode) {
+            appRuleModes = current + (normalized to mode)
+        }
+    }
+
+    val heldRulePackage: String
+        get() = prefs.getString(KEY_HELD_RULE_PKG, null).orEmpty()
+
+    val heldDevOptions: Boolean
+        get() = prefs.getBoolean(KEY_HELD_RULE_DEV, false)
+
+    val heldUsbDebug: Boolean
+        get() = prefs.getBoolean(KEY_HELD_RULE_USB, false)
+
+    val heldWirelessDebug: Boolean
+        get() = prefs.getBoolean(KEY_HELD_RULE_WIFI, false)
+
+    fun saveRuleHold(packageName: String, dev: Boolean, usb: Boolean, wifi: Boolean) {
+        val normalized = packageName.replace("\r", "").replace("\n", "").trim()
+        if (normalized.isEmpty()) return
+        prefs.edit()
+            .putString(KEY_HELD_RULE_PKG, normalized)
+            .putBoolean(KEY_HELD_RULE_DEV, dev)
+            .putBoolean(KEY_HELD_RULE_USB, usb)
+            .putBoolean(KEY_HELD_RULE_WIFI, wifi)
+            .apply()
+    }
+
+    fun clearRuleHold() {
+        if (heldRulePackage.isEmpty() && !heldDevOptions && !heldUsbDebug && !heldWirelessDebug) return
+        prefs.edit()
+            .remove(KEY_HELD_RULE_PKG)
+            .remove(KEY_HELD_RULE_DEV)
+            .remove(KEY_HELD_RULE_USB)
+            .remove(KEY_HELD_RULE_WIFI)
+            .apply()
     }
 
     var addedQsTileKeys: Set<String>
@@ -139,6 +242,13 @@ class AppPreferences(context: Context) {
         private const val KEY_AUTO_OFF_TARGET_AT_MS = "auto_off_target_at_ms"
         private const val KEY_KEEP_AWAKE_ON_USB = "keep_awake_on_usb"
         private const val KEY_SAFE_LAUNCH_PACKAGES = "safe_launch_packages"
+        private const val KEY_AUTO_APP_RULES_ENABLED = "auto_app_rules_enabled"
+        private const val KEY_AUTO_RESTORE_ON_EXIT = "auto_restore_on_exit"
+        private const val KEY_APP_RULE_MODES = "app_rule_modes"
+        private const val KEY_HELD_RULE_PKG = "held_rule_pkg"
+        private const val KEY_HELD_RULE_DEV = "held_rule_dev"
+        private const val KEY_HELD_RULE_USB = "held_rule_usb"
+        private const val KEY_HELD_RULE_WIFI = "held_rule_wifi"
         private const val KEY_ADDED_QS_TILES = "added_qs_tiles"
         private const val PACKAGE_DELIMITER = "\n"
         private const val DEFAULT_AUTO_OFF_MINUTES = 30

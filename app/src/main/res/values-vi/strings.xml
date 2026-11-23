@@ -230,8 +230,8 @@
 
     <string name="section_safe_launch">Tắt gỡ lỗi &amp; Mở app</string>
     <string name="safe_launch_banner_title">Có ứng dụng chặn gỡ lỗi?</string>
-    <string name="safe_launch_desc">Thêm app ngân hàng, VNeID, ví, game… Mở từ đây hoặc qua lối tắt ghim ngoài màn hình sẽ tự tắt sạch gỡ lỗi trước với 1 chạm.</string>
-    <string name="safe_launch_list_hint">Mở ngay tại đây hoặc ghim ra màn hình chính để tự tắt gỡ lỗi trước khi vào app.</string>
+    <string name="safe_launch_desc">Thêm app ngân hàng, VNeID, ví, game… Bật chế độ tự động ở trên để bấm thẳng icon gốc vẫn tự tắt gỡ lỗi, hoặc mở qua lối tắt ghim.</string>
+    <string name="safe_launch_list_hint">Khi bật tự động, bấm icon gốc của app sẽ tự tắt gỡ lỗi; bạn cũng có thể bấm Mở ngay hoặc Ghim lối tắt.</string>
     <string name="safe_launch_add_btn">Chọn ứng dụng</string>
     <string name="safe_launch_edit_btn">Thêm / sửa ứng dụng</string>
     <string name="safe_launch_open_now">Mở ngay</string>
@@ -241,6 +241,30 @@
     <string name="safe_launch_mode_a_hint">Cần chế độ 1 chạm (tab Thiết lập) để tự động tắt. Hiện tại bấm Mở sẽ đi tới đầu trang Tuỳ chọn nhà phát triển để bạn tự tắt.</string>
     <string name="safe_launch_pin_ok">Xác nhận trên hộp thoại để ghim \"%s\" ra màn hình chính.</string>
     <string name="safe_launch_pin_unsupported">Màn hình chính hiện tại không hỗ trợ ghim lối tắt ứng dụng.</string>
+
+    <string name="auto_rules_title">Tự động tắt khi mở app</string>
+    <string name="auto_rules_sub_off">Tự nhận biết khi bấm mở app gốc trong danh sách bên dưới.</string>
+    <string name="auto_rules_sub_empty">Chọn ứng dụng bên dưới để tự tắt gỡ lỗi ngay khi mở app.</string>
+    <string name="auto_rules_sub_need_usage">Cần cấp quyền Truy cập dữ liệu sử dụng để nhận biết app đang mở.</string>
+    <string name="auto_rules_sub_active">Đang bật · Tự nghỉ hoàn toàn khi tắt màn hình.</string>
+    <string name="auto_restore_title">Tự bật lại khi thoát app</string>
+    <string name="auto_restore_subtitle">Khôi phục gỡ lỗi sau ~8 giây khi thoát (tránh ngắt lúc lấy OTP).</string>
+    <string name="usage_access_title">Quyền Truy cập dữ liệu sử dụng</string>
+    <string name="usage_access_grant">Cấp quyền</string>
+    <string name="usage_dialog_title">Cấp quyền Truy cập dữ liệu sử dụng</string>
+    <string name="usage_dialog_body">Vibe Debug chỉ dùng quyền này cục bộ trên máy để nhận biết lúc bạn mở hoặc thoát ứng dụng đã chọn, từ đó tự tắt gỡ lỗi và tự bật lại.\n\nỨng dụng không có quyền INTERNET — dữ liệu sử dụng tuyệt đối không được lưu lại hay gửi ra ngoài.</string>
+    <string name="usage_dialog_open_settings">Mở Cài đặt</string>
+    <string name="rule_mode_dev_off">Tắt cả Dev Mode</string>
+    <string name="rule_mode_usb_off">Chỉ tắt USB/Wi-Fi</string>
+
+    <string name="watcher_notif_channel_name">Tự tắt gỡ lỗi theo ứng dụng</string>
+    <string name="watcher_notif_channel_desc">Thông báo im lặng hiển thị khi Vibe Debug đang canh tự động tắt gỡ lỗi cho app đã chọn.</string>
+    <string name="watcher_notif_watching_title">Đang canh %d app tự tắt gỡ lỗi</string>
+    <string name="watcher_notif_watching_body">Sẽ tự tắt gỡ lỗi khi bạn mở app đã chọn.</string>
+    <string name="watcher_notif_holding_title">Đã tạm tắt gỡ lỗi cho %s</string>
+    <string name="watcher_notif_holding_restore_body">Sẽ tự bật lại sau khi bạn thoát ứng dụng.</string>
+    <string name="watcher_notif_holding_stay_off_body">Gỡ lỗi đang tắt trong lúc bạn dùng ứng dụng này.</string>
+    <string name="watcher_notif_action_stop">Dừng</string>
 
     <string name="dialog_pick_app_title">Chọn app cần tắt gỡ lỗi khi mở</string>
     <string name="hint_search_apps">Tìm theo tên hoặc tên gói…</string>
@@ -291,8 +315,8 @@
     <string name="language_en">English</string>
 
     <string name="section_privacy_about">Quyền riêng tư &amp; Thông tin</string>
-    <string name="privacy_card_title">Không Internet · Không dịch vụ nền</string>
-    <string name="privacy_card_body">Không xin quyền INTERNET, không quảng cáo, không theo dõi, không chạy dịch vụ nền. Chỉ thay đổi cờ nhà phát triển khi bạn bấm.</string>
+    <string name="privacy_card_title">Không Internet · 100% trên máy</string>
+    <string name="privacy_card_body">Không xin quyền INTERNET, không quảng cáo, không theo dõi. Chỉ đổi cờ gỡ lỗi khi bạn bấm hoặc khi bạn bật tự động tắt theo ứng dụng.</string>
     <string name="label_app_version">Phiên bản</string>
 
     <!-- Legacy Technician / Copy Strings -->

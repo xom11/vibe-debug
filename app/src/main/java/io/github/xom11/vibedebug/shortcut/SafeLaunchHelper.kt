@@ -17,6 +17,9 @@ import io.github.xom11.vibedebug.data.AndroidSettingsGateway
 import io.github.xom11.vibedebug.data.AppPreferences
 import io.github.xom11.vibedebug.data.AutoOffManager
 import io.github.xom11.vibedebug.data.DevSettingsController
+import io.github.xom11.vibedebug.rules.AndroidForegroundAppDetector
+import io.github.xom11.vibedebug.rules.AppRuleEngine
+import io.github.xom11.vibedebug.rules.AppWatcherService
 
 /** Metadata for an installed app that can be launched via Safe Launch. */
 data class LaunchableApp(
@@ -122,10 +125,19 @@ object SafeLaunchHelper {
             ?: return SafeLaunchResult.AppNotFound
 
         val prefs = AppPreferences(appContext)
-        controller.setDeveloperOptions(false)
-        controller.syncKeepAwakeWithUsb(prefs.keepAwakeOnUsb)
-        AutoOffManager(appContext, prefs).cancel()
-        QuickSurfaceHelper.syncAllSurfaces(appContext)
+        val detector = AndroidForegroundAppDetector(appContext)
+        val engine = AppRuleEngine(
+            prefs = prefs,
+            controller = controller,
+            detector = detector,
+            autoOffManager = AutoOffManager(appContext, prefs),
+            onSurfaceSync = { QuickSurfaceHelper.syncAllSurfaces(appContext) },
+        )
+        val mode = prefs.getAppRuleMode(packageName)
+        val recordHold = prefs.autoAppRulesEnabled && prefs.autoRestoreOnExit && detector.hasUsageAccess()
+        engine.applyRuleForPackage(packageName, mode, recordHold = recordHold)
+        AppWatcherService.onSafeLaunch(packageName)
+        AppWatcherService.sync(appContext)
 
         launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         return try {

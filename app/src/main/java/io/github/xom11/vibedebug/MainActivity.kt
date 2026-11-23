@@ -1,7 +1,9 @@
 package io.github.xom11.vibedebug
 
+import android.Manifest
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.database.ContentObserver
 import android.graphics.Color
 import android.os.Build
@@ -14,6 +16,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,17 +26,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import io.github.xom11.vibedebug.data.AndroidSettingsGateway
 import io.github.xom11.vibedebug.data.AppPreferences
+import io.github.xom11.vibedebug.data.AppRuleMode
 import io.github.xom11.vibedebug.data.AutoOffManager
 import io.github.xom11.vibedebug.data.DevSettingsController
 import io.github.xom11.vibedebug.data.WirelessSwitchResult
 import io.github.xom11.vibedebug.debug.DebugPreviewConfig
 import io.github.xom11.vibedebug.model.OemBrandDetector
 import io.github.xom11.vibedebug.navigation.SettingsIntents
+import io.github.xom11.vibedebug.rules.AndroidForegroundAppDetector
+import io.github.xom11.vibedebug.rules.AppRuleEngine
+import io.github.xom11.vibedebug.rules.AppWatcherService
 import io.github.xom11.vibedebug.shortcut.QuickSurfaceHelper
 import io.github.xom11.vibedebug.shortcut.SafeLaunchHelper
 import io.github.xom11.vibedebug.shortcut.SafeLaunchResult
@@ -49,9 +57,15 @@ class MainActivity : ComponentActivity() {
     private lateinit var controller: DevSettingsController
     private lateinit var preferences: AppPreferences
     private lateinit var autoOffManager: AutoOffManager
+    private lateinit var foregroundDetector: AndroidForegroundAppDetector
 
     private var currentPreviewConfig by mutableStateOf<DebugPreviewConfig?>(null)
+    private var requestedTab by mutableStateOf<String?>(null)
     private var windowFocusTick by mutableIntStateOf(0)
+    private var notificationPromptShown = false
+
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,7 +75,9 @@ class MainActivity : ComponentActivity() {
         controller = DevSettingsController(gateway)
         preferences = AppPreferences(applicationContext)
         autoOffManager = AutoOffManager(applicationContext, preferences)
+        foregroundDetector = AndroidForegroundAppDetector(applicationContext)
         currentPreviewConfig = DebugPreviewConfig.fromIntent(intent)
+        requestedTab = intent?.getStringExtra(EXTRA_OPEN_TAB)
 
         setContent {
             val preview = currentPreviewConfig
@@ -79,6 +95,10 @@ class MainActivity : ComponentActivity() {
             var autoOffTargetAtMs by remember { mutableLongStateOf(preferences.autoOffTargetAtMs) }
             var keepAwakeOnUsb by remember { mutableStateOf(preferences.keepAwakeOnUsb) }
             var safeLaunchPackages by remember { mutableStateOf(preferences.safeLaunchPackages) }
+            var autoAppRulesEnabled by remember { mutableStateOf(preferences.autoAppRulesEnabled) }
+            var autoRestoreOnExit by remember { mutableStateOf(preferences.autoRestoreOnExit) }
+            var appRuleModes by remember { mutableStateOf(preferences.appRuleModes) }
+            var hasUsageAccess by remember { mutableStateOf(foregroundDetector.hasUsageAccess()) }
             var quickSurfaceState by remember {
                 mutableStateOf(QuickSurfaceHelper.readSurfaceState(applicationContext, preferences))
             }
@@ -89,6 +109,14 @@ class MainActivity : ComponentActivity() {
 
             val refreshSurfaceState = {
                 quickSurfaceState = QuickSurfaceHelper.readSurfaceState(applicationContext, preferences)
+            }
+
+            val refreshRuleUiState = {
+                autoAppRulesEnabled = preferences.autoAppRulesEnabled
+                autoRestoreOnExit = preferences.autoRestoreOnExit
+                safeLaunchPackages = preferences.safeLaunchPackages
+                appRuleModes = preferences.appRuleModes
+                hasUsageAccess = foregroundDetector.hasUsageAccess()
             }
 
             val schedulePostPinRefresh: () -> Unit = {
@@ -130,6 +158,7 @@ class MainActivity : ComponentActivity() {
                 }
                 val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
                     refreshSurfaceState()
+                    refreshRuleUiState()
                 }
                 gateway.registerObserver(observer)
                 preferences.registerChangeListener(prefListener)
@@ -142,6 +171,8 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(windowFocusTick) {
                 if (windowFocusTick > 0) {
                     refreshSurfaceState()
+                    refreshRuleUiState()
+                    AppWatcherService.sync(applicationContext)
                     delay(400L)
                     refreshSurfaceState()
                     delay(900L)
@@ -154,7 +185,9 @@ class MainActivity : ComponentActivity() {
                 val lifecycleObserver = LifecycleEventObserver { _, event ->
                     if (event == Lifecycle.Event.ON_RESUME) {
                         refreshLiveState()
-                        safeLaunchPackages = preferences.safeLaunchPackages
+                        refreshRuleUiState()
+                        AppWatcherService.sync(applicationContext)
+                        maybeRequestPostNotifications(hasUsageAccess)
                     }
                 }
                 lifecycleOwner.lifecycle.addObserver(lifecycleObserver)
@@ -245,10 +278,14 @@ class MainActivity : ComponentActivity() {
                     keepAwakeOnUsb = keepAwakeOnUsb,
                     themePreference = themePreference,
                     safeLaunchPackages = safeLaunchPackages,
+                    autoAppRulesEnabled = autoAppRulesEnabled,
+                    autoRestoreOnExit = autoRestoreOnExit,
+                    hasUsageAccess = hasUsageAccess,
+                    appRuleModes = appRuleModes,
                     quickSurfaceState = quickSurfaceState,
                     wirelessWifiWarning = wirelessWifiWarning,
                     wirelessBlockedTick = wirelessBlockedTick,
-                    initialTab = preview?.initialTab,
+                    initialTab = requestedTab ?: preview?.initialTab,
                     debugPreviewBanner = preview?.bannerText,
                     onRefreshState = { refreshLiveState() },
                     onRecheckPermission = {
@@ -315,12 +352,56 @@ class MainActivity : ComponentActivity() {
                         preferences.themePreference = pref
                     },
                     onAddSafeLaunchPackage = { pkg ->
+                        val wasEmpty = preferences.safeLaunchPackages.isEmpty()
                         preferences.addSafeLaunchPackage(pkg)
                         safeLaunchPackages = preferences.safeLaunchPackages
+                        if (wasEmpty && !preferences.autoAppRulesEnabled && effectivePermission && !effectiveState.blockedByPolicy) {
+                            autoAppRulesEnabled = true
+                            preferences.autoAppRulesEnabled = true
+                        }
+                        hasUsageAccess = foregroundDetector.hasUsageAccess()
+                        AppWatcherService.sync(applicationContext)
+                        if (autoAppRulesEnabled) {
+                            maybeRequestPostNotifications(hasUsageAccess)
+                        }
                     },
                     onRemoveSafeLaunchPackage = { pkg ->
                         preferences.removeSafeLaunchPackage(pkg)
                         safeLaunchPackages = preferences.safeLaunchPackages
+                        appRuleModes = preferences.appRuleModes
+                        AppWatcherService.sync(applicationContext)
+                    },
+                    onAutoAppRulesEnabledChanged = { enabled ->
+                        autoAppRulesEnabled = enabled
+                        preferences.autoAppRulesEnabled = enabled
+                        if (!enabled && preferences.heldRulePackage.isNotEmpty()) {
+                            AppRuleEngine(
+                                prefs = preferences,
+                                controller = controller,
+                                detector = foregroundDetector,
+                                autoOffManager = autoOffManager,
+                                onSurfaceSync = { QuickSurfaceHelper.syncAllSurfaces(applicationContext) },
+                            ).releaseHoldOnStop()
+                            refreshLiveState()
+                        }
+                        AppWatcherService.sync(applicationContext)
+                        if (enabled) {
+                            maybeRequestPostNotifications(hasUsageAccess)
+                        }
+                    },
+                    onAutoRestoreOnExitChanged = { enabled ->
+                        autoRestoreOnExit = enabled
+                        preferences.autoRestoreOnExit = enabled
+                        if (!enabled) {
+                            preferences.clearRuleHold()
+                        }
+                    },
+                    onSetAppRuleMode = { pkg, mode ->
+                        preferences.setAppRuleMode(pkg, mode)
+                        appRuleModes = preferences.appRuleModes
+                    },
+                    onOpenUsageAccessSettings = {
+                        SettingsIntents.launchUsageAccessScreen(this@MainActivity)
                     },
                     onLaunchSafeApp = { pkg ->
                         val sim = previewState
@@ -333,12 +414,20 @@ class MainActivity : ComponentActivity() {
                                     if (launchIntent == null) {
                                         SafeLaunchResult.AppNotFound
                                     } else {
+                                        val mode = preferences.getAppRuleMode(pkg)
                                         autoOffTargetAtMs = 0L
-                                        previewState = sim.copy(
-                                            devOptionsEnabled = false,
-                                            adbEnabled = false,
-                                            wirelessAdbEnabled = false,
-                                        )
+                                        previewState = if (mode == AppRuleMode.DEV_OFF) {
+                                            sim.copy(
+                                                devOptionsEnabled = false,
+                                                adbEnabled = false,
+                                                wirelessAdbEnabled = false,
+                                            )
+                                        } else {
+                                            sim.copy(
+                                                adbEnabled = false,
+                                                wirelessAdbEnabled = false,
+                                            )
+                                        }
                                         launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                         runCatching { startActivity(launchIntent) }
                                             .fold(
@@ -403,6 +492,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         } else {
+                            preferences.clearRuleHold()
                             if (controller.setUsbDebugging(enabled)) {
                                 autoOffManager.scheduleIfEnabled(controller.readState().adbEnabled)
                                 controller.syncKeepAwakeWithUsb(preferences.keepAwakeOnUsb)
@@ -420,11 +510,13 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         } else if (!enabled) {
+                            preferences.clearRuleHold()
                             pendingWirelessEnableAtMs = 0L
                             wirelessWifiWarning = false
                             controller.setWirelessDebugging(false)
                             refreshLiveState()
                         } else {
+                            preferences.clearRuleHold()
                             when (controller.setWirelessDebuggingWithResult(true)) {
                                 WirelessSwitchResult.WIFI_NOT_CONNECTED -> {
                                     pendingWirelessEnableAtMs = 0L
@@ -478,6 +570,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         } else {
+                            preferences.clearRuleHold()
                             if (controller.setDeveloperOptions(enabled) && !enabled) {
                                 autoOffManager.cancel()
                             }
@@ -501,5 +594,24 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         currentPreviewConfig = DebugPreviewConfig.fromIntent(intent)
+        intent.getStringExtra(EXTRA_OPEN_TAB)?.let { tab ->
+            requestedTab = tab
+        }
+    }
+
+    private fun maybeRequestPostNotifications(usageGranted: Boolean) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (!preferences.autoAppRulesEnabled || preferences.safeLaunchPackages.isEmpty() || !usageGranted || notificationPromptShown) return
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+        notificationPromptShown = true
+        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
+
+    companion object {
+        const val EXTRA_OPEN_TAB = "open_tab"
     }
 }

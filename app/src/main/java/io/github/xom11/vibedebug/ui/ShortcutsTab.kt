@@ -2,6 +2,7 @@ package io.github.xom11.vibedebug.ui
 
 import android.content.Context
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -40,6 +41,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -60,6 +62,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
 import io.github.xom11.vibedebug.R
+import io.github.xom11.vibedebug.data.AppRuleMode
 import io.github.xom11.vibedebug.model.DevState
 import io.github.xom11.vibedebug.shortcut.LaunchableApp
 import io.github.xom11.vibedebug.shortcut.QuickSurfaceState
@@ -76,6 +79,10 @@ fun ShortcutsTab(
     devState: DevState,
     hasWritePermission: Boolean,
     safeLaunchPackages: List<String>,
+    autoAppRulesEnabled: Boolean = false,
+    autoRestoreOnExit: Boolean = true,
+    hasUsageAccess: Boolean = false,
+    appRuleModes: Map<String, AppRuleMode> = emptyMap(),
     quickSurfaceState: QuickSurfaceState = QuickSurfaceState(),
     onShowSnackbar: (String) -> Unit,
     onShowManualTileDialog: (String) -> Unit,
@@ -87,6 +94,10 @@ fun ShortcutsTab(
     onOpenHomeScreen: () -> Unit = {},
     onAddSafeLaunchPackage: (String) -> Unit,
     onRemoveSafeLaunchPackage: (String) -> Unit,
+    onAutoAppRulesEnabledChanged: (Boolean) -> Unit = {},
+    onAutoRestoreOnExitChanged: (Boolean) -> Unit = {},
+    onSetAppRuleMode: (String, AppRuleMode) -> Unit = { _, _ -> },
+    onOpenUsageAccessSettings: () -> Unit = {},
     onLaunchSafeApp: (packageName: String, label: String) -> Unit = { _, _ -> },
     onOpenDeveloperOptionsTop: () -> Unit,
     onRefreshState: () -> Unit,
@@ -95,6 +106,7 @@ fun ShortcutsTab(
     val context = LocalContext.current
     val adaptive = LocalAdaptiveLayout.current
     var showAppPicker by rememberSaveable { mutableStateOf(false) }
+    var showUsageDisclosure by rememberSaveable { mutableStateOf(false) }
     var removeWidgetDialogLabel by rememberSaveable { mutableStateOf<String?>(null) }
     var removeShortcutDialogLabel by rememberSaveable { mutableStateOf<String?>(null) }
 
@@ -162,6 +174,7 @@ fun ShortcutsTab(
     }
 
     val safeLaunchSection: @Composable () -> Unit = {
+        val canUseAutoRules = hasWritePermission && !devState.blockedByPolicy
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             // Section 3: Turn Off Debug & Launch
             SectionLabel(stringResource(R.string.section_safe_launch))
@@ -177,6 +190,22 @@ fun ShortcutsTab(
                         border = palette.amberBorder,
                     )
                 }
+
+                AutoAppRulesCard(
+                    canUseAutoRules = canUseAutoRules,
+                    hasSavedApps = safeLaunchPackages.isNotEmpty(),
+                    autoAppRulesEnabled = autoAppRulesEnabled,
+                    autoRestoreOnExit = autoRestoreOnExit,
+                    hasUsageAccess = hasUsageAccess,
+                    onToggleAutoRules = { enabled ->
+                        onAutoAppRulesEnabledChanged(enabled)
+                        if (enabled && !hasUsageAccess) {
+                            showUsageDisclosure = true
+                        }
+                    },
+                    onToggleAutoRestore = onAutoRestoreOnExitChanged,
+                    onRequestUsageAccess = { showUsageDisclosure = true },
+                )
 
                 if (safeLaunchPackages.isEmpty()) {
                     SurfaceCard(modifier = Modifier.testTag("card_safe_launch_empty")) {
@@ -233,7 +262,9 @@ fun ShortcutsTab(
                     safeLaunchPackages.forEach { pkg ->
                         SafeLaunchAppCard(
                             packageName = pkg,
+                            ruleMode = appRuleModes[pkg] ?: AppRuleMode.DEV_OFF,
                             isShortcutPinned = pkg in quickSurfaceState.pinnedSafeLaunchPackages,
+                            onRuleModeChanged = { mode -> onSetAppRuleMode(pkg, mode) },
                             onOpenNow = { label -> onLaunchSafeApp(pkg, label) },
                             onPinShortcut = { label ->
                                 val ok = SafeLaunchHelper.requestPinSafeLaunchShortcut(context, pkg)
@@ -307,13 +338,28 @@ fun ShortcutsTab(
         }
     }
 
+    if (showUsageDisclosure) {
+        UsageAccessDisclosureDialog(
+            onOpenSettings = {
+                showUsageDisclosure = false
+                onOpenUsageAccessSettings()
+            },
+            onDismiss = { showUsageDisclosure = false },
+        )
+    }
+
     if (showAppPicker) {
         SafeLaunchAppPickerDialog(
             savedPackages = safeLaunchPackages,
             onTogglePackage = { pkg, currentlySaved ->
                 if (currentlySaved) onRemoveSafeLaunchPackage(pkg) else onAddSafeLaunchPackage(pkg)
             },
-            onDismiss = { showAppPicker = false },
+            onDismiss = {
+                showAppPicker = false
+                if (hasWritePermission && !devState.blockedByPolicy && autoAppRulesEnabled && safeLaunchPackages.isNotEmpty() && !hasUsageAccess) {
+                    showUsageDisclosure = true
+                }
+            },
         )
     }
 
@@ -596,9 +642,122 @@ private fun HubPinPillButton(
 }
 
 @Composable
+private fun AutoAppRulesCard(
+    canUseAutoRules: Boolean,
+    hasSavedApps: Boolean = false,
+    autoAppRulesEnabled: Boolean,
+    autoRestoreOnExit: Boolean,
+    hasUsageAccess: Boolean,
+    onToggleAutoRules: (Boolean) -> Unit,
+    onToggleAutoRestore: (Boolean) -> Unit,
+    onRequestUsageAccess: () -> Unit,
+) {
+    val palette = AppTheme.palette
+    val subText = when {
+        !canUseAutoRules -> stringResource(R.string.auto_off_requires_one_tap)
+        !autoAppRulesEnabled -> stringResource(R.string.auto_rules_sub_off)
+        !hasSavedApps -> stringResource(R.string.auto_rules_sub_empty)
+        !hasUsageAccess -> stringResource(R.string.auto_rules_sub_need_usage)
+        else -> stringResource(R.string.auto_rules_sub_active)
+    }
+    SurfaceCard(modifier = Modifier.testTag("card_auto_app_rules")) {
+        SwitchRow(
+            title = stringResource(R.string.auto_rules_title),
+            checked = autoAppRulesEnabled && canUseAutoRules,
+            onChange = onToggleAutoRules,
+            modifier = Modifier
+                .alpha(if (canUseAutoRules) 1f else 0.65f)
+                .testTag("row_auto_app_rules_switch"),
+            sub = subText,
+            enabled = canUseAutoRules,
+        )
+        AnimatedVisibility(visible = autoAppRulesEnabled && canUseAutoRules) {
+            Column(Modifier.fillMaxWidth()) {
+                if (hasSavedApps && !hasUsageAccess) {
+                    RowDivider()
+                    ValueRow(
+                        title = stringResource(R.string.usage_access_title),
+                        value = stringResource(R.string.usage_access_grant),
+                        modifier = Modifier.testTag("row_grant_usage_access"),
+                        onClick = onRequestUsageAccess,
+                        valueColor = palette.amber,
+                    )
+                }
+                RowDivider()
+                SwitchRow(
+                    title = stringResource(R.string.auto_restore_title),
+                    checked = autoRestoreOnExit,
+                    onChange = onToggleAutoRestore,
+                    modifier = Modifier.testTag("row_auto_restore_switch"),
+                    sub = stringResource(R.string.auto_restore_subtitle),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun UsageAccessDisclosureDialog(
+    onOpenSettings: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val palette = AppTheme.palette
+    val adaptive = LocalAdaptiveLayout.current
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier
+            .widthIn(max = adaptive.dialogMaxWidthDp.dp)
+            .fillMaxWidth(0.92f)
+            .testTag("dialog_usage_access_disclosure"),
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+        containerColor = palette.surface,
+        titleContentColor = palette.text,
+        textContentColor = palette.soft,
+        title = {
+            Text(
+                text = stringResource(R.string.usage_dialog_title),
+                fontWeight = FontWeight.SemiBold,
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(R.string.usage_dialog_body),
+                fontSize = 13.sp,
+                lineHeight = 20.sp,
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onOpenSettings,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = palette.mint,
+                    contentColor = palette.onMint,
+                ),
+            ) {
+                Text(
+                    text = stringResource(R.string.usage_dialog_open_settings),
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    text = stringResource(R.string.action_close),
+                    fontWeight = FontWeight.SemiBold,
+                    color = palette.muted,
+                )
+            }
+        },
+    )
+}
+
+@Composable
 private fun SafeLaunchAppCard(
     packageName: String,
+    ruleMode: AppRuleMode,
     isShortcutPinned: Boolean,
+    onRuleModeChanged: (AppRuleMode) -> Unit,
     onOpenNow: (label: String) -> Unit,
     onPinShortcut: (label: String) -> Unit,
     onUnpinShortcut: (label: String) -> Unit,
@@ -648,6 +807,27 @@ private fun SafeLaunchAppCard(
                 label = stringResource(R.string.cd_remove_app, label),
                 onClick = onRemove,
                 tint = palette.muted,
+            )
+        }
+
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .padding(start = 14.dp, end = 14.dp, top = 2.dp, bottom = 6.dp),
+        ) {
+            SegmentedControl(
+                options = listOf(
+                    stringResource(R.string.rule_mode_dev_off),
+                    stringResource(R.string.rule_mode_usb_off),
+                ),
+                selectedIndex = if (ruleMode == AppRuleMode.DEV_OFF) 0 else 1,
+                onSelect = { index ->
+                    onRuleModeChanged(if (index == 0) AppRuleMode.DEV_OFF else AppRuleMode.USB_OFF)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("seg_rule_mode_$packageName"),
+                height = 34.dp,
             )
         }
 

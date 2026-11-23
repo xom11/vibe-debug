@@ -230,8 +230,8 @@
 
     <string name="section_safe_launch">Turn Off Debug &amp; Launch</string>
     <string name="safe_launch_banner_title">Apps blocking Developer Mode?</string>
-    <string name="safe_launch_desc">Add banking, digital ID, e-wallet, or security-sensitive apps. Launching from here or a pinned shortcut turns off Developer Options first in 1 tap.</string>
-    <string name="safe_launch_list_hint">Open here or pin to your Home screen to turn off debugging automatically.</string>
+    <string name="safe_launch_desc">Add banking, digital ID, e-wallet, or security-sensitive apps to turn off debugging automatically when opened (or via Clean Launch shortcuts).</string>
+    <string name="safe_launch_list_hint">With auto mode on, opening the regular app icon turns off debugging automatically; you can also tap Open now or Pin a shortcut.</string>
     <string name="safe_launch_add_btn">Choose apps</string>
     <string name="safe_launch_edit_btn">Add / edit apps</string>
     <string name="safe_launch_open_now">Open now</string>
@@ -241,6 +241,30 @@
     <string name="safe_launch_mode_a_hint">1-Tap Mode (Setup tab) is needed for automatic disable. Right now, tapping Open opens Developer Options so you can turn it off first.</string>
     <string name="safe_launch_pin_ok">Confirm on the launcher prompt to pin \"%s\" to your home screen.</string>
     <string name="safe_launch_pin_unsupported">Your launcher does not support pinning app shortcuts.</string>
+
+    <string name="auto_rules_title">Auto-turn off when opening apps</string>
+    <string name="auto_rules_sub_off">Detects when listed apps open from their regular icon (optional Usage Access).</string>
+    <string name="auto_rules_sub_empty">Select apps below to automatically turn off debugging when opened.</string>
+    <string name="auto_rules_sub_need_usage">Needs Usage Access permission to detect foreground apps.</string>
+    <string name="auto_rules_sub_active">Active · Pauses automatically while the screen is off.</string>
+    <string name="auto_restore_title">Restore after leaving app</string>
+    <string name="auto_restore_subtitle">Turns debugging back on ~8s after leaving (grace window for OTP).</string>
+    <string name="usage_access_title">Usage Access permission</string>
+    <string name="usage_access_grant">Grant</string>
+    <string name="usage_dialog_title">Allow Usage Access</string>
+    <string name="usage_dialog_body">Vibe Debug uses Usage Access solely on your device to detect when one of your selected apps opens or closes so it can turn debugging off and restore it afterward.\n\nThis app has no INTERNET permission — no app usage data is ever stored, logged, or sent off your device.</string>
+    <string name="usage_dialog_open_settings">Open Settings</string>
+    <string name="rule_mode_dev_off">Turn off Dev Mode</string>
+    <string name="rule_mode_usb_off">USB &amp; Wi-Fi only</string>
+
+    <string name="watcher_notif_channel_name">Auto-disable for strict apps</string>
+    <string name="watcher_notif_channel_desc">Silent status shown while Vibe Debug automatically turns off debugging for selected apps.</string>
+    <string name="watcher_notif_watching_title">Watching %d protected apps</string>
+    <string name="watcher_notif_watching_body">Debugging turns off automatically when opened.</string>
+    <string name="watcher_notif_holding_title">Debugging paused for %s</string>
+    <string name="watcher_notif_holding_restore_body">Will restore shortly after you leave the app.</string>
+    <string name="watcher_notif_holding_stay_off_body">Debugging stays off while this app is active.</string>
+    <string name="watcher_notif_action_stop">Stop</string>
 
     <string name="dialog_pick_app_title">Select apps for Clean Launch</string>
     <string name="hint_search_apps">Search by name or package…</string>
@@ -291,8 +315,8 @@
     <string name="language_en">English</string>
 
     <string name="section_privacy_about">Privacy &amp; About</string>
-    <string name="privacy_card_title">Zero Network · Zero Background Services</string>
-    <string name="privacy_card_body">No INTERNET permission, no ads, no analytics, and no persistent background services. Only updates Android developer flags on your explicit tap.</string>
+    <string name="privacy_card_title">Zero Network · 100% On-Device</string>
+    <string name="privacy_card_body">No INTERNET permission, no ads, no analytics. Developer flags change only when you tap or when optional on-device per-app rules are enabled.</string>
     <string name="label_app_version">Version</string>
 
     <!-- Legacy Technician / Copy Strings -->

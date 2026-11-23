@@ -1,0 +1,4 @@
+• Thêm chế độ Tự động tắt khi mở app: bấm thẳng icon app gốc (ngân hàng, VNeID, ví…) vẫn tự tắt gỡ lỗi nhờ Usage Access cục bộ, không dùng Trợ năng
+• Tự bật lại gỡ lỗi sau ~8 giây khi thoát app (tránh ngắt lúc lấy OTP)
+• Chọn linh hoạt mức tắt cho từng app: Tắt cả Dev Mode hoặc Chỉ tắt USB/Wi-Fi
+• Tự đồng bộ lại chế độ canh app sau khi khởi động lại hoặc cập nhật app

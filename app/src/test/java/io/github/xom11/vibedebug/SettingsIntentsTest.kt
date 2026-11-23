@@ -81,4 +81,15 @@ class SettingsIntentsTest {
             SettingsIntents.ADB_REINSTALL_GRANT_COMMAND
         )
     }
+
+    @Test
+    fun `buildUsageAccess intents target usage access settings with and without package Uri`() {
+        val appIntent = SettingsIntents.buildUsageAccessAppIntent("io.github.xom11.vibedebug")
+        assertEquals(Settings.ACTION_USAGE_ACCESS_SETTINGS, appIntent.action)
+        assertEquals("package:io.github.xom11.vibedebug", appIntent.dataString)
+
+        val fallbackIntent = SettingsIntents.buildUsageAccessFallbackIntent()
+        assertEquals(Settings.ACTION_USAGE_ACCESS_SETTINGS, fallbackIntent.action)
+        assertNull(fallbackIntent.data)
+    }
 }

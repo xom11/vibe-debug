@@ -41,6 +41,7 @@ class UsbDebugTileService : BaseDebugTileService() {
         if (controller.hasWritePermission()) {
             if (controller.toggleUsbDebugging()) {
                 val prefs = AppPreferences(applicationContext)
+                prefs.clearRuleHold()
                 createAutoOffManager().scheduleIfEnabled(controller.readState().adbEnabled)
                 controller.syncKeepAwakeWithUsb(prefs.keepAwakeOnUsb)
             }

@@ -16,6 +16,7 @@ import io.github.xom11.vibedebug.data.AndroidSettingsGateway
 import io.github.xom11.vibedebug.data.AppPreferences
 import io.github.xom11.vibedebug.data.AutoOffManager
 import io.github.xom11.vibedebug.data.DevSettingsController
+import io.github.xom11.vibedebug.rules.AppWatcherService
 import io.github.xom11.vibedebug.shortcut.QuickSurfaceHelper
 import io.github.xom11.vibedebug.shortcut.QuickTileType
 
@@ -50,6 +51,7 @@ abstract class BaseDebugTileService : TileService() {
 
     override fun onStartListening() {
         super.onStartListening()
+        AppWatcherService.sync(applicationContext)
         if (QuickSurfaceHelper.isTileComponentEnabled(applicationContext, this::class.java)) {
             syncAddedPreference(true)
         }
