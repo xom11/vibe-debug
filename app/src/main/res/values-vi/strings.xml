@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">VibeADB</string>
+    <string name="app_name">Vibe Debug</string>
     <string name="app_subtitle">Kiểm tra &amp; mở nhanh công tắc Gỡ lỗi USB</string>
 
     <!-- Quick Settings Tiles, Home Widget & App Shortcuts -->
@@ -16,7 +16,14 @@
     <string name="tile_subtitle_auto_off_in">Tự tắt sau %d phút</string>
 
     <string name="widget_label">Gỡ lỗi USB</string>
+    <string name="widget_short_usb">Gỡ lỗi USB</string>
+    <string name="widget_short_wireless">Gỡ lỗi Wi-Fi</string>
+    <string name="widget_short_dev">Dev Mode</string>
+    <string name="widget_short_awake">Giữ sáng</string>
     <string name="widget_description">Xem trạng thái và bật/tắt nhanh Gỡ lỗi USB ngay từ màn hình chính.</string>
+    <string name="widget_wireless_description">Xem trạng thái và bật/tắt nhanh Gỡ lỗi Wi-Fi từ màn hình chính.</string>
+    <string name="widget_dev_options_description">Hiện hoặc tắt nhanh Tuỳ chọn nhà phát triển từ màn hình chính.</string>
+    <string name="widget_keep_awake_description">Bật/tắt Giữ màn hình sáng khi cắm sạc từ màn hình chính.</string>
     <string name="widget_state_on">BẬT</string>
     <string name="widget_state_off">TẮT</string>
     <string name="widget_hint_one_tap">Chạm để bật/tắt</string>
@@ -30,12 +37,12 @@
     <string name="shortcut_dev_off_long">Mở đầu trang tắt Chế độ nhà phát triển</string>
 
     <!-- Safe Launch Contracts -->
-    <string name="safe_launch_shortcut_long">%s (Không gỡ lỗi)</string>
+    <string name="safe_launch_shortcut_long">%s (Tắt gỡ lỗi)</string>
     <string name="safe_launch_toast_clean">Đã tắt sạch gỡ lỗi. Đang mở %s…</string>
     <string name="safe_launch_toast_need_perm">Hãy bật chế độ 1 chạm trong Thiết lập trước (đang mở Tùy chọn nhà phát triển).</string>
     <string name="safe_launch_toast_blocked">Tính năng gỡ lỗi bị chính sách thiết bị chặn.</string>
     <string name="safe_launch_toast_not_found">Không tìm thấy ứng dụng.</string>
-    <string name="safe_launch_not_listed">Ứng dụng này chưa có trong danh sách Mở an toàn.</string>
+    <string name="safe_launch_not_listed">Ứng dụng này chưa có trong danh sách Tắt gỡ lỗi &amp; Mở app.</string>
 
     <!-- Navigation -->
     <string name="nav_home">Trang chủ</string>
@@ -47,15 +54,15 @@
     <string name="quick_surfaces_subtitle">Đặt nút bật/tắt ngay trên thanh kéo từ trên xuống (chỗ bật Wi-Fi, Đèn pin) hoặc ghim Widget ra màn hình chính chỉ với 1 chạm.</string>
     <string name="btn_add_qs_usb">Thêm nút Gỡ lỗi USB lên thanh Wi-Fi</string>
     <string name="btn_add_qs_wireless">Thêm nút Gỡ lỗi không dây lên thanh Wi-Fi</string>
-    <string name="btn_pin_home_widget">Thêm Widget (2×1)</string>
-    <string name="btn_remove_home_widget">Gỡ Widget (2×1)</string>
+    <string name="btn_pin_home_widget">Thêm Widget (1×1)</string>
+    <string name="btn_remove_home_widget">Gỡ Widget (1×1)</string>
     <string name="btn_pin_home_shortcut">Ghim lối tắt (1×1)</string>
     <string name="btn_unpin_home_shortcut">Gỡ lối tắt (1×1)</string>
 
     <string name="feedback_tile_added">Đã thêm nút \"%1$s\" vào thanh Cài đặt nhanh!</string>
     <string name="feedback_tile_already_added">Nút \"%1$s\" đã có sẵn trên thanh Cài đặt nhanh — kéo từ trên xuống để dùng ngay.</string>
     <string name="feedback_tile_removed">Đã gỡ nút \"%1$s\" khỏi thanh Cài đặt nhanh.</string>
-    <string name="feedback_widget_pin_requested">Bấm Thêm trên hộp thoại của máy để đặt Widget 2×1 ra màn hình chính.</string>
+    <string name="feedback_widget_pin_requested">Bấm Thêm trên hộp thoại của máy để đặt Widget \"%1$s\" ra màn hình chính.</string>
     <string name="feedback_widget_unsupported">Màn hình chính hiện tại không hỗ trợ ghim tự động. Hãy nhấn giữ khoảng trống ngoài màn hình chính rồi chọn Tiện ích (Widgets).</string>
     <string name="feedback_shortcut_pin_requested">Bấm Thêm trên hộp thoại của máy để đặt lối tắt 1×1 ra màn hình chính.</string>
     <string name="feedback_shortcut_unsupported">Màn hình chính hiện tại không hỗ trợ ghim tự động. Bạn có thể nhấn giữ biểu tượng ứng dụng để kéo lối tắt ra ngoài.</string>
@@ -109,16 +116,11 @@
     <string name="wireless_sub_off_one_tap">Đang tắt · Chạm để bật</string>
     <string name="wireless_sub_mode_a">Chạm để mở Gỡ lỗi không dây trong Cài đặt</string>
     <string name="dev_menu_visible">Đang hiện menu</string>
+    <string name="dev_menu_visible_mode_a">Đang bật · Tắt nếu có app chặn</string>
     <string name="dev_menu_hidden">Đang ẩn menu</string>
     <string name="awake_while_charging">Khi đang sạc</string>
     <string name="awake_off">Đang tắt</string>
     <string name="awake_mode_a_hint">Mở Cài đặt</string>
-
-    <string name="section_banking_helper">Ngân hàng &amp; VNeID</string>
-    <string name="banking_helper_mode_a_title">VNeID / ngân hàng báo lỗi?</string>
-    <string name="banking_helper_mode_a_sub">Mở đầu trang để tắt hẳn Chế độ nhà phát triển</string>
-    <string name="banking_helper_mode_b_title">Mở VNeID / ngân hàng sạch gỡ lỗi</string>
-    <string name="banking_helper_mode_b_sub">1 chạm tắt sạch Chế độ nhà phát triển trước khi mở app</string>
 
     <!-- OEM Unlock Guide (State A1: Unprivileged & Dev OFF) -->
     <string name="dev_off_banner_title">Chế độ nhà phát triển đang TẮT</string>
@@ -164,31 +166,37 @@
     <string name="mode_one_tap_subtitle">Đã cấp quyền bật/tắt trực tiếp ngay trong ứng dụng.</string>
     <string name="switch_usb_desc">Tự mở lại Chế độ nhà phát triển nếu đang tắt</string>
     <string name="switch_wireless_desc">Gỡ lỗi qua Wi-Fi trên Android 11 trở lên</string>
-    <string name="switch_dev_options_desc">Tắt sạch toàn bộ để dùng VNeID và app ngân hàng</string>
+    <string name="switch_dev_options_desc">Tắt sạch toàn bộ khi vào ngân hàng, VNeID, game…</string>
     <string name="btn_open_system_dev_settings">Mở Tuỳ chọn nhà phát triển hệ thống</string>
 
     <!-- Shortcuts Tab -->
     <string name="shortcuts_title">Lối tắt</string>
-    <string name="shortcuts_subtitle">Thêm ô Cài đặt nhanh, ghim ra màn hình chính hoặc mở app ngân hàng không gỡ lỗi.</string>
-    <string name="section_qs_tiles">Ô Cài đặt nhanh</string>
-    <string name="tile_usb_desc">Bật/tắt hoặc mở nhanh Gỡ lỗi USB ngay từ thanh thông báo.</string>
-    <string name="tile_wireless_desc">Công tắc nhanh Gỡ lỗi không dây trên Android 11+.</string>
-    <string name="tile_dev_options_desc">Hiện hoặc ẩn cả menu Tuỳ chọn nhà phát triển.</string>
-    <string name="tile_keep_awake_desc">Giữ màn hình sáng trong lúc cắm sạc kiểm thử.</string>
+    <string name="shortcuts_subtitle">Đặt nút lên thanh kéo xuống (Cài đặt nhanh), ra màn hình chính (Widget) hoặc mở app sạch gỡ lỗi.</string>
+    <string name="section_qs_tiles">Công tắc nhanh</string>
+    <string name="legend_qs_tile">Cài đặt nhanh</string>
+    <string name="legend_home_widget">Widget</string>
+    <string name="cd_toggle_qs_tile">Ô Cài đặt nhanh: %1$s</string>
+    <string name="cd_toggle_home_widget">Widget màn hình chính: %1$s</string>
+    <string name="tile_usb_desc">Bật/tắt nhanh kết nối gỡ lỗi qua cáp USB.</string>
+    <string name="tile_wireless_desc">Bật/tắt nhanh gỡ lỗi không dây (Android 11+).</string>
+    <string name="tile_dev_options_desc">Hiện hoặc tắt sạch toàn bộ Chế độ nhà phát triển.</string>
+    <string name="tile_keep_awake_desc">Giữ màn hình luôn sáng trong lúc cắm sạc.</string>
     <string name="action_add_tile">Thêm</string>
     <string name="action_remove_tile">Gỡ</string>
 
     <string name="section_home_surfaces">Màn hình chính</string>
     <string name="dialog_remove_widget_title">Gỡ Widget ngoài màn hình chính</string>
-    <string name="dialog_remove_widget_body">Android chỉ cho phép gỡ tiện ích trực tiếp ngoài màn hình chính:\n\n1. Ra màn hình chính của máy.\n2. Nhấn giữ Widget VibeADB (2×1) rồi chọn Gỡ / Xoá.</string>
+    <string name="dialog_remove_widget_body">Android chỉ cho phép gỡ tiện ích trực tiếp ngoài màn hình chính:\n\n1. Ra màn hình chính của máy.\n2. Nhấn giữ biểu tượng Widget \"%1$s\" rồi chọn Gỡ / Xoá.</string>
     <string name="dialog_remove_shortcut_title">Gỡ lối tắt ngoài màn hình chính</string>
     <string name="dialog_remove_shortcut_body">Android chỉ cho phép gỡ biểu tượng đã ghim trực tiếp ngoài màn hình chính:\n\n1. Ra màn hình chính của máy.\n2. Nhấn giữ biểu tượng \"%1$s\" rồi chọn Gỡ / Xoá.</string>
     <string name="action_go_home">Ra màn hình chính</string>
 
-    <string name="section_safe_launch">Mở không cần gỡ lỗi</string>
-    <string name="safe_launch_desc">1 chạm tắt sạch Chế độ nhà phát triển rồi mở thẳng app ngân hàng/VNeID — không chạy nền, không quyền Usage Access, không dịch vụ trợ năng.</string>
-    <string name="safe_launch_empty">Chưa có app nào. Thêm VNeID hoặc các app ngân hàng báo lỗi Chế độ nhà phát triển.</string>
-    <string name="safe_launch_add_btn">+ Thêm app ngân hàng / VNeID</string>
+    <string name="section_safe_launch">Tắt gỡ lỗi &amp; Mở app</string>
+    <string name="safe_launch_banner_title">Có ứng dụng chặn gỡ lỗi?</string>
+    <string name="safe_launch_desc">Thêm app ngân hàng, VNeID, ví, game… Mở từ đây hoặc qua lối tắt ghim ngoài màn hình sẽ tự tắt sạch gỡ lỗi trước với 1 chạm.</string>
+    <string name="safe_launch_list_hint">Mở ngay tại đây hoặc ghim ra màn hình chính để tự tắt gỡ lỗi trước khi vào app.</string>
+    <string name="safe_launch_add_btn">Chọn ứng dụng</string>
+    <string name="safe_launch_edit_btn">Thêm / sửa ứng dụng</string>
     <string name="safe_launch_open_now">Mở ngay</string>
     <string name="safe_launch_pin">Ghim</string>
     <string name="safe_launch_unpin">Gỡ ghim</string>
@@ -197,11 +205,11 @@
     <string name="safe_launch_pin_ok">Xác nhận trên hộp thoại để ghim \"%s\" ra màn hình chính.</string>
     <string name="safe_launch_pin_unsupported">Màn hình chính hiện tại không hỗ trợ ghim lối tắt ứng dụng.</string>
 
-    <string name="dialog_pick_app_title">Thêm app mở an toàn</string>
+    <string name="dialog_pick_app_title">Chọn app cần tắt gỡ lỗi khi mở</string>
     <string name="hint_search_apps">Tìm theo tên hoặc tên gói…</string>
     <string name="loading_apps">Đang tải danh sách ứng dụng…</string>
     <string name="no_matching_apps">Không tìm thấy ứng dụng phù hợp.</string>
-    <string name="badge_banking_suggested">Ngân hàng / VNeID</string>
+    <string name="badge_banking_suggested">Gợi ý</string>
     <string name="badge_added">Đã thêm</string>
     <string name="action_close">Đóng</string>
 

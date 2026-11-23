@@ -4,6 +4,10 @@
 -keep class io.github.l3n4k4.usbdebugswitch.tile.DevOptionsTileService { *; }
 -keep class io.github.l3n4k4.usbdebugswitch.tile.KeepAwakeTileService { *; }
 -keep class io.github.l3n4k4.usbdebugswitch.widget.UsbDebugWidgetProvider { *; }
+-keep class io.github.l3n4k4.usbdebugswitch.widget.WirelessDebugWidgetProvider { *; }
+-keep class io.github.l3n4k4.usbdebugswitch.widget.DevOptionsWidgetProvider { *; }
+-keep class io.github.l3n4k4.usbdebugswitch.widget.KeepAwakeWidgetProvider { *; }
+-keep class io.github.l3n4k4.usbdebugswitch.widget.WidgetToggleReceiver { *; }
 -keep class io.github.l3n4k4.usbdebugswitch.shortcut.ShortcutDispatchActivity { *; }
 -keep class io.github.l3n4k4.usbdebugswitch.shortcut.SafeLaunchActivity { *; }
 -keep class io.github.l3n4k4.usbdebugswitch.data.AutoOffReceiver { *; }

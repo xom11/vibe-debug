@@ -1,0 +1,4 @@
+• Siết bảo mật Widget: tách bộ xử lý bấm 1 chạm sang receiver nội bộ không export
+• Nâng targetSdk / compileSdk lên Android 16 (API 36), tối ưu giao diện máy tính bảng & màn hình gập
+• Thêm đủ 4 ô Cài đặt nhanh và 4 Widget 1x1 ngoài màn hình chính
+• Thêm tính năng Tắt gỡ lỗi & Mở app (Clean Launch) và Hẹn giờ tự tắt (15 / 30 / 60 phút)

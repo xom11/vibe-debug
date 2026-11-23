@@ -32,6 +32,8 @@ import io.github.l3n4k4.usbdebugswitch.debug.DebugPreviewConfig
 import io.github.l3n4k4.usbdebugswitch.model.OemBrandDetector
 import io.github.l3n4k4.usbdebugswitch.navigation.SettingsIntents
 import io.github.l3n4k4.usbdebugswitch.shortcut.QuickSurfaceHelper
+import io.github.l3n4k4.usbdebugswitch.shortcut.SafeLaunchHelper
+import io.github.l3n4k4.usbdebugswitch.shortcut.SafeLaunchResult
 import io.github.l3n4k4.usbdebugswitch.ui.UsbDebugScreen
 import io.github.l3n4k4.usbdebugswitch.ui.theme.UsbDebugSwitchTheme
 import io.github.l3n4k4.usbdebugswitch.ui.theme.resolveIsDarkTheme
@@ -273,6 +275,40 @@ class MainActivity : ComponentActivity() {
                         preferences.removeSafeLaunchPackage(pkg)
                         safeLaunchPackages = preferences.safeLaunchPackages
                     },
+                    onLaunchSafeApp = { pkg ->
+                        val sim = previewState
+                        if (sim != null) {
+                            when {
+                                sim.blockedByPolicy -> SafeLaunchResult.BlockedByPolicy
+                                !effectivePermission -> SafeLaunchResult.NeedsPermission
+                                else -> {
+                                    val launchIntent = packageManager.getLaunchIntentForPackage(pkg)
+                                    if (launchIntent == null) {
+                                        SafeLaunchResult.AppNotFound
+                                    } else {
+                                        autoOffTargetAtMs = 0L
+                                        previewState = sim.copy(
+                                            devOptionsEnabled = false,
+                                            adbEnabled = false,
+                                            wirelessAdbEnabled = false,
+                                        )
+                                        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        runCatching { startActivity(launchIntent) }
+                                            .fold(
+                                                onSuccess = { SafeLaunchResult.LaunchedClean },
+                                                onFailure = { SafeLaunchResult.AppNotFound },
+                                            )
+                                    }
+                                }
+                            }
+                        } else {
+                            val result = SafeLaunchHelper.launchSafely(this@MainActivity, pkg)
+                            if (result == SafeLaunchResult.LaunchedClean) {
+                                refreshLiveState()
+                            }
+                            result
+                        }
+                    },
                     onOpenBuildNumberScreen = {
                         SettingsIntents.launchBuildNumberScreen(this@MainActivity)
                     },
@@ -302,13 +338,8 @@ class MainActivity : ComponentActivity() {
                         refreshSurfaceState()
                         label
                     },
-                    onPinHomeWidget = {
-                        val requested = QuickSurfaceHelper.requestPinUsbWidget(this@MainActivity)
-                        if (requested) schedulePostPinRefresh()
-                        requested
-                    },
-                    onPinHomeShortcut = {
-                        val requested = QuickSurfaceHelper.requestPinUsbShortcut(this@MainActivity)
+                    onPinWidget = { tile ->
+                        val requested = QuickSurfaceHelper.requestPinWidget(this@MainActivity, tile)
                         if (requested) schedulePostPinRefresh()
                         requested
                     },

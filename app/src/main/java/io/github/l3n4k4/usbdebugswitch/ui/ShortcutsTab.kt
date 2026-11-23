@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -48,12 +49,15 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
 import io.github.l3n4k4.usbdebugswitch.R
 import io.github.l3n4k4.usbdebugswitch.model.DevState
@@ -61,7 +65,6 @@ import io.github.l3n4k4.usbdebugswitch.shortcut.LaunchableApp
 import io.github.l3n4k4.usbdebugswitch.shortcut.QuickSurfaceState
 import io.github.l3n4k4.usbdebugswitch.shortcut.QuickTileType
 import io.github.l3n4k4.usbdebugswitch.shortcut.SafeLaunchHelper
-import io.github.l3n4k4.usbdebugswitch.shortcut.SafeLaunchResult
 import io.github.l3n4k4.usbdebugswitch.shortcut.TileAddOutcome
 import io.github.l3n4k4.usbdebugswitch.ui.theme.AppTheme
 import io.github.l3n4k4.usbdebugswitch.ui.theme.MonoFont
@@ -81,19 +84,20 @@ fun ShortcutsTab(
     onAddDevOptionsTile: ((TileAddOutcome) -> Unit) -> Unit,
     onAddKeepAwakeTile: ((TileAddOutcome) -> Unit) -> Unit,
     onRemoveTile: (QuickTileType) -> String = { "" },
-    onPinHomeWidget: () -> Boolean,
-    onPinHomeShortcut: () -> Boolean,
+    onPinWidget: (QuickTileType) -> Boolean,
     onScheduleSurfaceRefresh: () -> Unit = {},
     onOpenHomeScreen: () -> Unit = {},
     onAddSafeLaunchPackage: (String) -> Unit,
     onRemoveSafeLaunchPackage: (String) -> Unit,
+    onLaunchSafeApp: (packageName: String, label: String) -> Unit = { _, _ -> },
     onOpenDeveloperOptionsTop: () -> Unit,
     onRefreshState: () -> Unit,
 ) {
     val palette = AppTheme.palette
     val context = LocalContext.current
+    val adaptive = LocalAdaptiveLayout.current
     var showAppPicker by rememberSaveable { mutableStateOf(false) }
-    var showRemoveWidgetDialog by rememberSaveable { mutableStateOf(false) }
+    var removeWidgetDialogLabel by rememberSaveable { mutableStateOf<String?>(null) }
     var removeShortcutDialogLabel by rememberSaveable { mutableStateOf<String?>(null) }
 
     fun handleTileOutcome(outcome: TileAddOutcome) {
@@ -116,7 +120,201 @@ fun ShortcutsTab(
         onShowSnackbar(context.getString(R.string.feedback_tile_removed, label))
     }
 
-    ScreenColumn(spacing = 14.dp) {
+    fun handlePinWidget(tile: QuickTileType) {
+        val label = context.getString(tile.labelRes)
+        if (tile in quickSurfaceState.addedWidgets) {
+            removeWidgetDialogLabel = label
+        } else {
+            val requested = onPinWidget(tile)
+            onShowSnackbar(
+                if (requested) context.getString(R.string.feedback_widget_pin_requested, label)
+                else context.getString(R.string.feedback_widget_unsupported)
+            )
+        }
+    }
+
+    val qsTilesAndHomeSurfacesSection: @Composable () -> Unit = {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Section 1: Quick Controls (Quick Settings + 1x1 Home Widgets)
+            SectionLabel(stringResource(R.string.section_qs_tiles))
+            SurfaceCard(modifier = Modifier.testTag("card_qs_tiles")) {
+                QuickControlSurfaceRow(
+                    tile = QuickTileType.USB_DEBUG,
+                    title = stringResource(R.string.tile_label),
+                    isControlOn = devState.adbEnabled && !devState.blockedByPolicy,
+                    isQsAdded = QuickTileType.USB_DEBUG in quickSurfaceState.addedTiles,
+                    isWidgetAdded = QuickTileType.USB_DEBUG in quickSurfaceState.addedWidgets,
+                    onToggleQs = {
+                        if (QuickTileType.USB_DEBUG in quickSurfaceState.addedTiles) {
+                            removeTile(QuickTileType.USB_DEBUG)
+                        } else {
+                            onAddUsbTile(::handleTileOutcome)
+                        }
+                    },
+                    onToggleWidget = { handlePinWidget(QuickTileType.USB_DEBUG) },
+                )
+                if (devState.supportsWirelessAdb) {
+                    RowDivider()
+                    QuickControlSurfaceRow(
+                        tile = QuickTileType.WIRELESS_DEBUG,
+                        title = stringResource(R.string.tile_wireless_label),
+                        isControlOn = devState.supportsWirelessAdb &&
+                            devState.wirelessAdbEnabled &&
+                            !devState.blockedByPolicy,
+                        isQsAdded = QuickTileType.WIRELESS_DEBUG in quickSurfaceState.addedTiles,
+                        isWidgetAdded = QuickTileType.WIRELESS_DEBUG in quickSurfaceState.addedWidgets,
+                        onToggleQs = {
+                            if (QuickTileType.WIRELESS_DEBUG in quickSurfaceState.addedTiles) {
+                                removeTile(QuickTileType.WIRELESS_DEBUG)
+                            } else {
+                                onAddWirelessTile(::handleTileOutcome)
+                            }
+                        },
+                        onToggleWidget = { handlePinWidget(QuickTileType.WIRELESS_DEBUG) },
+                    )
+                }
+                RowDivider()
+                QuickControlSurfaceRow(
+                    tile = QuickTileType.DEV_OPTIONS,
+                    title = stringResource(R.string.tile_dev_options_label),
+                    isControlOn = devState.devOptionsEnabled && !devState.blockedByPolicy,
+                    isQsAdded = QuickTileType.DEV_OPTIONS in quickSurfaceState.addedTiles,
+                    isWidgetAdded = QuickTileType.DEV_OPTIONS in quickSurfaceState.addedWidgets,
+                    onToggleQs = {
+                        if (QuickTileType.DEV_OPTIONS in quickSurfaceState.addedTiles) {
+                            removeTile(QuickTileType.DEV_OPTIONS)
+                        } else {
+                            onAddDevOptionsTile(::handleTileOutcome)
+                        }
+                    },
+                    onToggleWidget = { handlePinWidget(QuickTileType.DEV_OPTIONS) },
+                )
+                RowDivider()
+                QuickControlSurfaceRow(
+                    tile = QuickTileType.KEEP_AWAKE,
+                    title = stringResource(R.string.tile_keep_awake_label),
+                    isControlOn = devState.keepAwakeEnabled,
+                    isQsAdded = QuickTileType.KEEP_AWAKE in quickSurfaceState.addedTiles,
+                    isWidgetAdded = QuickTileType.KEEP_AWAKE in quickSurfaceState.addedWidgets,
+                    onToggleQs = {
+                        if (QuickTileType.KEEP_AWAKE in quickSurfaceState.addedTiles) {
+                            removeTile(QuickTileType.KEEP_AWAKE)
+                        } else {
+                            onAddKeepAwakeTile(::handleTileOutcome)
+                        }
+                    },
+                    onToggleWidget = { handlePinWidget(QuickTileType.KEEP_AWAKE) },
+                )
+            }
+        }
+    }
+
+    val safeLaunchSection: @Composable () -> Unit = {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Section 3: Turn Off Debug & Launch
+            SectionLabel(stringResource(R.string.section_safe_launch))
+
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (!hasWritePermission) {
+                    StatusBanner(
+                        title = stringResource(R.string.strip_mode_a_active),
+                        body = stringResource(R.string.safe_launch_mode_a_hint),
+                        fg = palette.amberText,
+                        bodyColor = palette.amberBody,
+                        bg = palette.amberBg,
+                        border = palette.amberBorder,
+                    )
+                }
+
+                if (safeLaunchPackages.isEmpty()) {
+                    SurfaceCard(modifier = Modifier.testTag("card_safe_launch_empty")) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            IconTile(
+                                icon = R.drawable.ic_lock,
+                                bg = palette.mintDim,
+                                fg = palette.mint,
+                                size = 38.dp,
+                            )
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                Text(
+                                    text = stringResource(R.string.safe_launch_banner_title),
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = palette.text,
+                                )
+                                Text(
+                                    text = stringResource(R.string.safe_launch_desc),
+                                    fontSize = 12.sp,
+                                    lineHeight = 17.sp,
+                                    color = palette.muted,
+                                )
+                            }
+                        }
+                        Box(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 14.dp)) {
+                            OutlineActionButton(
+                                text = stringResource(R.string.safe_launch_add_btn),
+                                onClick = { showAppPicker = true },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("btn_add_safe_launch_app"),
+                                color = palette.mint,
+                                border = palette.mintBorder,
+                                fill = palette.mintBg,
+                                height = 44.dp,
+                                icon = R.drawable.ic_add,
+                            )
+                        }
+                    }
+                } else {
+                    Text(
+                        text = stringResource(R.string.safe_launch_list_hint),
+                        fontSize = 12.sp,
+                        lineHeight = 17.sp,
+                        color = palette.muted,
+                    )
+                    safeLaunchPackages.forEach { pkg ->
+                        SafeLaunchAppCard(
+                            packageName = pkg,
+                            isShortcutPinned = pkg in quickSurfaceState.pinnedSafeLaunchPackages,
+                            onOpenNow = { label -> onLaunchSafeApp(pkg, label) },
+                            onPinShortcut = { label ->
+                                val ok = SafeLaunchHelper.requestPinSafeLaunchShortcut(context, pkg)
+                                if (ok) onScheduleSurfaceRefresh()
+                                onShowSnackbar(
+                                    if (ok) context.getString(R.string.safe_launch_pin_ok, label)
+                                    else context.getString(R.string.safe_launch_pin_unsupported)
+                                )
+                            },
+                            onUnpinShortcut = { label ->
+                                removeShortcutDialogLabel = label
+                            },
+                            onRemove = { onRemoveSafeLaunchPackage(pkg) },
+                        )
+                    }
+                    OutlineActionButton(
+                        text = stringResource(R.string.safe_launch_edit_btn),
+                        onClick = { showAppPicker = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("btn_add_safe_launch_app"),
+                        color = palette.mint,
+                        border = palette.mintBorder,
+                        fill = palette.mintBg,
+                        height = 46.dp,
+                        icon = R.drawable.ic_add,
+                    )
+                }
+            }
+        }
+    }
+
+    ScreenColumn(spacing = 16.dp) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = stringResource(R.string.shortcuts_title),
@@ -132,200 +330,29 @@ fun ShortcutsTab(
             )
         }
 
-        // Section 1: Quick Settings Tiles
-        SectionLabel(stringResource(R.string.section_qs_tiles))
-        SurfaceCard(modifier = Modifier.testTag("card_qs_tiles")) {
-            TileActionRow(
-                icon = R.drawable.ic_qs_usb_debug,
-                title = stringResource(R.string.tile_label),
-                description = stringResource(R.string.tile_usb_desc),
-                buttonTag = "btn_add_qs_usb",
-                isAdded = QuickTileType.USB_DEBUG in quickSurfaceState.addedTiles,
-                onAdd = { onAddUsbTile(::handleTileOutcome) },
-                onRemove = { removeTile(QuickTileType.USB_DEBUG) },
-            )
-            if (devState.supportsWirelessAdb) {
-                RowDivider()
-                TileActionRow(
-                    icon = R.drawable.ic_qs_wireless_debug,
-                    title = stringResource(R.string.tile_wireless_label),
-                    description = stringResource(R.string.tile_wireless_desc),
-                    buttonTag = "btn_add_qs_wireless",
-                    isAdded = QuickTileType.WIRELESS_DEBUG in quickSurfaceState.addedTiles,
-                    onAdd = { onAddWirelessTile(::handleTileOutcome) },
-                    onRemove = { removeTile(QuickTileType.WIRELESS_DEBUG) },
-                )
+        if (adaptive.useTwoColumnContent) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(adaptive.columnSpacingDp.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    qsTilesAndHomeSurfacesSection()
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    safeLaunchSection()
+                }
             }
-            RowDivider()
-            TileActionRow(
-                icon = R.drawable.ic_qs_dev_options,
-                title = stringResource(R.string.tile_dev_options_label),
-                description = stringResource(R.string.tile_dev_options_desc),
-                buttonTag = "btn_add_qs_dev_options",
-                isAdded = QuickTileType.DEV_OPTIONS in quickSurfaceState.addedTiles,
-                onAdd = { onAddDevOptionsTile(::handleTileOutcome) },
-                onRemove = { removeTile(QuickTileType.DEV_OPTIONS) },
-            )
-            RowDivider()
-            TileActionRow(
-                icon = R.drawable.ic_qs_keep_awake,
-                title = stringResource(R.string.tile_keep_awake_label),
-                description = stringResource(R.string.tile_keep_awake_desc),
-                buttonTag = "btn_add_qs_keep_awake",
-                isAdded = QuickTileType.KEEP_AWAKE in quickSurfaceState.addedTiles,
-                onAdd = { onAddKeepAwakeTile(::handleTileOutcome) },
-                onRemove = { removeTile(QuickTileType.KEEP_AWAKE) },
-            )
-        }
-
-        // Section 2: Home Screen Widget & Shortcut
-        SectionLabel(stringResource(R.string.section_home_surfaces))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(IntrinsicSize.Max),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            val widgetAdded = quickSurfaceState.isHomeWidgetAdded
-            OutlineActionButton(
-                text = stringResource(
-                    if (widgetAdded) R.string.btn_remove_home_widget else R.string.btn_pin_home_widget
-                ),
-                onClick = {
-                    if (widgetAdded) {
-                        showRemoveWidgetDialog = true
-                    } else {
-                        val requested = onPinHomeWidget()
-                        onShowSnackbar(
-                            context.getString(
-                                if (requested) R.string.feedback_widget_pin_requested
-                                else R.string.feedback_widget_unsupported
-                            )
-                        )
-                    }
-                },
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .testTag("btn_pin_home_widget"),
-                color = if (widgetAdded) palette.coral else palette.text,
-                border = if (widgetAdded) palette.coralBorder else palette.line,
-                fill = if (widgetAdded) palette.coralBg else palette.surface,
-                height = 50.dp,
-                icon = if (widgetAdded) R.drawable.ic_trash else R.drawable.ic_add,
-            )
-
-            val shortcutPinned = quickSurfaceState.isHomeUsbShortcutPinned
-            OutlineActionButton(
-                text = stringResource(
-                    if (shortcutPinned) R.string.btn_unpin_home_shortcut else R.string.btn_pin_home_shortcut
-                ),
-                onClick = {
-                    if (shortcutPinned) {
-                        removeShortcutDialogLabel = context.getString(R.string.shortcut_usb_short)
-                    } else {
-                        val requested = onPinHomeShortcut()
-                        onShowSnackbar(
-                            context.getString(
-                                if (requested) R.string.feedback_shortcut_pin_requested
-                                else R.string.feedback_shortcut_unsupported
-                            )
-                        )
-                    }
-                },
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .testTag("btn_pin_home_shortcut"),
-                color = if (shortcutPinned) palette.coral else palette.text,
-                border = if (shortcutPinned) palette.coralBorder else palette.line,
-                fill = if (shortcutPinned) palette.coralBg else palette.surface,
-                height = 50.dp,
-                icon = if (shortcutPinned) R.drawable.ic_trash else R.drawable.ic_add,
-            )
-        }
-
-        // Section 3: Banking / VNeID Safe Launch
-        SectionLabel(stringResource(R.string.section_safe_launch))
-
-        StatusBanner(
-            title = stringResource(R.string.section_safe_launch),
-            body = stringResource(R.string.safe_launch_desc),
-            fg = palette.blueText,
-            bodyColor = palette.soft,
-            bg = palette.blueBg,
-            border = palette.blueBorder,
-            icon = R.drawable.ic_lock,
-        )
-
-        if (!hasWritePermission) {
-            StatusBanner(
-                title = stringResource(R.string.strip_mode_a_active),
-                body = stringResource(R.string.safe_launch_mode_a_hint),
-                fg = palette.amberText,
-                bodyColor = palette.amberBody,
-                bg = palette.amberBg,
-                border = palette.amberBorder,
-            )
-        }
-
-        if (safeLaunchPackages.isEmpty()) {
-            Text(
-                text = stringResource(R.string.safe_launch_empty),
-                fontSize = 13.sp,
-                lineHeight = 19.sp,
-                color = palette.muted,
-            )
         } else {
-            safeLaunchPackages.forEach { pkg ->
-                SafeLaunchAppCard(
-                    packageName = pkg,
-                    isShortcutPinned = pkg in quickSurfaceState.pinnedSafeLaunchPackages,
-                    onOpenNow = { label ->
-                        when (SafeLaunchHelper.launchSafely(context, pkg)) {
-                            SafeLaunchResult.LaunchedClean -> {
-                                context.showToast(context.getString(R.string.safe_launch_toast_clean, label))
-                                onRefreshState()
-                            }
-                            SafeLaunchResult.NeedsPermission -> {
-                                onShowSnackbar(context.getString(R.string.safe_launch_toast_need_perm))
-                                onOpenDeveloperOptionsTop()
-                            }
-                            SafeLaunchResult.BlockedByPolicy -> {
-                                onShowSnackbar(context.getString(R.string.safe_launch_toast_blocked))
-                            }
-                            SafeLaunchResult.AppNotFound -> {
-                                onShowSnackbar(context.getString(R.string.safe_launch_toast_not_found))
-                            }
-                        }
-                    },
-                    onPinShortcut = { label ->
-                        val ok = SafeLaunchHelper.requestPinSafeLaunchShortcut(context, pkg)
-                        if (ok) onScheduleSurfaceRefresh()
-                        onShowSnackbar(
-                            if (ok) context.getString(R.string.safe_launch_pin_ok, label)
-                            else context.getString(R.string.safe_launch_pin_unsupported)
-                        )
-                    },
-                    onUnpinShortcut = { label ->
-                        removeShortcutDialogLabel = label
-                    },
-                    onRemove = { onRemoveSafeLaunchPackage(pkg) },
-                )
-            }
+            qsTilesAndHomeSurfacesSection()
+            safeLaunchSection()
         }
-
-        OutlineActionButton(
-            text = stringResource(R.string.safe_launch_add_btn),
-            onClick = { showAppPicker = true },
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("btn_add_safe_launch_app"),
-            color = palette.mint,
-            border = palette.mintBorder,
-            fill = palette.mintBg,
-            height = 48.dp,
-        )
     }
 
     if (showAppPicker) {
@@ -338,15 +365,15 @@ fun ShortcutsTab(
         )
     }
 
-    if (showRemoveWidgetDialog) {
+    removeWidgetDialogLabel?.let { label ->
         RemoveHomeSurfaceDialog(
             title = stringResource(R.string.dialog_remove_widget_title),
-            body = stringResource(R.string.dialog_remove_widget_body),
+            body = stringResource(R.string.dialog_remove_widget_body, label),
             onGoHome = {
-                showRemoveWidgetDialog = false
+                removeWidgetDialogLabel = null
                 onOpenHomeScreen()
             },
-            onDismiss = { showRemoveWidgetDialog = false },
+            onDismiss = { removeWidgetDialogLabel = null },
         )
     }
 
@@ -371,8 +398,13 @@ private fun RemoveHomeSurfaceDialog(
     onDismiss: () -> Unit,
 ) {
     val palette = AppTheme.palette
+    val adaptive = LocalAdaptiveLayout.current
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier
+            .widthIn(max = adaptive.dialogMaxWidthDp.dp)
+            .fillMaxWidth(0.92f),
+        properties = DialogProperties(usePlatformDefaultWidth = false),
         containerColor = palette.surface,
         titleContentColor = palette.text,
         textContentColor = palette.soft,
@@ -412,75 +444,140 @@ private fun RemoveHomeSurfaceDialog(
 }
 
 @Composable
-private fun TileActionRow(
-    @DrawableRes icon: Int,
+private fun QuickControlSurfaceRow(
+    tile: QuickTileType,
     title: String,
-    description: String,
-    buttonTag: String,
-    isAdded: Boolean,
-    onAdd: () -> Unit,
-    onRemove: () -> Unit,
+    isControlOn: Boolean,
+    isQsAdded: Boolean,
+    isWidgetAdded: Boolean,
+    onToggleQs: () -> Unit,
+    onToggleWidget: () -> Unit,
 ) {
     val palette = AppTheme.palette
     Row(
-        Modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 68.dp)
-            .padding(start = 14.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
+            .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        IconTile(
-            icon = icon,
-            bg = if (isAdded) palette.mintDim else palette.surface2,
-            fg = palette.mint,
-            size = 38.dp,
+        WidgetPreviewIconBox(
+            icon = tile.iconRes,
+            isOn = isControlOn,
         )
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Text(
-                    text = title,
-                    modifier = Modifier.weight(1f, fill = false),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = palette.text,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (isAdded) {
-                    Text(
-                        text = stringResource(R.string.badge_added),
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(5.dp))
-                            .background(palette.mintDim)
-                            .padding(horizontal = 5.dp, vertical = 1.dp),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = palette.mint,
-                        maxLines = 1,
-                        softWrap = false,
-                    )
-                }
-            }
+
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             Text(
-                text = description,
-                fontSize = 12.sp,
-                lineHeight = 16.sp,
-                color = palette.muted,
+                text = title,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = palette.text,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Max),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                SurfacePillButton(
+                    text = stringResource(R.string.legend_qs_tile),
+                    isAdded = isQsAdded,
+                    contentDescription = stringResource(R.string.cd_toggle_qs_tile, title),
+                    tag = "btn_qs_${tile.prefKey}",
+                    onClick = onToggleQs,
+                    modifier = Modifier
+                        .weight(1.3f)
+                        .fillMaxHeight(),
+                )
+                SurfacePillButton(
+                    text = stringResource(R.string.legend_home_widget),
+                    isAdded = isWidgetAdded,
+                    contentDescription = stringResource(R.string.cd_toggle_home_widget, title),
+                    tag = "btn_widget_${tile.prefKey}",
+                    onClick = onToggleWidget,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                )
+            }
         }
-        OutlineActionButton(
-            text = stringResource(if (isAdded) R.string.action_remove_tile else R.string.action_add_tile),
-            onClick = if (isAdded) onRemove else onAdd,
-            modifier = Modifier.testTag(buttonTag),
-            color = if (isAdded) palette.coral else palette.mint,
-            border = if (isAdded) palette.coralBorder else palette.mintBorder,
-            fill = if (isAdded) palette.coralBg else Color.Transparent,
-            height = 38.dp,
-            icon = if (isAdded) R.drawable.ic_trash else R.drawable.ic_add,
+    }
+}
+
+@Composable
+private fun WidgetPreviewIconBox(
+    @DrawableRes icon: Int,
+    isOn: Boolean,
+) {
+    val shape = RoundedCornerShape(16.dp)
+    val bg = if (isOn) Color(0xFF7EE2A8) else Color(0xFF161A1D)
+    val border = if (isOn) Color(0xFFA4F4C4) else Color(0xFF2E3740)
+    val borderWidth = if (isOn) 1.dp else 1.2.dp
+    val fg = if (isOn) Color(0xFF0B1F14) else Color(0xFFE9EDF0)
+    Box(
+        modifier = Modifier
+            .size(54.dp)
+            .clip(shape)
+            .background(bg)
+            .border(borderWidth, border, shape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null,
+            modifier = Modifier.size(26.dp),
+            tint = fg,
+        )
+    }
+}
+
+@Composable
+private fun SurfacePillButton(
+    text: String,
+    isAdded: Boolean,
+    contentDescription: String,
+    tag: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val palette = AppTheme.palette
+    val shape = RoundedCornerShape(10.dp)
+    val fg = if (isAdded) palette.mint else palette.text
+    val fill = if (isAdded) palette.mintBg else palette.surface2
+    val border = if (isAdded) palette.mintBorder else palette.line
+    Row(
+        modifier = modifier
+            .heightIn(min = 34.dp)
+            .testTag(tag)
+            .clip(shape)
+            .background(fill)
+            .border(1.dp, border, shape)
+            .clickable(onClickLabel = contentDescription, role = Role.Button, onClick = onClick)
+            .semantics { this.contentDescription = contentDescription }
+            .padding(horizontal = 8.dp, vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
+    ) {
+        Icon(
+            painter = painterResource(if (isAdded) R.drawable.ic_check else R.drawable.ic_add),
+            contentDescription = null,
+            modifier = Modifier.size(14.dp),
+            tint = if (isAdded) palette.mint else palette.muted,
+        )
+        Text(
+            text = text,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = fg,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -584,6 +681,7 @@ private fun SafeLaunchAppPickerDialog(
 ) {
     val palette = AppTheme.palette
     val context = LocalContext.current
+    val adaptive = LocalAdaptiveLayout.current
     var query by rememberSaveable { mutableStateOf("") }
     var apps by remember { mutableStateOf<List<LaunchableApp>?>(null) }
 
@@ -602,6 +700,10 @@ private fun SafeLaunchAppPickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier
+            .widthIn(max = adaptive.dialogMaxWidthDp.dp)
+            .fillMaxWidth(0.92f),
+        properties = DialogProperties(usePlatformDefaultWidth = false),
         containerColor = palette.surface,
         titleContentColor = palette.text,
         textContentColor = palette.soft,
@@ -680,7 +782,7 @@ private fun SafeLaunchAppPickerDialog(
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .heightIn(max = 340.dp),
+                                .heightIn(max = adaptive.dialogListMaxHeightDp.dp),
                             verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
                             items(filtered, key = { it.packageName }) { app ->

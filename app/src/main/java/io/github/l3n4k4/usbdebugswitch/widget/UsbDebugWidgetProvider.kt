@@ -3,20 +3,46 @@ package io.github.l3n4k4.usbdebugswitch.widget
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.widget.RemoteViews
+import androidx.annotation.DrawableRes
+import androidx.annotation.LayoutRes
+import androidx.annotation.StringRes
 import io.github.l3n4k4.usbdebugswitch.MainActivity
 import io.github.l3n4k4.usbdebugswitch.R
 import io.github.l3n4k4.usbdebugswitch.data.AndroidSettingsGateway
 import io.github.l3n4k4.usbdebugswitch.data.AppPreferences
 import io.github.l3n4k4.usbdebugswitch.data.AutoOffManager
 import io.github.l3n4k4.usbdebugswitch.data.DevSettingsController
+import io.github.l3n4k4.usbdebugswitch.model.DevState
 import io.github.l3n4k4.usbdebugswitch.shortcut.QuickSurfaceHelper
 
-/** Home screen 2x1 widget for checking and toggling USB Debugging. */
-class UsbDebugWidgetProvider : AppWidgetProvider() {
+/** Shared base for home screen 1x1 icon-style developer control widgets. */
+abstract class BaseDebugWidgetProvider : AppWidgetProvider() {
+
+    @get:LayoutRes
+    protected abstract val layoutRes: Int
+
+    @get:DrawableRes
+    protected abstract val iconRes: Int
+
+    @get:StringRes
+    protected abstract val titleRes: Int
+
+    @get:StringRes
+    protected abstract val shortTitleRes: Int
+
+    protected abstract val toggleAction: String
+
+    protected abstract fun isOn(state: DevState): Boolean
+
+    protected abstract fun canOneTap(state: DevState, privileged: Boolean): Boolean
+
+    protected abstract fun performToggle(appContext: Context, controller: DevSettingsController)
 
     override fun onUpdate(
         context: Context,
@@ -24,106 +50,193 @@ class UsbDebugWidgetProvider : AppWidgetProvider() {
         appWidgetIds: IntArray
     ) {
         for (widgetId in appWidgetIds) {
-            updateSingleWidget(context, appWidgetManager, widgetId)
+            appWidgetManager.updateAppWidget(widgetId, buildRemoteViews(context, widgetId))
         }
     }
 
-    override fun onReceive(context: Context, intent: Intent) {
-        super.onReceive(context, intent)
-        if (intent.action == ACTION_WIDGET_TOGGLE) {
-            val appContext = context.applicationContext ?: context
-            val controller = DevSettingsController(AndroidSettingsGateway(appContext))
-            val state = controller.readState()
-            if (!state.blockedByPolicy && controller.hasWritePermission()) {
-                if (controller.toggleUsbDebugging()) {
-                    AutoOffManager(appContext, AppPreferences(appContext))
-                        .scheduleIfEnabled(controller.readState().adbEnabled)
-                }
+    internal fun handleToggle(context: Context) {
+        val appContext = context.applicationContext ?: context
+        val controller = DevSettingsController(AndroidSettingsGateway(appContext))
+        val state = controller.readState()
+        if (canOneTap(state, controller.hasWritePermission())) {
+            performToggle(appContext, controller)
+        }
+        QuickSurfaceHelper.syncAllSurfaces(appContext)
+    }
+
+    internal fun updateAllOfType(context: Context) {
+        val manager = AppWidgetManager.getInstance(context)
+        val ids = manager.getAppWidgetIds(ComponentName(context, this::class.java))
+        for (id in ids) {
+            manager.updateAppWidget(id, buildRemoteViews(context, id))
+        }
+    }
+
+    internal fun buildRemoteViews(context: Context, appWidgetId: Int): RemoteViews {
+        val appContext = context.applicationContext ?: context
+        val controller = DevSettingsController(AndroidSettingsGateway(appContext))
+        val state = controller.readState()
+        val privileged = controller.hasWritePermission()
+        val active = isOn(state)
+        val oneTapReady = canOneTap(state, privileged)
+
+        val views = RemoteViews(context.packageName, layoutRes)
+        views.setInt(
+            R.id.widget_tile_box,
+            "setBackgroundResource",
+            if (active) R.drawable.bg_widget_icon_on else R.drawable.bg_widget_icon_off
+        )
+        views.setImageViewResource(R.id.widget_icon, iconRes)
+        views.setInt(
+            R.id.widget_icon,
+            "setColorFilter",
+            if (active) COLOR_ICON_ON else COLOR_ICON_OFF
+        )
+        views.setTextViewText(R.id.widget_title, context.getString(shortTitleRes))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            views.setContentDescription(
+                R.id.widget_root,
+                "${context.getString(titleRes)}: ${context.getString(if (active) R.string.widget_state_on else R.string.widget_state_off)}"
+            )
+        }
+
+        val tapPendingIntent = if (oneTapReady) {
+            val toggleIntent = Intent(context, WidgetToggleReceiver::class.java).apply {
+                action = toggleAction
             }
-            QuickSurfaceHelper.syncAllSurfaces(appContext)
+            PendingIntent.getBroadcast(
+                context,
+                appWidgetId,
+                toggleIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        } else {
+            val openAppIntent = Intent(context, MainActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            }
+            PendingIntent.getActivity(
+                context,
+                appWidgetId,
+                openAppIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        }
+
+        views.setOnClickPendingIntent(R.id.widget_root, tapPendingIntent)
+        return views
+    }
+
+    companion object {
+        private const val COLOR_ICON_ON = 0xFF0B1F14.toInt()
+        private const val COLOR_ICON_OFF = 0xFFE9EDF0.toInt()
+    }
+}
+
+/** Home screen 1x1 icon widget for checking and toggling USB Debugging. */
+class UsbDebugWidgetProvider : BaseDebugWidgetProvider() {
+
+    override val layoutRes: Int = R.layout.widget_usb_debug
+    override val iconRes: Int = R.drawable.ic_qs_usb_debug
+    override val titleRes: Int = R.string.widget_label
+    override val shortTitleRes: Int = R.string.widget_short_usb
+    override val toggleAction: String = ACTION_WIDGET_TOGGLE
+
+    override fun isOn(state: DevState): Boolean = state.adbEnabled && !state.blockedByPolicy
+
+    override fun canOneTap(state: DevState, privileged: Boolean): Boolean =
+        privileged && !state.blockedByPolicy
+
+    override fun performToggle(appContext: Context, controller: DevSettingsController) {
+        if (controller.toggleUsbDebugging()) {
+            AutoOffManager(appContext, AppPreferences(appContext))
+                .scheduleIfEnabled(controller.readState().adbEnabled)
         }
     }
 
     companion object {
         const val ACTION_WIDGET_TOGGLE = "io.github.l3n4k4.usbdebugswitch.ACTION_WIDGET_TOGGLE"
+        const val ACTION_WIDGET_TOGGLE_WIRELESS = "io.github.l3n4k4.usbdebugswitch.ACTION_WIDGET_TOGGLE_WIRELESS"
+        const val ACTION_WIDGET_TOGGLE_DEV_OPTIONS = "io.github.l3n4k4.usbdebugswitch.ACTION_WIDGET_TOGGLE_DEV_OPTIONS"
+        const val ACTION_WIDGET_TOGGLE_KEEP_AWAKE = "io.github.l3n4k4.usbdebugswitch.ACTION_WIDGET_TOGGLE_KEEP_AWAKE"
 
         fun updateAllWidgets(context: Context) {
-            val manager = AppWidgetManager.getInstance(context)
-            val ids = manager.getAppWidgetIds(ComponentName(context, UsbDebugWidgetProvider::class.java))
-            if (ids.isNotEmpty()) {
-                for (id in ids) {
-                    updateSingleWidget(context, manager, id)
-                }
-            }
+            listOf(
+                UsbDebugWidgetProvider(),
+                WirelessDebugWidgetProvider(),
+                DevOptionsWidgetProvider(),
+                KeepAwakeWidgetProvider(),
+            ).forEach { it.updateAllOfType(context) }
         }
+    }
+}
 
-        private fun updateSingleWidget(
-            context: Context,
-            appWidgetManager: AppWidgetManager,
-            appWidgetId: Int
-        ) {
-            val appContext = context.applicationContext ?: context
-            val controller = DevSettingsController(AndroidSettingsGateway(appContext))
-            val state = controller.readState()
-            val privileged = controller.hasWritePermission()
-            val canOneTap = privileged && !state.blockedByPolicy
+/** Home screen 1x1 icon widget for checking and toggling Wireless Debugging. */
+class WirelessDebugWidgetProvider : BaseDebugWidgetProvider() {
 
-            val views = RemoteViews(context.packageName, R.layout.widget_usb_debug)
-            views.setTextViewText(
-                R.id.widget_title,
-                context.getString(R.string.widget_label)
-            )
-            views.setInt(
-                R.id.widget_root,
-                "setBackgroundResource",
-                if (state.adbEnabled) R.drawable.bg_widget_pill_on else R.drawable.bg_widget_pill_off
-            )
-            views.setInt(
-                R.id.widget_badge,
-                "setBackgroundResource",
-                if (state.adbEnabled) R.drawable.bg_widget_badge_on else R.drawable.bg_widget_badge_off
-            )
-            views.setTextViewText(
-                R.id.widget_badge,
-                context.getString(
-                    if (state.adbEnabled) R.string.widget_state_on else R.string.widget_state_off
-                )
-            )
-            views.setTextViewText(
-                R.id.widget_subtitle,
-                context.getString(
-                    when {
-                        state.blockedByPolicy -> R.string.tile_subtitle_blocked
-                        privileged -> R.string.widget_hint_one_tap
-                        else -> R.string.widget_hint_open
-                    }
-                )
-            )
+    override val layoutRes: Int = R.layout.widget_wireless_debug
+    override val iconRes: Int = R.drawable.ic_qs_wireless_debug
+    override val titleRes: Int = R.string.tile_wireless_label
+    override val shortTitleRes: Int = R.string.widget_short_wireless
+    override val toggleAction: String = UsbDebugWidgetProvider.ACTION_WIDGET_TOGGLE_WIRELESS
 
-            val tapPendingIntent = if (canOneTap) {
-                val toggleIntent = Intent(context, UsbDebugWidgetProvider::class.java).apply {
-                    action = ACTION_WIDGET_TOGGLE
-                }
-                PendingIntent.getBroadcast(
-                    context,
-                    appWidgetId,
-                    toggleIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-            } else {
-                val openAppIntent = Intent(context, MainActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                }
-                PendingIntent.getActivity(
-                    context,
-                    appWidgetId,
-                    openAppIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-            }
+    override fun isOn(state: DevState): Boolean =
+        state.supportsWirelessAdb && state.wirelessAdbEnabled && !state.blockedByPolicy
 
-            views.setOnClickPendingIntent(R.id.widget_root, tapPendingIntent)
-            appWidgetManager.updateAppWidget(appWidgetId, views)
+    override fun canOneTap(state: DevState, privileged: Boolean): Boolean =
+        privileged && !state.blockedByPolicy && state.supportsWirelessAdb
+
+    override fun performToggle(appContext: Context, controller: DevSettingsController) {
+        controller.toggleWirelessDebugging()
+    }
+}
+
+/** Home screen 1x1 icon widget for showing or hiding Developer Options. */
+class DevOptionsWidgetProvider : BaseDebugWidgetProvider() {
+
+    override val layoutRes: Int = R.layout.widget_dev_options
+    override val iconRes: Int = R.drawable.ic_qs_dev_options
+    override val titleRes: Int = R.string.tile_dev_options_label
+    override val shortTitleRes: Int = R.string.widget_short_dev
+    override val toggleAction: String = UsbDebugWidgetProvider.ACTION_WIDGET_TOGGLE_DEV_OPTIONS
+
+    override fun isOn(state: DevState): Boolean = state.devOptionsEnabled && !state.blockedByPolicy
+
+    override fun canOneTap(state: DevState, privileged: Boolean): Boolean =
+        privileged && !state.blockedByPolicy
+
+    override fun performToggle(appContext: Context, controller: DevSettingsController) {
+        if (controller.toggleDeveloperOptions() && !controller.readState().devOptionsEnabled) {
+            AutoOffManager(appContext, AppPreferences(appContext)).cancel()
+        }
+    }
+}
+
+/** Home screen 1x1 icon widget for toggling Keep Awake while plugged in. */
+class KeepAwakeWidgetProvider : BaseDebugWidgetProvider() {
+
+    override val layoutRes: Int = R.layout.widget_keep_awake
+    override val iconRes: Int = R.drawable.ic_qs_keep_awake
+    override val titleRes: Int = R.string.tile_keep_awake_label
+    override val shortTitleRes: Int = R.string.widget_short_awake
+    override val toggleAction: String = UsbDebugWidgetProvider.ACTION_WIDGET_TOGGLE_KEEP_AWAKE
+
+    override fun isOn(state: DevState): Boolean = state.keepAwakeEnabled
+
+    override fun canOneTap(state: DevState, privileged: Boolean): Boolean = privileged
+
+    override fun performToggle(appContext: Context, controller: DevSettingsController) {
+        controller.toggleKeepAwake()
+    }
+}
+
+/** Internal non-exported receiver executing privileged widget 1-tap toggles safely. */
+class WidgetToggleReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        when (intent.action) {
+            UsbDebugWidgetProvider.ACTION_WIDGET_TOGGLE -> UsbDebugWidgetProvider().handleToggle(context)
+            UsbDebugWidgetProvider.ACTION_WIDGET_TOGGLE_WIRELESS -> WirelessDebugWidgetProvider().handleToggle(context)
+            UsbDebugWidgetProvider.ACTION_WIDGET_TOGGLE_DEV_OPTIONS -> DevOptionsWidgetProvider().handleToggle(context)
+            UsbDebugWidgetProvider.ACTION_WIDGET_TOGGLE_KEEP_AWAKE -> KeepAwakeWidgetProvider().handleToggle(context)
         }
     }
 }

@@ -1,14 +1,25 @@
 package io.github.l3n4k4.usbdebugswitch
 
+import android.Manifest
+import android.app.Application
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.provider.Settings
+import android.widget.FrameLayout
 import androidx.test.core.app.ApplicationProvider
 import io.github.l3n4k4.usbdebugswitch.data.AppPreferences
 import io.github.l3n4k4.usbdebugswitch.shortcut.QuickSurfaceHelper
 import io.github.l3n4k4.usbdebugswitch.shortcut.QuickTileType
 import io.github.l3n4k4.usbdebugswitch.shortcut.TileAddOutcome
 import io.github.l3n4k4.usbdebugswitch.tile.UsbDebugTileService
+import io.github.l3n4k4.usbdebugswitch.widget.DevOptionsWidgetProvider
+import io.github.l3n4k4.usbdebugswitch.widget.KeepAwakeWidgetProvider
+import io.github.l3n4k4.usbdebugswitch.widget.UsbDebugWidgetProvider
+import io.github.l3n4k4.usbdebugswitch.widget.WidgetToggleReceiver
+import io.github.l3n4k4.usbdebugswitch.widget.WirelessDebugWidgetProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -16,6 +27,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
@@ -103,5 +115,63 @@ class QuickSurfaceHelperTest {
 
         val updatedState = QuickSurfaceHelper.readSurfaceState(context, AppPreferences(context))
         assertFalse(QuickTileType.USB_DEBUG in updatedState.addedTiles)
+    }
+
+    @Test
+    fun `QuickTileType registers distinct service and widget providers for all 4 controls`() {
+        val entries = QuickTileType.entries
+        assertEquals(4, entries.size)
+        assertEquals(4, entries.map { it.serviceClass }.toSet().size)
+        assertEquals(4, entries.map { it.widgetProviderClass }.toSet().size)
+
+        val state = QuickSurfaceHelper.readSurfaceState(context, AppPreferences(context))
+        assertTrue(state.addedWidgets.isEmpty())
+        assertFalse(state.isHomeWidgetAdded)
+    }
+
+    @Test
+    fun `all 4 1x1 widget providers inflate and apply RemoteViews cleanly`() {
+        val providers = listOf(
+            UsbDebugWidgetProvider(),
+            WirelessDebugWidgetProvider(),
+            DevOptionsWidgetProvider(),
+            KeepAwakeWidgetProvider(),
+        )
+        val container = FrameLayout(context)
+        providers.forEachIndexed { idx, provider ->
+            val views = provider.buildRemoteViews(context, appWidgetId = idx + 1)
+            val inflated = views.apply(context, container)
+            assertTrue(inflated != null)
+        }
+    }
+
+    @Test
+    fun `widget toggle executes only through non-exported WidgetToggleReceiver`() {
+        val pm = context.packageManager
+        val receiverInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            pm.getReceiverInfo(
+                ComponentName(context, WidgetToggleReceiver::class.java),
+                PackageManager.ComponentInfoFlags.of(0L)
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            pm.getReceiverInfo(ComponentName(context, WidgetToggleReceiver::class.java), 0)
+        }
+        assertFalse(receiverInfo.exported)
+
+        Shadows.shadowOf(context as Application)
+            .grantPermissions(Manifest.permission.WRITE_SECURE_SETTINGS)
+        Settings.Global.putInt(context.contentResolver, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0)
+        Settings.Global.putInt(context.contentResolver, Settings.Global.ADB_ENABLED, 0)
+
+        // External broadcast targeting the exported AppWidgetProvider must not toggle privileged settings.
+        UsbDebugWidgetProvider().onReceive(context, Intent(UsbDebugWidgetProvider.ACTION_WIDGET_TOGGLE))
+        assertEquals(0, Settings.Global.getInt(context.contentResolver, Settings.Global.ADB_ENABLED, 0))
+        assertEquals(0, Settings.Global.getInt(context.contentResolver, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0))
+
+        // Internal broadcast targeting the non-exported WidgetToggleReceiver performs the 1-tap toggle.
+        WidgetToggleReceiver().onReceive(context, Intent(UsbDebugWidgetProvider.ACTION_WIDGET_TOGGLE))
+        assertEquals(1, Settings.Global.getInt(context.contentResolver, Settings.Global.ADB_ENABLED, 0))
+        assertEquals(1, Settings.Global.getInt(context.contentResolver, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0))
     }
 }

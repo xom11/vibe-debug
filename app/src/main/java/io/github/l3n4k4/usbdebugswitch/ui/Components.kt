@@ -6,6 +6,7 @@ import android.content.Context
 import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,14 +18,19 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
@@ -90,16 +96,28 @@ enum class AppTab(
 fun ScreenColumn(
     modifier: Modifier = Modifier,
     spacing: Dp = 14.dp,
+    scrollState: ScrollState = rememberScrollState(),
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Column(
+    val adaptive = LocalAdaptiveLayout.current
+    Box(
         modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(spacing),
-        content = content,
-    )
+            .verticalScroll(scrollState),
+        contentAlignment = Alignment.TopCenter,
+    ) {
+        Column(
+            modifier = Modifier
+                .widthIn(max = adaptive.contentMaxWidthDp.dp)
+                .fillMaxWidth()
+                .padding(
+                    horizontal = adaptive.horizontalPaddingDp.dp,
+                    vertical = adaptive.verticalPaddingDp.dp,
+                ),
+            verticalArrangement = Arrangement.spacedBy(spacing),
+            content = content,
+        )
+    }
 }
 
 @Composable
@@ -119,6 +137,7 @@ fun SectionLabel(text: String, modifier: Modifier = Modifier) {
 @Composable
 fun SurfaceCard(
     modifier: Modifier = Modifier,
+    verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val palette = AppTheme.palette
@@ -129,6 +148,7 @@ fun SurfaceCard(
             .clip(shape)
             .background(palette.surface)
             .border(1.dp, palette.line, shape),
+        verticalArrangement = verticalArrangement,
         content = content,
     )
 }
@@ -633,7 +653,11 @@ fun BottomNavBar(
                     strokeWidth = 1.dp.toPx(),
                 )
             }
-            .windowInsetsPadding(WindowInsets.navigationBars)
+            .windowInsetsPadding(
+                WindowInsets.systemBars
+                    .union(WindowInsets.displayCutout)
+                    .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
+            )
             .padding(horizontal = 12.dp, vertical = 8.dp),
     ) {
         AppTab.entries.forEach { tab ->
@@ -641,6 +665,107 @@ fun BottomNavBar(
                 tab = tab,
                 selected = tab == currentTab,
                 onClick = { onSelect(tab) },
+            )
+        }
+    }
+}
+
+@Composable
+fun SideNavRail(
+    currentTab: AppTab,
+    onSelect: (AppTab) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val palette = AppTheme.palette
+    val adaptive = LocalAdaptiveLayout.current
+    val dividerColor = palette.divider
+    val showLabels = adaptive.heightDp >= 300
+    Column(
+        modifier
+            .fillMaxHeight()
+            .background(palette.bg)
+            .drawBehind {
+                drawLine(
+                    color = dividerColor,
+                    start = Offset(size.width, 0f),
+                    end = Offset(size.width, size.height),
+                    strokeWidth = 1.dp.toPx(),
+                )
+            }
+            .windowInsetsPadding(
+                WindowInsets.systemBars
+                    .union(WindowInsets.displayCutout)
+                    .only(WindowInsetsSides.Vertical + WindowInsetsSides.Start)
+            )
+            .width(adaptive.railWidthDp.dp)
+            .padding(
+                horizontal = 8.dp,
+                vertical = if (adaptive.isCompactHeight) 6.dp else adaptive.verticalPaddingDp.dp,
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(
+            if (adaptive.isCompactHeight) 6.dp else 10.dp,
+            if (adaptive.isCompactHeight) Alignment.CenterVertically else Alignment.Top,
+        ),
+    ) {
+        AppTab.entries.forEach { tab ->
+            RailNavItem(
+                tab = tab,
+                selected = tab == currentTab,
+                compact = adaptive.isCompactHeight,
+                showLabel = showLabels,
+                onClick = { onSelect(tab) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun RailNavItem(
+    tab: AppTab,
+    selected: Boolean,
+    compact: Boolean,
+    showLabel: Boolean,
+    onClick: () -> Unit,
+) {
+    val palette = AppTheme.palette
+    val label = stringResource(tab.labelRes)
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .testTag(tab.tag)
+            .clip(RoundedCornerShape(12.dp))
+            .selectable(selected = selected, role = Role.Tab, onClick = onClick)
+            .then(
+                if (showLabel) Modifier
+                else Modifier.semantics { contentDescription = label }
+            )
+            .padding(vertical = if (compact) 4.dp else 6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Box(
+            Modifier
+                .size(width = 56.dp, height = 30.dp)
+                .clip(RoundedCornerShape(15.dp))
+                .background(if (selected) palette.mintDim else Color.Transparent),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(tab.iconRes),
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = if (selected) palette.mint else palette.muted,
+            )
+        }
+        if (showLabel) {
+            Text(
+                text = label,
+                fontSize = 11.sp,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                color = if (selected) palette.text else palette.muted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }

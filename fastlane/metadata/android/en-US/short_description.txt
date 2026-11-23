@@ -1,0 +1,1 @@
+Inspect and switch USB & Wireless Debugging in 1 tap with auto-off timer

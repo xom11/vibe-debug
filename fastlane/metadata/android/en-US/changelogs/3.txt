@@ -1,0 +1,5 @@
+• Security hardening: isolated widget toggle broadcast handling into a non-exported receiver
+• Upgraded targetSdk / compileSdk to Android 16 (API 36) with adaptive tablet & foldable layout
+• Added 4 Quick Settings tiles and 4 1x1 Home Screen widgets (USB Debug, Wireless Debug, Developer Options, Keep Awake)
+• Added Clean Launch (Turn Off Debug & Launch) with pinned badged shortcuts
+• Added Safety Auto-Off Timer (15 / 30 / 60 min)

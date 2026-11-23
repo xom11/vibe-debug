@@ -1,0 +1,19 @@
+VibeADB là tiện ích Android nhẹ, không quyền Internet và không quảng cáo, giúp kiểm tra và bật/tắt nhanh Gỡ lỗi USB, Gỡ lỗi không dây, Tuỳ chọn nhà phát triển và Giữ màn hình sáng mà không phải tìm sâu trong Cài đặt.
+
+Tính năng nổi bật:
+
+• Dùng ngay không cần máy tính (Chế độ mở nhanh):
+  - Tự nhận diện khi Chế độ nhà phát triển đang tắt và hiển thị hướng dẫn mở khoá đúng theo từng hãng (Samsung, OPPO / Realme / OnePlus, Xiaomi / Redmi / POCO, Vivo / iQOO, Pixel / Android gốc) kèm nút nhảy thẳng tới mục Số phiên bản.
+  - Theo dõi trực tiếp Gỡ lỗi USB, Gỡ lỗi không dây (Android 11+), Chế độ nhà phát triển, Giữ màn hình sáng và cuộn tới đúng công tắc trong Cài đặt.
+
+• Chế độ 1 chạm (WRITE_SECURE_SETTINGS):
+  - Cấp quyền 1 lần qua ADB hoặc Shizuku (có sẵn lệnh cài đè cho ColorOS / OxygenOS 15–16+) để bật/tắt trực tiếp ngay trong app, trên 4 ô Cài đặt nhanh (cạnh nút Wi-Fi / Đèn pin) và 4 Widget 1×1 ngoài màn hình chính.
+
+• Tắt gỡ lỗi & Mở app (Clean Launch):
+  - Thêm ứng dụng ngân hàng, VNeID, ví điện tử hoặc app yêu cầu tắt gỡ lỗi để tự động tắt sạch Chế độ nhà phát triển chỉ với 1 chạm trước khi mở, hoặc ghim lối tắt 1×1 ra màn hình chính.
+
+• Hẹn giờ tự tắt an toàn (15 / 30 / 60 phút):
+  - Tự động tắt Gỡ lỗi USB bằng bộ hẹn giờ tiết kiệm pin chuẩn Android, không chạy dịch vụ nền.
+
+• Riêng tư tuyệt đối:
+  - Không xin quyền INTERNET, không theo dõi, không quảng cáo, mã nguồn mở GPL-3.0-or-later.

@@ -2,6 +2,7 @@ package io.github.l3n4k4.usbdebugswitch
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.res.Configuration
 import androidx.test.core.app.ApplicationProvider
 import io.github.l3n4k4.usbdebugswitch.data.AppPreferences
 import io.github.l3n4k4.usbdebugswitch.data.AutoOffManager
@@ -16,6 +17,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import java.util.Locale
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
@@ -154,5 +156,37 @@ class AutoOffAndPreferencesTest {
 
         autoOffManager.scheduleIfEnabled(usbEnabled = false)
         assertEquals(0L, prefs.autoOffTargetAtMs)
+    }
+
+    @Test
+    fun `clean launch strings stay generalized in English and localized in Vietnamese`() {
+        val enConfig = Configuration(context.resources.configuration).apply {
+            setLocale(Locale.ENGLISH)
+        }
+        val enContext = context.createConfigurationContext(enConfig)
+
+        val enIds = listOf(
+            R.string.section_safe_launch,
+            R.string.safe_launch_desc,
+            R.string.safe_launch_list_hint,
+            R.string.badge_banking_suggested,
+        )
+        enIds.forEach { resId ->
+            val value = enContext.getString(resId)
+            assertTrue("Expected non-blank English string for $resId", value.isNotBlank())
+            assertFalse(
+                "English string $resId should not hardcode VNeID: $value",
+                value.contains("VNeID", ignoreCase = true),
+            )
+        }
+
+        val viConfig = Configuration(context.resources.configuration).apply {
+            setLocale(Locale("vi"))
+        }
+        val viContext = context.createConfigurationContext(viConfig)
+        assertEquals("Tắt gỡ lỗi & Mở app", viContext.getString(R.string.section_safe_launch))
+        assertTrue(viContext.getString(R.string.safe_launch_desc).isNotBlank())
+        assertTrue(viContext.getString(R.string.safe_launch_list_hint).isNotBlank())
+        assertEquals("Gợi ý", viContext.getString(R.string.badge_banking_suggested))
     }
 }

@@ -85,8 +85,9 @@ fun HomeTab(
 ) {
     val palette = AppTheme.palette
     val context = LocalContext.current
+    val adaptive = LocalAdaptiveLayout.current
     val now = rememberNow(active = hasWritePermission && devState.adbEnabled && autoOffTargetAtMs > 0L)
-    var selectedBrand by remember(detectedBrand) { mutableStateOf(detectedBrand) }
+    var selectedBrand by rememberSaveable(detectedBrand) { mutableStateOf(detectedBrand) }
     var showBrandPicker by rememberSaveable { mutableStateOf(false) }
 
     val deviceBrandLabel = remember {
@@ -222,179 +223,247 @@ fun HomeTab(
             }
         }
 
-        // Signature USB Hero Card
-        UsbHeroCard(
-            devState = devState,
-            hasWritePermission = hasWritePermission,
-            autoJumpEnabled = autoJumpEnabled,
-            autoOffEnabled = autoOffEnabled,
-            autoOffMinutes = autoOffMinutes,
-            autoOffTargetAtMs = autoOffTargetAtMs,
-            nowMs = now,
-            onHeroPowerClick = {
-                if (hasWritePermission) {
-                    onSetUsbDebugging(!devState.adbEnabled)
-                } else {
-                    if (devState.devOptionsEnabled) onOpenEnableAdbScreen() else onOpenBuildNumberScreen()
-                }
-            },
-            onToggleAutoOffChip = {
-                val next = !autoOffEnabled
-                onToggleAutoOff(next)
-                context.showToast(
-                    if (next) context.getString(R.string.toast_auto_off_enabled, autoOffMinutes)
-                    else context.getString(R.string.toast_auto_off_disabled)
-                )
-            },
-            onToggleAutoJumpChip = {
-                val next = !autoJumpEnabled
-                onAutoJumpChanged(next)
-                context.showToast(
-                    context.getString(if (next) R.string.toast_auto_jump_on else R.string.toast_auto_jump_off)
-                )
-            },
-        )
-
-        // OEM Unlock Guide (only in Mode A when Developer Options is OFF and not policy-blocked)
-        if (!hasWritePermission && !devState.devOptionsEnabled && !devState.blockedByPolicy) {
-            OemUnlockGuideCard(
-                selectedBrand = selectedBrand,
-                showBrandPicker = showBrandPicker,
-                onToggleBrandPicker = { showBrandPicker = !showBrandPicker },
-                onSelectBrand = { selectedBrand = it },
-                onOpenBuildNumberScreen = onOpenBuildNumberScreen,
-            )
-        }
-
-        SectionLabel(stringResource(R.string.section_controls))
-
-        // Wireless Debugging Wide Card
-        if (devState.supportsWirelessAdb) {
-            WirelessDebugCard(
+        val heroCard: @Composable (Modifier) -> Unit = { cardModifier ->
+            // Signature USB Hero Card
+            UsbHeroCard(
                 devState = devState,
                 hasWritePermission = hasWritePermission,
-                onClick = {
+                autoJumpEnabled = autoJumpEnabled,
+                autoOffEnabled = autoOffEnabled,
+                autoOffMinutes = autoOffMinutes,
+                autoOffTargetAtMs = autoOffTargetAtMs,
+                nowMs = now,
+                modifier = cardModifier,
+                onHeroPowerClick = {
                     if (hasWritePermission) {
-                        onSetWirelessDebugging(!devState.wirelessAdbEnabled)
+                        onSetUsbDebugging(!devState.adbEnabled)
                     } else {
-                        if (devState.devOptionsEnabled) onOpenEnableWirelessAdbScreen() else onOpenBuildNumberScreen()
+                        if (devState.devOptionsEnabled) onOpenEnableAdbScreen() else onOpenBuildNumberScreen()
                     }
+                },
+                onToggleAutoOffChip = {
+                    val next = !autoOffEnabled
+                    onToggleAutoOff(next)
+                    context.showToast(
+                        if (next) context.getString(R.string.toast_auto_off_enabled, autoOffMinutes)
+                        else context.getString(R.string.toast_auto_off_disabled)
+                    )
+                },
+                onToggleAutoJumpChip = {
+                    val next = !autoJumpEnabled
+                    onAutoJumpChanged(next)
+                    context.showToast(
+                        context.getString(if (next) R.string.toast_auto_jump_on else R.string.toast_auto_jump_off)
+                    )
                 },
             )
         }
 
-        // Equal-height 2-Column Controls: Developer Options & Keep Awake
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(IntrinsicSize.Max),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            SmallControlCard(
-                icon = R.drawable.ic_qs_dev_options,
-                title = stringResource(R.string.label_developer_mode),
-                subtitle = stringResource(
-                    if (devState.devOptionsEnabled) R.string.dev_menu_visible else R.string.dev_menu_hidden
-                ),
-                isOn = devState.devOptionsEnabled,
-                hasWritePermission = hasWritePermission,
-                enabled = !devState.blockedByPolicy,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .testTag("card_dev_options"),
-                onClick = {
-                    if (hasWritePermission) {
-                        onSetDeveloperOptions(!devState.devOptionsEnabled)
-                    } else {
-                        if (devState.devOptionsEnabled) onOpenDeveloperOptionsTop() else onOpenBuildNumberScreen()
-                    }
-                },
-            )
-
-            SmallControlCard(
-                icon = R.drawable.ic_qs_keep_awake,
-                title = stringResource(R.string.label_keep_awake),
-                subtitle = when {
-                    devState.keepAwakeEnabled -> stringResource(R.string.awake_while_charging)
-                    hasWritePermission -> stringResource(R.string.awake_off)
-                    else -> stringResource(R.string.awake_mode_a_hint)
-                },
-                isOn = devState.keepAwakeEnabled,
-                hasWritePermission = hasWritePermission,
-                enabled = !devState.blockedByPolicy || hasWritePermission,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .testTag("card_keep_awake"),
-                onClick = {
-                    if (hasWritePermission) {
-                        onSetKeepAwake(!devState.keepAwakeEnabled)
-                    } else {
-                        if (devState.devOptionsEnabled) onOpenDeveloperOptionsTop() else onOpenBuildNumberScreen()
-                    }
-                },
-            )
-        }
-
-        // Banking / VNeID Helper Row
-        SectionLabel(stringResource(R.string.section_banking_helper))
-        val bankingShape = RoundedCornerShape(16.dp)
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .testTag("card_banking_helper")
-                .clip(bankingShape)
-                .background(palette.surface)
-                .border(1.dp, palette.line, bankingShape)
-                .clickable(
-                    enabled = !devState.blockedByPolicy,
-                    role = Role.Button,
-                ) {
-                    if (hasWritePermission) {
-                        onNavigateTab(AppTab.SHORTCUTS)
-                    } else {
-                        onOpenDeveloperOptionsTop()
-                    }
-                }
-                .padding(horizontal = 14.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            IconTile(
-                icon = R.drawable.ic_lock,
-                bg = palette.blueBg,
-                fg = palette.blue,
-                size = 38.dp,
-            )
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = stringResource(
-                        if (hasWritePermission) R.string.banking_helper_mode_b_title
-                        else R.string.banking_helper_mode_a_title
-                    ),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = palette.text,
-                )
-                Text(
-                    text = stringResource(
-                        if (hasWritePermission) R.string.banking_helper_mode_b_sub
-                        else R.string.banking_helper_mode_a_sub
-                    ),
-                    fontSize = 12.sp,
-                    lineHeight = 17.sp,
-                    color = palette.muted,
+        val oemGuideSection: @Composable () -> Unit = {
+            // OEM Unlock Guide (only in Mode A when Developer Options is OFF and not policy-blocked)
+            if (!hasWritePermission && !devState.devOptionsEnabled && !devState.blockedByPolicy) {
+                OemUnlockGuideCard(
+                    selectedBrand = selectedBrand,
+                    showBrandPicker = showBrandPicker,
+                    onToggleBrandPicker = { showBrandPicker = !showBrandPicker },
+                    onSelectBrand = { selectedBrand = it },
+                    onOpenBuildNumberScreen = onOpenBuildNumberScreen,
                 )
             }
-            Icon(
-                painter = painterResource(
-                    if (hasWritePermission) R.drawable.ic_chevron else R.drawable.ic_open_external
-                ),
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = palette.muted,
-            )
+        }
+
+        val devModeSubtitle = when {
+            !devState.devOptionsEnabled -> stringResource(R.string.dev_menu_hidden)
+            !hasWritePermission -> stringResource(R.string.dev_menu_visible_mode_a)
+            else -> stringResource(R.string.dev_menu_visible)
+        }
+        val onDevModeClick = {
+            if (hasWritePermission) {
+                onSetDeveloperOptions(!devState.devOptionsEnabled)
+            } else {
+                if (devState.devOptionsEnabled) onOpenDeveloperOptionsTop() else onOpenBuildNumberScreen()
+            }
+        }
+        val keepAwakeSubtitle = when {
+            devState.keepAwakeEnabled -> stringResource(R.string.awake_while_charging)
+            hasWritePermission -> stringResource(R.string.awake_off)
+            else -> stringResource(R.string.awake_mode_a_hint)
+        }
+        val onKeepAwakeClick = {
+            if (hasWritePermission) {
+                onSetKeepAwake(!devState.keepAwakeEnabled)
+            } else {
+                if (devState.devOptionsEnabled) onOpenDeveloperOptionsTop() else onOpenBuildNumberScreen()
+            }
+        }
+
+        val wirelessCard: @Composable () -> Unit = {
+            if (devState.supportsWirelessAdb) {
+                WirelessDebugCard(
+                    devState = devState,
+                    hasWritePermission = hasWritePermission,
+                    onClick = {
+                        if (hasWritePermission) {
+                            onSetWirelessDebugging(!devState.wirelessAdbEnabled)
+                        } else {
+                            if (devState.devOptionsEnabled) onOpenEnableWirelessAdbScreen() else onOpenBuildNumberScreen()
+                        }
+                    },
+                )
+            }
+        }
+
+        if (adaptive.useTwoColumnContent) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Max),
+                horizontalArrangement = Arrangement.spacedBy(adaptive.columnSpacingDp.dp),
+            ) {
+                heroCard(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                )
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    wirelessCard()
+                    if (adaptive.canFitSideBySideSubCards) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            SmallControlCard(
+                                icon = R.drawable.ic_qs_dev_options,
+                                title = stringResource(R.string.label_developer_mode),
+                                subtitle = devModeSubtitle,
+                                isOn = devState.devOptionsEnabled,
+                                hasWritePermission = hasWritePermission,
+                                enabled = !devState.blockedByPolicy,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .testTag("card_dev_options"),
+                                onClick = onDevModeClick,
+                            )
+
+                            SmallControlCard(
+                                icon = R.drawable.ic_qs_keep_awake,
+                                title = stringResource(R.string.label_keep_awake),
+                                subtitle = keepAwakeSubtitle,
+                                isOn = devState.keepAwakeEnabled,
+                                hasWritePermission = hasWritePermission,
+                                enabled = !devState.blockedByPolicy || hasWritePermission,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .testTag("card_keep_awake"),
+                                onClick = onKeepAwakeClick,
+                            )
+                        }
+                    } else {
+                        SmallControlCard(
+                            icon = R.drawable.ic_qs_dev_options,
+                            title = stringResource(R.string.label_developer_mode),
+                            subtitle = devModeSubtitle,
+                            isOn = devState.devOptionsEnabled,
+                            hasWritePermission = hasWritePermission,
+                            enabled = !devState.blockedByPolicy,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("card_dev_options"),
+                            onClick = onDevModeClick,
+                        )
+
+                        SmallControlCard(
+                            icon = R.drawable.ic_qs_keep_awake,
+                            title = stringResource(R.string.label_keep_awake),
+                            subtitle = keepAwakeSubtitle,
+                            isOn = devState.keepAwakeEnabled,
+                            hasWritePermission = hasWritePermission,
+                            enabled = !devState.blockedByPolicy || hasWritePermission,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("card_keep_awake"),
+                            onClick = onKeepAwakeClick,
+                        )
+                    }
+                }
+            }
+            oemGuideSection()
+        } else {
+            heroCard(Modifier)
+            oemGuideSection()
+            SectionLabel(stringResource(R.string.section_controls))
+            wirelessCard()
+            if (adaptive.canFitSideBySideSubCards) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Max),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    SmallControlCard(
+                        icon = R.drawable.ic_qs_dev_options,
+                        title = stringResource(R.string.label_developer_mode),
+                        subtitle = devModeSubtitle,
+                        isOn = devState.devOptionsEnabled,
+                        hasWritePermission = hasWritePermission,
+                        enabled = !devState.blockedByPolicy,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .testTag("card_dev_options"),
+                        onClick = onDevModeClick,
+                    )
+
+                    SmallControlCard(
+                        icon = R.drawable.ic_qs_keep_awake,
+                        title = stringResource(R.string.label_keep_awake),
+                        subtitle = keepAwakeSubtitle,
+                        isOn = devState.keepAwakeEnabled,
+                        hasWritePermission = hasWritePermission,
+                        enabled = !devState.blockedByPolicy || hasWritePermission,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .testTag("card_keep_awake"),
+                        onClick = onKeepAwakeClick,
+                    )
+                }
+            } else {
+                SmallControlCard(
+                    icon = R.drawable.ic_qs_dev_options,
+                    title = stringResource(R.string.label_developer_mode),
+                    subtitle = devModeSubtitle,
+                    isOn = devState.devOptionsEnabled,
+                    hasWritePermission = hasWritePermission,
+                    enabled = !devState.blockedByPolicy,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("card_dev_options"),
+                    onClick = onDevModeClick,
+                )
+
+                SmallControlCard(
+                    icon = R.drawable.ic_qs_keep_awake,
+                    title = stringResource(R.string.label_keep_awake),
+                    subtitle = keepAwakeSubtitle,
+                    isOn = devState.keepAwakeEnabled,
+                    hasWritePermission = hasWritePermission,
+                    enabled = !devState.blockedByPolicy || hasWritePermission,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("card_keep_awake"),
+                    onClick = onKeepAwakeClick,
+                )
+            }
         }
     }
 }
@@ -412,8 +481,10 @@ private fun UsbHeroCard(
     onHeroPowerClick: () -> Unit,
     onToggleAutoOffChip: () -> Unit,
     onToggleAutoJumpChip: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val palette = AppTheme.palette
+    val adaptive = LocalAdaptiveLayout.current
     val on = devState.adbEnabled && !devState.blockedByPolicy
     val enabled = !devState.blockedByPolicy
     val toggleLabel = stringResource(R.string.cd_toggle_usb)
@@ -433,7 +504,7 @@ private fun UsbHeroCard(
 
     val shape = RoundedCornerShape(22.dp)
     Column(
-        Modifier
+        modifier
             .fillMaxWidth()
             .testTag("card_usb_hero")
             .alpha(if (enabled) 1f else 0.6f)
@@ -441,7 +512,7 @@ private fun UsbHeroCard(
             .background(palette.surface)
             .border(1.dp, if (on) palette.mintBorder else palette.line, shape)
             .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.SpaceBetween,
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -468,10 +539,11 @@ private fun UsbHeroCard(
                 }
                 Text(
                     text = stringResource(if (on) R.string.state_on_caps else R.string.state_off_caps),
-                    fontSize = 52.sp,
-                    lineHeight = 52.sp,
+                    fontSize = if (adaptive.compactHeroTypography) 42.sp else 52.sp,
+                    lineHeight = if (adaptive.compactHeroTypography) 44.sp else 52.sp,
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = (-0.03).em,
+                    maxLines = 1,
                     color = if (on) palette.mint else palette.text,
                 )
                 Text(
@@ -484,7 +556,7 @@ private fun UsbHeroCard(
 
             Box(
                 Modifier
-                    .size(88.dp)
+                    .size(if (adaptive.compactHeroTypography) 76.dp else 88.dp)
                     .testTag("btn_hero_usb_power")
                     .clip(CircleShape)
                     .background(if (on) palette.mint else palette.surface2)
@@ -499,13 +571,14 @@ private fun UsbHeroCard(
                 Icon(
                     painter = painterResource(R.drawable.ic_power),
                     contentDescription = null,
-                    modifier = Modifier.size(36.dp),
+                    modifier = Modifier.size(if (adaptive.compactHeroTypography) 32.dp else 36.dp),
                     tint = if (on) palette.onMint else palette.text,
                 )
             }
         }
 
         FlowRow(
+            modifier = Modifier.padding(top = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {

@@ -1,0 +1,19 @@
+VibeADB is a lightweight, zero-internet, zero-ad Android utility for checking and switching USB Debugging, Wireless Debugging, Developer Options, and Keep Awake without digging through nested Settings menus.
+
+Key features:
+
+• Works out of the box (No PC required):
+  - Detects if Developer Options is locked and shows an OEM-accurate 2-step unlock guide for Samsung, OPPO / Realme / OnePlus, Xiaomi / Redmi / POCO, Vivo / iQOO, and Pixel / Stock Android, with a direct jump to About Phone / Build Number.
+  - Displays live status for USB Debugging, Wireless Debugging (Android 11+), Developer Options, and Keep Awake, and highlights the exact toggle inside System Settings.
+
+• 1-Tap Mode (with WRITE_SECURE_SETTINGS):
+  - Grant WRITE_SECURE_SETTINGS once via ADB or Shizuku (including the reinstall-with-grant command for ColorOS / OxygenOS 15–16+) to unlock instant 1-tap switching inside the app, across 4 Quick Settings tiles, and across 4 1×1 Home Screen widgets.
+
+• Clean Launch (Turn Off Debug & Launch):
+  - Pick banking, digital ID, e-wallet, enterprise, or security-sensitive apps that refuse to run while Developer Options is active. Launching them from Shortcuts or a badged 1×1 home shortcut turns off Developer Options cleanly first.
+
+• Safety Auto-Off Timer:
+  - Automatically turn off USB Debugging after 15, 30, or 60 minutes using Android's battery-friendly AlarmManager.setWindow (no exact alarm permission or background service).
+
+• Privacy by Design:
+  - Declares zero INTERNET permission, zero background services, zero analytics, and zero ads.

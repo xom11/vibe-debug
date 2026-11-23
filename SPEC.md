@@ -1,16 +1,17 @@
-# Specification: VibeADB (USB Debug Switch for Android)
+# Specification: Vibe Debug (USB Debug Switch for Android)
 
 ## 1. App Identity & Google Play Compliance
 
 - **Package Name:** `io.github.l3n4k4.usbdebugswitch`
 - **Version:** `2.0.0` (`versionCode = 3`)
 - **App Name:**
-  - English (`res/values/strings.xml`): `VibeADB`
-  - Vietnamese (`res/values-vi/strings.xml`): `VibeADB`
-  - Google Play listing title candidate: `VibeADB: USB Debug Switch` (never start the title with `"Android ..."`)
+  - English (`res/values/strings.xml`): `Vibe Debug`
+  - Vietnamese (`res/values-vi/strings.xml`): `Vibe Debug`
+  - Google Play listing title candidate: `Vibe Debug: USB & ADB Switch` (never start the title with `"Android ..."`)
 - **Platform & Stack:**
   - Kotlin + Jetpack Compose (Material 3 with custom **Obsidian & Mint** dark/light `AppPalette` and System/Dark/Light selector)
-  - `minSdk = 26` (Android 8.0), `targetSdk = 35` (Android 15), `compileSdk = 35`
+  - `minSdk = 26` (Android 8.0), `targetSdk = 36` (Android 16), `compileSdk = 36`
+  - Reproducible FLOSS build configuration: `dependenciesInfo { includeInApk = false; includeInBundle = false }`, `vcsInfo.include = false`, `LICENSE` (`GPL-3.0-or-later`), and `PRIVACY.md`.
   - Bilingual resources: `res/values/strings.xml` (English default) and `res/values-vi/strings.xml` (natural, jargon-free Vietnamese), plus `locales_config.xml` and Android 13+ `LocaleManager` in-app picker.
 - **Permissions & Manifest (`AndroidManifest.xml`):**
   - `android:allowBackup="false"`
@@ -26,7 +27,7 @@
   - Custom vector adaptive icon (`ic_launcher_foreground`, `ic_launcher_background`, and Android 13+ `monochrome` layer) depicting a stylized USB plug + toggle switch.
   - Do **not** reuse or imitate the Android green robot or stock Android Settings gear icon.
 - **Play Store Quality Safeguards:**
-  - Must never lock controls or appear as a thin wrapper when opened without ADB permission: default **Mode A** delivers full live monitoring, OEM-aware onboarding, deep-link highlighting, 4 Quick Settings tiles, and a Home Screen widget out of the box.
+  - Must never lock controls or appear as a thin wrapper when opened without ADB permission: default **Mode A** delivers full live monitoring, OEM-aware onboarding, deep-link highlighting, 4 Quick Settings tiles, and 4 1×1 icon-style Home Screen widgets out of the box.
   - Auto-jump to Settings on app launch remains **OFF by default** and is only displayed/active in Mode A.
 
 ---
@@ -49,7 +50,9 @@ Read the four system flags from `Settings.Global` (reading requires zero permiss
 
 ## 3. Three-Tab Hybrid UX ("Zero-Setup Mode A + 1-Tap Mode B")
 
-The app uses a 3-tab bottom-navigation layout (`HomeTab`, `ShortcutsTab`, `SetupTab`) styled with high-contrast Obsidian (`#0E1113` / `#7EE2A8`) and Crisp Daylight (`#F5F7FA` / `#059669`) palettes.
+The app uses a responsive 3-tab layout (`HomeTab`, `ShortcutsTab`, `SetupTab`) styled with high-contrast Obsidian (`#0E1113` / `#7EE2A8`) and Crisp Daylight (`#F5F7FA` / `#059669`) palettes:
+- **Compact portrait phones (`< 600dp`):** Bottom navigation bar (`BottomNavBar`) with single-column layout.
+- **Tablets, foldables & wide/landscape windows (`>= 600dp` or compact-height landscape `>= 480dp`):** Left navigation rail (`SideNavRail`), display-cutout safe insets, centered `maxWidth` containers, and a 2-column dashboard layout from `>= 680dp` (`AdaptiveLayoutSpec`).
 
 ### Tab 1: Home (`HomeTab`)
 - **Header & Status Strip:** App title, `Android X · API Y · Brand` mono subtitle, manual refresh icon, and top status strip (MDM policy banner if blocked, green Mint pill in Mode B, or Amber info strip with `"Enable 1-Tap"` button to SetupTab in Mode A).
@@ -63,18 +66,15 @@ The app uses a 3-tab bottom-navigation layout (`HomeTab`, `ShortcutsTab`, `Setup
 - **Secondary Controls:**
   - **Wireless Debugging wide card** (Android 11+): instant 1-tap switch in Mode B; jumps to `toggle_adb_wireless` (or Build Number if Dev OFF) in Mode A.
   - **Equal-height 2-column cards (`IntrinsicSize.Max`):**
-    - **Developer Options:** instant 1-tap cascade off (`adb_enabled=0`, `adb_wifi_enabled=0`, `development_settings_enabled=0`) in Mode B; jumps to top of Developer Options in Mode A.
+    - **Developer Options:** instant 1-tap cascade off (`adb_enabled=0`, `adb_wifi_enabled=0`, `development_settings_enabled=0`) in Mode B; jumps to top of Developer Options in Mode A (with a concise subtitle hint when ON in Mode A: *"On · Turn off if an app blocks debug"*).
     - **Keep Awake (`stay_on_while_plugged_in`):** 1-tap toggle in Mode B; opens Developer Options in Mode A.
-- **Banking / VNeID Helper Card:**
-  - Mode A: opens top of Developer Options (`ACTION_APPLICATION_DEVELOPMENT_SETTINGS` without fragment args).
-  - Mode B: navigates straight to the Safe Launch section in ShortcutsTab.
 
 ### Tab 2: Shortcuts (`ShortcutsTab`)
-- **Quick Settings Tiles:** Live added-state tracking (`QuickSurfaceHelper.readSurfaceState`, `BaseDebugTileService`, `AppPreferences`) switching each tile action between `+ Add` (`ic_add`) and `Remove` (`ic_trash`, disabling the tile component / clearing `sysui_qs_tiles` best-effort so SystemUI drops the tile immediately). Uses 1-tap `StatusBarManager.requestAddTileService` (Android 13+, or manual instructions dialog on older Android) for all 4 tiles: USB Debug, Wireless Debug (Android 11+), Developer Options, Keep Awake.
-- **Home Screen Surfaces:** Equal-height buttons for 2×1 Widget and 1×1 Shortcut that detect active widget IDs (`AppWidgetManager`) and pinned shortcuts (`ShortcutManager`), dynamically switching between `+ Add` / `+ Pin` (`ic_add`) and `Remove` (`ic_trash`, guiding users to their Home screen where Android enforces manual unpin/removal).
-- **Banking / VNeID Safe Launch (`SafeLaunchHelper` + `SafeLaunchActivity`):**
-  - Searchable launcher app picker loaded off the main thread (`Dispatchers.IO`), prioritizing detected Vietnamese banking / digital ID apps (`VNeID`, `Vietcombank`, `VPBank`, `VietinBank`, `BIDV`, `Techcombank`, `MB`, `TPBank`, `ACB`, `MoMo`, `ZaloPay`, `Cake`, `Viettel Money`).
-  - Each saved app card supports **Open now** and **Pin / Remove shortcut** (192×192 badged app icon with `#0E1113`/`#7EE2A8` ring), tracking pinned shortcut status via `ShortcutManager.pinnedShortcuts`.
+- **Quick Controls (Quick Settings Tiles + 1×1 Icon Home Widgets):** Unified card where every control (**USB Debug**, **Wireless Debug** on Android 11+, **Developer Options**, **Keep Awake**) pairs its title/description with two aligned 50%/50% labeled pill buttons (`Quick Settings` | `Widget 1×1`). Quick Settings buttons use live added-state tracking (`QuickSurfaceHelper.readSurfaceState`, `BaseDebugTileService`, `AppPreferences`) and toggle via `StatusBarManager.requestAddTileService` (or manual instructions dialog pre-API 33) and component disable + `sysui_qs_tiles` cleanup. Widget buttons track active `AppWidgetManager` IDs per `QuickTileType` and pin via `AppWidgetManager.requestPinAppWidget` or guide users to long-press their Home screen to remove.
+- **Turn Off Debug & Launch (`SafeLaunchHelper` + `SafeLaunchActivity`):**
+  - **Empty state:** Compact `SurfaceCard` explaining strict-app Clean Launch with a `"Choose apps"` button.
+  - **Populated state:** Concise 1-line hint above saved app cards (**Open now** and **Pin / Remove shortcut** with 192×192 badged app icon with `#0E1113`/`#7EE2A8` ring), followed by `"Add / edit apps"`.
+  - Searchable launcher app picker loaded off the main thread (`Dispatchers.IO`), prioritizing common strict Vietnamese banking / digital ID apps (`VNeID`, `Vietcombank`, `VPBank`, `VietinBank`, `BIDV`, `Techcombank`, `MB`, `TPBank`, `ACB`, `MoMo`, `ZaloPay`, `Cake`, `Viettel Money`) with a generic `"Suggested"` badge while supporting any installed app (useful for banking, digital ID, e-wallet, and security-sensitive apps).
   - `SafeLaunchActivity` validates the requested package against the user's saved `safeLaunchPackages` allowlist before calling `controller.setDeveloperOptions(false)`, cancelling Auto-Off, syncing surfaces, and starting the app (Mode B), or directing to Developer Options top (Mode A).
 
 ### Tab 3: Setup (`SetupTab`)
@@ -101,7 +101,7 @@ The app uses a 3-tab bottom-navigation layout (`HomeTab`, `ShortcutsTab`, `Setup
   - `WirelessDebugTileService` (Android 11+, handles pre-Android 11 gracefully)
   - `DevOptionsTileService` (Mode B cascades off debugging + cancels Auto-Off; Mode A opens top of Developer Options)
   - `KeepAwakeTileService` (Mode B toggles `stay_on_while_plugged_in`; Mode A opens Developer Options)
-- **`UsbDebugWidgetProvider`:** Pure `AppWidgetProvider` + `RemoteViews` 2×1 Obsidian & Mint pill widget synced across app, tiles, and `AutoOffReceiver`.
+- **`BaseDebugWidgetProvider` (`UsbDebugWidgetProvider`, `WirelessDebugWidgetProvider`, `DevOptionsWidgetProvider`, `KeepAwakeWidgetProvider`) + `WidgetToggleReceiver` (`android:exported="false"`):** Pure `AppWidgetProvider` + `RemoteViews` 1×1 icon-style Obsidian & Mint squircle widgets for all 4 controls, synced across app, tiles, and `AutoOffReceiver`. Privileged toggle actions are dispatched exclusively to the non-exported `WidgetToggleReceiver` so third-party apps cannot trigger privileged toggles via exported widget broadcasts.
 
 ---
 

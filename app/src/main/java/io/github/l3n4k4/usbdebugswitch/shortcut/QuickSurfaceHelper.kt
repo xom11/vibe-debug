@@ -23,7 +23,10 @@ import io.github.l3n4k4.usbdebugswitch.tile.DevOptionsTileService
 import io.github.l3n4k4.usbdebugswitch.tile.KeepAwakeTileService
 import io.github.l3n4k4.usbdebugswitch.tile.UsbDebugTileService
 import io.github.l3n4k4.usbdebugswitch.tile.WirelessDebugTileService
+import io.github.l3n4k4.usbdebugswitch.widget.DevOptionsWidgetProvider
+import io.github.l3n4k4.usbdebugswitch.widget.KeepAwakeWidgetProvider
 import io.github.l3n4k4.usbdebugswitch.widget.UsbDebugWidgetProvider
+import io.github.l3n4k4.usbdebugswitch.widget.WirelessDebugWidgetProvider
 
 sealed interface TileAddOutcome {
     data class Added(val tileLabel: String) : TileAddOutcome
@@ -35,13 +38,38 @@ sealed interface TileAddOutcome {
 enum class QuickTileType(
     val prefKey: String,
     val serviceClass: Class<*>,
+    val widgetProviderClass: Class<*>,
     @StringRes val labelRes: Int,
     @DrawableRes val iconRes: Int,
 ) {
-    USB_DEBUG("usb_debug", UsbDebugTileService::class.java, R.string.tile_label, R.drawable.ic_qs_usb_debug),
-    WIRELESS_DEBUG("wireless_debug", WirelessDebugTileService::class.java, R.string.tile_wireless_label, R.drawable.ic_qs_wireless_debug),
-    DEV_OPTIONS("dev_options", DevOptionsTileService::class.java, R.string.tile_dev_options_label, R.drawable.ic_qs_dev_options),
-    KEEP_AWAKE("keep_awake", KeepAwakeTileService::class.java, R.string.tile_keep_awake_label, R.drawable.ic_qs_keep_awake);
+    USB_DEBUG(
+        "usb_debug",
+        UsbDebugTileService::class.java,
+        UsbDebugWidgetProvider::class.java,
+        R.string.tile_label,
+        R.drawable.ic_qs_usb_debug,
+    ),
+    WIRELESS_DEBUG(
+        "wireless_debug",
+        WirelessDebugTileService::class.java,
+        WirelessDebugWidgetProvider::class.java,
+        R.string.tile_wireless_label,
+        R.drawable.ic_qs_wireless_debug,
+    ),
+    DEV_OPTIONS(
+        "dev_options",
+        DevOptionsTileService::class.java,
+        DevOptionsWidgetProvider::class.java,
+        R.string.tile_dev_options_label,
+        R.drawable.ic_qs_dev_options,
+    ),
+    KEEP_AWAKE(
+        "keep_awake",
+        KeepAwakeTileService::class.java,
+        KeepAwakeWidgetProvider::class.java,
+        R.string.tile_keep_awake_label,
+        R.drawable.ic_qs_keep_awake,
+    );
 
     companion object {
         fun fromServiceClass(cls: Class<*>): QuickTileType? =
@@ -51,10 +79,13 @@ enum class QuickTileType(
 
 data class QuickSurfaceState(
     val addedTiles: Set<QuickTileType> = emptySet(),
-    val isHomeWidgetAdded: Boolean = false,
+    val addedWidgets: Set<QuickTileType> = emptySet(),
     val isHomeUsbShortcutPinned: Boolean = false,
     val pinnedSafeLaunchPackages: Set<String> = emptySet(),
-)
+) {
+    val isHomeWidgetAdded: Boolean
+        get() = QuickTileType.USB_DEBUG in addedWidgets
+}
 
 /** Coordinates Quick Settings tile prompts, removal, pinned widgets/shortcuts, and surface refreshes. */
 object QuickSurfaceHelper {
@@ -189,11 +220,12 @@ object QuickSurfaceHelper {
                 preferences.isQsTileAdded(tile.prefKey)
         }.toSet()
 
-        val isHomeWidgetAdded = runCatching {
-            AppWidgetManager.getInstance(appContext)
-                .getAppWidgetIds(ComponentName(appContext, UsbDebugWidgetProvider::class.java))
-                .isNotEmpty()
-        }.getOrDefault(false)
+        val addedWidgets = runCatching {
+            val manager = AppWidgetManager.getInstance(appContext)
+            QuickTileType.entries.filter { tile ->
+                manager.getAppWidgetIds(ComponentName(appContext, tile.widgetProviderClass)).isNotEmpty()
+            }.toSet()
+        }.getOrDefault(emptySet())
 
         val pinnedIds = runCatching {
             appContext.getSystemService(ShortcutManager::class.java)
@@ -217,7 +249,7 @@ object QuickSurfaceHelper {
 
         return QuickSurfaceState(
             addedTiles = addedTiles,
-            isHomeWidgetAdded = isHomeWidgetAdded,
+            addedWidgets = addedWidgets,
             isHomeUsbShortcutPinned = isHomeUsbShortcutPinned,
             pinnedSafeLaunchPackages = pinnedSafeLaunchPackages,
         )
@@ -308,17 +340,20 @@ object QuickSurfaceHelper {
         }
     }
 
-    fun requestPinUsbWidget(context: Context): Boolean {
+    fun requestPinWidget(context: Context, tile: QuickTileType): Boolean {
         val manager = AppWidgetManager.getInstance(context)
         if (!manager.isRequestPinAppWidgetSupported) return false
         return runCatching {
             manager.requestPinAppWidget(
-                ComponentName(context, UsbDebugWidgetProvider::class.java),
+                ComponentName(context, tile.widgetProviderClass),
                 null,
                 null
             )
         }.getOrDefault(false)
     }
+
+    fun requestPinUsbWidget(context: Context): Boolean =
+        requestPinWidget(context, QuickTileType.USB_DEBUG)
 
     fun requestPinUsbShortcut(context: Context): Boolean {
         val shortcutManager = context.getSystemService(ShortcutManager::class.java) ?: return false

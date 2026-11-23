@@ -21,7 +21,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.UsbDebugSwitch"
-        tools:targetApi="35">
+        tools:targetApi="36">
 
         <activity
             android:name=".MainActivity"
@@ -121,16 +121,55 @@
             android:exported="false" />
 
         <receiver
+            android:name=".widget.WidgetToggleReceiver"
+            android:exported="false" />
+
+        <receiver
             android:name=".widget.UsbDebugWidgetProvider"
             android:exported="true"
             android:label="@string/widget_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="io.github.l3n4k4.usbdebugswitch.ACTION_WIDGET_TOGGLE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/usb_debug_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.WirelessDebugWidgetProvider"
+            android:exported="true"
+            android:label="@string/tile_wireless_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/wireless_debug_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.DevOptionsWidgetProvider"
+            android:exported="true"
+            android:label="@string/tile_dev_options_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/dev_options_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.KeepAwakeWidgetProvider"
+            android:exported="true"
+            android:label="@string/tile_keep_awake_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/keep_awake_widget_info" />
         </receiver>
 
     </application>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">VibeADB</string>
+    <string name="app_name">Vibe Debug</string>
     <string name="app_subtitle">Quick USB Debugging monitor &amp; shortcut</string>
 
     <!-- Quick Settings Tiles, Home Widget & App Shortcuts -->
@@ -16,7 +16,14 @@
     <string name="tile_subtitle_auto_off_in">Auto off in %dm</string>
 
     <string name="widget_label">USB Debug</string>
+    <string name="widget_short_usb">USB Debug</string>
+    <string name="widget_short_wireless">Wi-Fi Debug</string>
+    <string name="widget_short_dev">Dev Mode</string>
+    <string name="widget_short_awake">Keep Awake</string>
     <string name="widget_description">Check and switch USB Debugging from your home screen.</string>
+    <string name="widget_wireless_description">Check and switch Wireless Debugging from your home screen.</string>
+    <string name="widget_dev_options_description">Show or turn off Developer Options from your home screen.</string>
+    <string name="widget_keep_awake_description">Toggle Keep Awake while charging from your home screen.</string>
     <string name="widget_state_on">ON</string>
     <string name="widget_state_off">OFF</string>
     <string name="widget_hint_one_tap">Tap to switch</string>
@@ -35,7 +42,7 @@
     <string name="safe_launch_toast_need_perm">Enable 1-tap mode in Setup first (opening Developer Options).</string>
     <string name="safe_launch_toast_blocked">Debugging is blocked by device policy.</string>
     <string name="safe_launch_toast_not_found">App not found.</string>
-    <string name="safe_launch_not_listed">This app is not in your Safe Launch list.</string>
+    <string name="safe_launch_not_listed">This app is not in your Clean Launch list.</string>
 
     <!-- Navigation -->
     <string name="nav_home">Home</string>
@@ -47,15 +54,15 @@
     <string name="quick_surfaces_subtitle">Add a toggle next to Wi-Fi / Flashlight in your top shade or pin a widget to your home screen in 1 tap.</string>
     <string name="btn_add_qs_usb">Add USB Debug to Quick Settings (Wi-Fi bar)</string>
     <string name="btn_add_qs_wireless">Add Wireless Debug to Quick Settings</string>
-    <string name="btn_pin_home_widget">Add Widget (2×1)</string>
-    <string name="btn_remove_home_widget">Remove Widget (2×1)</string>
+    <string name="btn_pin_home_widget">Add Widget (1×1)</string>
+    <string name="btn_remove_home_widget">Remove Widget (1×1)</string>
     <string name="btn_pin_home_shortcut">Pin Shortcut (1×1)</string>
     <string name="btn_unpin_home_shortcut">Remove Shortcut (1×1)</string>
 
     <string name="feedback_tile_added">Added \"%1$s\" tile to your Quick Settings panel!</string>
     <string name="feedback_tile_already_added">\"%1$s\" is already in Quick Settings — swipe down from the top to use it.</string>
     <string name="feedback_tile_removed">Removed \"%1$s\" tile from Quick Settings.</string>
-    <string name="feedback_widget_pin_requested">Confirm on the launcher prompt to place the 2×1 widget.</string>
+    <string name="feedback_widget_pin_requested">Confirm on the launcher prompt to place the \"%1$s\" widget.</string>
     <string name="feedback_widget_unsupported">Your launcher does not support 1-tap widget pinning. Long-press your home screen and choose Widgets.</string>
     <string name="feedback_shortcut_pin_requested">Confirm on the launcher prompt to place the 1×1 shortcut.</string>
     <string name="feedback_shortcut_unsupported">Your launcher does not support 1-tap shortcut pinning. Long-press the app icon to drag shortcuts.</string>
@@ -109,16 +116,11 @@
     <string name="wireless_sub_off_one_tap">Off · Tap to toggle</string>
     <string name="wireless_sub_mode_a">Tap to open Wireless Debugging in Settings</string>
     <string name="dev_menu_visible">Menu visible</string>
+    <string name="dev_menu_visible_mode_a">On · Turn off if an app blocks debug</string>
     <string name="dev_menu_hidden">Menu hidden</string>
     <string name="awake_while_charging">While charging</string>
     <string name="awake_off">Off</string>
     <string name="awake_mode_a_hint">Open Settings</string>
-
-    <string name="section_banking_helper">Banking &amp; Digital ID</string>
-    <string name="banking_helper_mode_a_title">VNeID / banking app blocked?</string>
-    <string name="banking_helper_mode_a_sub">Open top of Developer Options to turn it off</string>
-    <string name="banking_helper_mode_b_title">Open VNeID / banking cleanly</string>
-    <string name="banking_helper_mode_b_sub">1-tap Safe Launch turns off Developer Options automatically</string>
 
     <!-- OEM Unlock Guide (State A1: Unprivileged & Dev OFF) -->
     <string name="dev_off_banner_title">Developer Mode is OFF</string>
@@ -164,31 +166,37 @@
     <string name="mode_one_tap_subtitle">Direct switches are unlocked via WRITE_SECURE_SETTINGS.</string>
     <string name="switch_usb_desc">Auto-enables Developer Mode if currently off</string>
     <string name="switch_wireless_desc">Debug over Wi-Fi on Android 11 and newer</string>
-    <string name="switch_dev_options_desc">Turn off cleanly for banking or ID apps</string>
+    <string name="switch_dev_options_desc">Turn off cleanly for strict apps or games</string>
     <string name="btn_open_system_dev_settings">Open System Developer Options</string>
 
     <!-- Shortcuts Tab -->
     <string name="shortcuts_title">Shortcuts</string>
-    <string name="shortcuts_subtitle">Add Quick Settings tiles, pin home controls, or launch banking apps without debugging.</string>
-    <string name="section_qs_tiles">Quick Settings Tiles</string>
-    <string name="tile_usb_desc">Toggle or open USB Debugging directly from the top shade.</string>
-    <string name="tile_wireless_desc">Quick toggle for Wi-Fi debugging on Android 11+.</string>
-    <string name="tile_dev_options_desc">Show or hide the system Developer Options menu.</string>
-    <string name="tile_keep_awake_desc">Keep screen awake while plugged in for testing.</string>
+    <string name="shortcuts_subtitle">Place switches in your top pull-down shade (Quick Settings), on your Home screen (Widget), or launch strict apps cleanly.</string>
+    <string name="section_qs_tiles">Quick Controls</string>
+    <string name="legend_qs_tile">Quick Settings</string>
+    <string name="legend_home_widget">Widget</string>
+    <string name="cd_toggle_qs_tile">Quick Settings tile: %1$s</string>
+    <string name="cd_toggle_home_widget">Home widget: %1$s</string>
+    <string name="tile_usb_desc">Switch or open USB Debugging in 1 tap.</string>
+    <string name="tile_wireless_desc">Switch Wi-Fi debugging on Android 11+.</string>
+    <string name="tile_dev_options_desc">Show or turn off Developer Options cleanly.</string>
+    <string name="tile_keep_awake_desc">Keep screen awake while plugged in.</string>
     <string name="action_add_tile">Add</string>
     <string name="action_remove_tile">Remove</string>
 
     <string name="section_home_surfaces">Home Screen</string>
     <string name="dialog_remove_widget_title">Remove Home Screen Widget</string>
-    <string name="dialog_remove_widget_body">Android only allows removing widgets directly on your Home screen:\n\n1. Go to your Home screen.\n2. Long-press the VibeADB 2×1 widget and tap Remove.</string>
+    <string name="dialog_remove_widget_body">Android only allows removing widgets directly on your Home screen:\n\n1. Go to your Home screen.\n2. Long-press the \"%1$s\" widget icon and tap Remove.</string>
     <string name="dialog_remove_shortcut_title">Remove Home Screen Shortcut</string>
     <string name="dialog_remove_shortcut_body">Android only allows removing pinned icons directly on your Home screen:\n\n1. Go to your Home screen.\n2. Long-press the \"%1$s\" icon and tap Remove.</string>
     <string name="action_go_home">Go to Home screen</string>
 
-    <string name="section_safe_launch">Open Without Debugging</string>
-    <string name="safe_launch_desc">1-tap disables Developer Options before launching banking or digital ID apps — no background service, no Usage Access, no Accessibility service.</string>
-    <string name="safe_launch_empty">No apps added yet. Add VNeID or banking apps that warn about Developer Options.</string>
-    <string name="safe_launch_add_btn">+ Add banking / VNeID app</string>
+    <string name="section_safe_launch">Turn Off Debug &amp; Launch</string>
+    <string name="safe_launch_banner_title">Apps blocking Developer Mode?</string>
+    <string name="safe_launch_desc">Add banking, digital ID, e-wallet, or security-sensitive apps. Launching from here or a pinned shortcut turns off Developer Options first in 1 tap.</string>
+    <string name="safe_launch_list_hint">Open here or pin to your Home screen to turn off debugging automatically.</string>
+    <string name="safe_launch_add_btn">Choose apps</string>
+    <string name="safe_launch_edit_btn">Add / edit apps</string>
     <string name="safe_launch_open_now">Open now</string>
     <string name="safe_launch_pin">Pin</string>
     <string name="safe_launch_unpin">Remove shortcut</string>
@@ -197,11 +205,11 @@
     <string name="safe_launch_pin_ok">Confirm on the launcher prompt to pin \"%s\" to your home screen.</string>
     <string name="safe_launch_pin_unsupported">Your launcher does not support pinning app shortcuts.</string>
 
-    <string name="dialog_pick_app_title">Add app for Safe Launch</string>
+    <string name="dialog_pick_app_title">Select apps for Clean Launch</string>
     <string name="hint_search_apps">Search by name or package…</string>
     <string name="loading_apps">Loading installed apps…</string>
     <string name="no_matching_apps">No matching apps found.</string>
-    <string name="badge_banking_suggested">Banking / VNeID</string>
+    <string name="badge_banking_suggested">Suggested</string>
     <string name="badge_added">Added</string>
     <string name="action_close">Close</string>
 

@@ -10,8 +10,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -71,253 +74,280 @@ fun SetupTab(
 ) {
     val palette = AppTheme.palette
     val context = LocalContext.current
+    val adaptive = LocalAdaptiveLayout.current
     var showLegacyOplusNote by rememberSaveable { mutableStateOf(false) }
 
-    ScreenColumn(spacing = 14.dp) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = stringResource(R.string.setup_tab_title),
-                fontSize = 24.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = palette.text,
-            )
-            Text(
-                text = stringResource(R.string.setup_tab_subtitle),
-                fontSize = 13.sp,
-                lineHeight = 19.sp,
-                color = palette.muted,
-            )
-        }
-
-        // Section 1: 1-Tap Setup
-        SectionLabel(stringResource(R.string.section_one_tap_setup))
-
-        SurfaceCard(modifier = Modifier.testTag("card_setup_checklist")) {
-            ChecklistRow(
-                index = 1,
-                title = stringResource(R.string.setup_checklist_dev),
-                status = stringResource(
-                    if (devState.devOptionsEnabled) R.string.setup_dev_on else R.string.setup_dev_off
-                ),
-                done = devState.devOptionsEnabled,
-                warn = false,
-                onClick = if (devState.devOptionsEnabled || devState.blockedByPolicy) null else onOpenBuildNumberScreen,
-            )
-            RowDivider()
-            ChecklistRow(
-                index = 2,
-                title = stringResource(R.string.setup_checklist_perm),
-                subtitle = "WRITE_SECURE_SETTINGS",
-                status = stringResource(
-                    if (hasWritePermission) R.string.setup_perm_granted else R.string.setup_perm_missing
-                ),
-                done = hasWritePermission,
-                warn = !hasWritePermission,
-            )
-        }
-
-        when {
-            devState.blockedByPolicy -> {
-                StatusBanner(
-                    title = stringResource(R.string.banner_policy_title),
-                    body = stringResource(R.string.banner_policy_body),
-                    fg = palette.coral,
-                    bodyColor = palette.coralBody,
-                    bg = palette.coralBg,
-                    border = palette.coralBorder,
-                    icon = R.drawable.ic_lock,
+    val oneTapSetupCard: @Composable (Modifier) -> Unit = { cardModifier ->
+        SurfaceCard(
+            modifier = cardModifier.testTag("card_setup_checklist"),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column(Modifier.fillMaxWidth()) {
+                ChecklistRow(
+                    index = 1,
+                    title = stringResource(R.string.setup_checklist_dev),
+                    status = stringResource(
+                        if (devState.devOptionsEnabled) R.string.setup_dev_on else R.string.setup_dev_off
+                    ),
+                    done = devState.devOptionsEnabled,
+                    warn = false,
+                    onClick = if (devState.devOptionsEnabled || devState.blockedByPolicy) null else onOpenBuildNumberScreen,
                 )
-            }
-
-            hasWritePermission -> {
-                StatusBanner(
-                    title = stringResource(R.string.mode_one_tap_badge),
-                    body = stringResource(R.string.setup_already_ready),
-                    fg = palette.mint,
-                    bodyColor = palette.mintLight,
-                    bg = palette.mintBg,
-                    border = palette.mintBorder,
-                    icon = R.drawable.ic_check,
+                RowDivider()
+                ChecklistRow(
+                    index = 2,
+                    title = stringResource(R.string.setup_checklist_perm),
+                    subtitle = "WRITE_SECURE_SETTINGS",
+                    status = stringResource(
+                        if (hasWritePermission) R.string.setup_perm_granted else R.string.setup_perm_missing
+                    ),
+                    done = hasWritePermission,
+                    warn = !hasWritePermission,
                 )
-            }
+                RowDivider()
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    when {
+                        devState.blockedByPolicy -> {
+                            StatusBanner(
+                                title = stringResource(R.string.banner_policy_title),
+                                body = stringResource(R.string.banner_policy_body),
+                                fg = palette.coral,
+                                bodyColor = palette.coralBody,
+                                bg = palette.coralBg,
+                                border = palette.coralBorder,
+                                icon = R.drawable.ic_lock,
+                            )
+                        }
 
-            detectedBrand == OemBrand.ONEPLUS_OPPO_REALME -> {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    StatusBanner(
-                        title = stringResource(R.string.setup_coloros_title),
-                        body = stringResource(R.string.setup_coloros_body),
-                        fg = palette.amberText,
-                        bodyColor = palette.amberBody,
-                        bg = palette.amberBg,
-                        border = palette.amberBorder,
-                    )
-                    CommandCopyBox(
-                        command = SettingsIntents.ADB_REINSTALL_GRANT_COMMAND,
-                        copyTag = "btn_copy_reinstall_cmd",
-                    )
-                    Text(
-                        text = stringResource(R.string.other_brands_toggle).let {
-                            if (showLegacyOplusNote) "▾ " else "▸ "
-                        } + stringResource(R.string.setup_coloros_legacy_note),
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable(role = Role.Button) { showLegacyOplusNote = !showLegacyOplusNote }
-                            .padding(vertical = 4.dp),
-                        fontSize = 12.sp,
-                        lineHeight = 17.sp,
-                        color = palette.muted,
-                    )
-                    AnimatedVisibility(visible = showLegacyOplusNote) {
-                        CommandCopyBox(
-                            command = SettingsIntents.ADB_GRANT_COMMAND,
-                            copyTag = "btn_copy_adb_cmd",
-                        )
+                        hasWritePermission -> {
+                            StatusBanner(
+                                title = stringResource(R.string.mode_one_tap_badge),
+                                body = stringResource(R.string.setup_already_ready),
+                                fg = palette.mint,
+                                bodyColor = palette.mintLight,
+                                bg = palette.mintBg,
+                                border = palette.mintBorder,
+                                icon = R.drawable.ic_check,
+                            )
+                        }
+
+                        detectedBrand == OemBrand.ONEPLUS_OPPO_REALME -> {
+                            StatusBanner(
+                                title = stringResource(R.string.setup_coloros_title),
+                                body = stringResource(R.string.setup_coloros_body),
+                                fg = palette.amberText,
+                                bodyColor = palette.amberBody,
+                                bg = palette.amberBg,
+                                border = palette.amberBorder,
+                            )
+                            CommandCopyBox(
+                                command = SettingsIntents.ADB_REINSTALL_GRANT_COMMAND,
+                                copyTag = "btn_copy_reinstall_cmd",
+                            )
+                            Text(
+                                text = stringResource(R.string.other_brands_toggle).let {
+                                    if (showLegacyOplusNote) "▾ " else "▸ "
+                                } + stringResource(R.string.setup_coloros_legacy_note),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable(role = Role.Button) { showLegacyOplusNote = !showLegacyOplusNote }
+                                    .padding(vertical = 4.dp),
+                                fontSize = 12.sp,
+                                lineHeight = 17.sp,
+                                color = palette.muted,
+                            )
+                            AnimatedVisibility(visible = showLegacyOplusNote) {
+                                CommandCopyBox(
+                                    command = SettingsIntents.ADB_GRANT_COMMAND,
+                                    copyTag = "btn_copy_adb_cmd",
+                                )
+                            }
+                        }
+
+                        else -> {
+                            Text(
+                                text = stringResource(R.string.setup_standard_intro),
+                                fontSize = 13.sp,
+                                lineHeight = 19.sp,
+                                color = palette.soft,
+                            )
+                            CommandCopyBox(
+                                command = SettingsIntents.ADB_GRANT_COMMAND,
+                                copyTag = "btn_copy_adb_cmd",
+                            )
+                            if (detectedBrand == OemBrand.XIAOMI) {
+                                StatusBanner(
+                                    title = stringResource(R.string.brand_xiaomi),
+                                    body = stringResource(R.string.setup_xiaomi_warning),
+                                    fg = palette.amberText,
+                                    bodyColor = palette.amberBody,
+                                    bg = palette.amberBg,
+                                    border = palette.amberBorder,
+                                )
+                            }
+                            Text(
+                                text = stringResource(R.string.setup_reinstall_fallback),
+                                fontSize = 12.sp,
+                                lineHeight = 17.sp,
+                                color = palette.muted,
+                            )
+                            CommandCopyBox(
+                                command = SettingsIntents.ADB_REINSTALL_GRANT_COMMAND,
+                                copyTag = "btn_copy_reinstall_cmd",
+                            )
+                        }
                     }
                 }
             }
 
-            else -> {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        text = stringResource(R.string.setup_standard_intro),
-                        fontSize = 13.sp,
-                        lineHeight = 19.sp,
-                        color = palette.soft,
-                    )
-                    CommandCopyBox(
-                        command = SettingsIntents.ADB_GRANT_COMMAND,
-                        copyTag = "btn_copy_adb_cmd",
-                    )
-                    if (detectedBrand == OemBrand.XIAOMI) {
-                        StatusBanner(
-                            title = stringResource(R.string.brand_xiaomi),
-                            body = stringResource(R.string.setup_xiaomi_warning),
-                            fg = palette.amberText,
-                            bodyColor = palette.amberBody,
-                            bg = palette.amberBg,
-                            border = palette.amberBorder,
+            Column(Modifier.fillMaxWidth()) {
+                RowDivider()
+                Box(Modifier.padding(14.dp)) {
+                    if (!hasWritePermission) {
+                        PrimaryActionButton(
+                            text = stringResource(R.string.btn_recheck_permission),
+                            onClick = {
+                                val granted = onRecheckPermission()
+                                context.showToast(
+                                    context.getString(
+                                        if (granted) R.string.toast_perm_granted_now
+                                        else R.string.toast_perm_still_missing
+                                    )
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("btn_recheck_permission"),
+                            height = 48.dp,
+                        )
+                    } else {
+                        OutlineActionButton(
+                            text = stringResource(R.string.btn_recheck_permission),
+                            onClick = {
+                                val granted = onRecheckPermission()
+                                context.showToast(
+                                    context.getString(
+                                        if (granted) R.string.toast_perm_granted_now
+                                        else R.string.toast_perm_still_missing
+                                    )
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("btn_recheck_permission"),
+                            color = palette.soft,
+                            border = palette.line,
+                            icon = R.drawable.ic_refresh,
                         )
                     }
-                    Text(
-                        text = stringResource(R.string.setup_reinstall_fallback),
-                        fontSize = 12.sp,
-                        lineHeight = 17.sp,
-                        color = palette.muted,
-                    )
-                    CommandCopyBox(
-                        command = SettingsIntents.ADB_REINSTALL_GRANT_COMMAND,
-                        copyTag = "btn_copy_reinstall_cmd",
-                    )
                 }
             }
         }
+    }
 
-        if (!hasWritePermission) {
-            PrimaryActionButton(
-                text = stringResource(R.string.btn_recheck_permission),
-                onClick = {
-                    val granted = onRecheckPermission()
-                    context.showToast(
-                        context.getString(
-                            if (granted) R.string.toast_perm_granted_now
-                            else R.string.toast_perm_still_missing
-                        )
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("btn_recheck_permission"),
-                height = 48.dp,
-            )
-        } else {
-            OutlineActionButton(
-                text = stringResource(R.string.btn_recheck_permission),
-                onClick = {
-                    val granted = onRecheckPermission()
-                    context.showToast(
-                        context.getString(
-                            if (granted) R.string.toast_perm_granted_now
-                            else R.string.toast_perm_still_missing
-                        )
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("btn_recheck_permission"),
-                color = palette.soft,
-                border = palette.line,
-                icon = R.drawable.ic_refresh,
-            )
-        }
-
-        // Section 2: Auto-Off Timer (Safety)
+    val safetyTimerCard: @Composable (Modifier) -> Unit = { cardModifier ->
         val canUseAutoOff = hasWritePermission && !devState.blockedByPolicy
-        SectionLabel(stringResource(R.string.section_safety_timer))
-        SurfaceCard(modifier = Modifier.testTag("card_auto_off_timer")) {
-            SwitchRow(
-                title = stringResource(R.string.auto_off_title),
-                checked = autoOffEnabled && canUseAutoOff,
-                onChange = onAutoOffEnabledChanged,
-                modifier = Modifier
-                    .alpha(if (canUseAutoOff) 1f else 0.65f)
-                    .testTag("row_auto_off_switch"),
-                sub = stringResource(
-                    if (canUseAutoOff) R.string.auto_off_subtitle
-                    else R.string.auto_off_requires_one_tap
-                ),
-                enabled = canUseAutoOff,
-            )
-            AnimatedVisibility(visible = autoOffEnabled && canUseAutoOff) {
+        SurfaceCard(
+            modifier = cardModifier.testTag("card_auto_off_timer"),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column(Modifier.fillMaxWidth()) {
+                SwitchRow(
+                    title = stringResource(R.string.auto_off_title),
+                    checked = autoOffEnabled && canUseAutoOff,
+                    onChange = onAutoOffEnabledChanged,
+                    modifier = Modifier
+                        .alpha(if (canUseAutoOff) 1f else 0.65f)
+                        .testTag("row_auto_off_switch"),
+                    sub = stringResource(
+                        if (canUseAutoOff) R.string.auto_off_subtitle
+                        else R.string.auto_off_requires_one_tap
+                    ),
+                    enabled = canUseAutoOff,
+                )
+                AnimatedVisibility(visible = autoOffEnabled && canUseAutoOff) {
+                    if (adaptive.canFitSideBySideSubCards) {
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp, end = 16.dp, bottom = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.auto_off_duration_label),
+                                fontSize = 13.sp,
+                                color = palette.muted,
+                            )
+                            SegmentedControl(
+                                options = AUTO_OFF_OPTIONS.map { stringResource(R.string.minutes_option, it) },
+                                selectedIndex = AUTO_OFF_OPTIONS.indexOf(autoOffMinutes).coerceAtLeast(0),
+                                onSelect = { index -> onAutoOffMinutesChanged(AUTO_OFF_OPTIONS[index]) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag("seg_auto_off_minutes"),
+                                height = 36.dp,
+                            )
+                        }
+                    } else {
+                        Column(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp, end = 16.dp, bottom = 14.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.auto_off_duration_label),
+                                fontSize = 13.sp,
+                                color = palette.muted,
+                            )
+                            SegmentedControl(
+                                options = AUTO_OFF_OPTIONS.map { stringResource(R.string.minutes_option, it) },
+                                selectedIndex = AUTO_OFF_OPTIONS.indexOf(autoOffMinutes).coerceAtLeast(0),
+                                onSelect = { index -> onAutoOffMinutesChanged(AUTO_OFF_OPTIONS[index]) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("seg_auto_off_minutes"),
+                                height = 36.dp,
+                            )
+                        }
+                    }
+                }
+            }
+            Column(Modifier.fillMaxWidth()) {
+                RowDivider()
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, bottom = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        .background(palette.surface2.copy(alpha = 0.55f))
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    Text(
-                        text = stringResource(R.string.auto_off_duration_label),
-                        fontSize = 13.sp,
-                        color = palette.muted,
+                    Icon(
+                        painter = painterResource(R.drawable.ic_timer),
+                        contentDescription = null,
+                        modifier = Modifier.padding(top = 1.dp).size(16.dp),
+                        tint = palette.muted,
                     )
-                    SegmentedControl(
-                        options = AUTO_OFF_OPTIONS.map { stringResource(R.string.minutes_option, it) },
-                        selectedIndex = AUTO_OFF_OPTIONS.indexOf(autoOffMinutes).coerceAtLeast(0),
-                        onSelect = { index -> onAutoOffMinutesChanged(AUTO_OFF_OPTIONS[index]) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("seg_auto_off_minutes"),
-                        height = 36.dp,
+                    Text(
+                        text = stringResource(R.string.auto_off_inexact_note),
+                        fontSize = 12.sp,
+                        lineHeight = 17.sp,
+                        color = palette.muted,
                     )
                 }
             }
-            RowDivider()
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .background(palette.surface2.copy(alpha = 0.55f))
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_timer),
-                    contentDescription = null,
-                    modifier = Modifier.padding(top = 1.dp).size(16.dp),
-                    tint = palette.muted,
-                )
-                Text(
-                    text = stringResource(R.string.auto_off_inexact_note),
-                    fontSize = 12.sp,
-                    lineHeight = 17.sp,
-                    color = palette.muted,
-                )
-            }
         }
+    }
 
-        // Section 3: Appearance & Behavior
-        SectionLabel(stringResource(R.string.section_appearance))
-        SurfaceCard(modifier = Modifier.testTag("card_appearance")) {
+    val appearanceCard: @Composable (Modifier) -> Unit = { cardModifier ->
+        SurfaceCard(modifier = cardModifier.testTag("card_appearance")) {
             Column(
                 Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -359,10 +389,13 @@ fun SetupTab(
                 )
             }
         }
+    }
 
-        // Section 4: Privacy & Version
-        SectionLabel(stringResource(R.string.section_privacy_about))
-        SurfaceCard(modifier = Modifier.testTag("card_privacy_about")) {
+    val privacyAboutCard: @Composable (Modifier) -> Unit = { cardModifier ->
+        SurfaceCard(
+            modifier = cardModifier.testTag("card_privacy_about"),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -391,11 +424,133 @@ fun SetupTab(
                     )
                 }
             }
-            RowDivider()
-            ValueRow(
-                title = stringResource(R.string.label_app_version),
-                value = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+            Column(Modifier.fillMaxWidth()) {
+                RowDivider()
+                ValueRow(
+                    title = stringResource(R.string.label_app_version),
+                    value = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                )
+            }
+        }
+    }
+
+    ScreenColumn(spacing = 16.dp) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = stringResource(R.string.setup_tab_title),
+                fontSize = 24.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = palette.text,
             )
+            Text(
+                text = stringResource(R.string.setup_tab_subtitle),
+                fontSize = 13.sp,
+                lineHeight = 19.sp,
+                color = palette.muted,
+            )
+        }
+
+        if (adaptive.useTwoColumnContent) {
+            if (hasWritePermission || devState.blockedByPolicy) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Max),
+                    horizontalArrangement = Arrangement.spacedBy(adaptive.columnSpacingDp.dp),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        SectionLabel(stringResource(R.string.section_one_tap_setup))
+                        oneTapSetupCard(Modifier.weight(1f))
+                    }
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        SectionLabel(stringResource(R.string.section_appearance))
+                        appearanceCard(Modifier.weight(1f))
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Max),
+                    horizontalArrangement = Arrangement.spacedBy(adaptive.columnSpacingDp.dp),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        SectionLabel(stringResource(R.string.section_safety_timer))
+                        safetyTimerCard(Modifier.weight(1f))
+                    }
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        SectionLabel(stringResource(R.string.section_privacy_about))
+                        privacyAboutCard(Modifier.weight(1f))
+                    }
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(adaptive.columnSpacingDp.dp),
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        SectionLabel(stringResource(R.string.section_one_tap_setup))
+                        oneTapSetupCard(Modifier)
+                    }
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            SectionLabel(stringResource(R.string.section_safety_timer))
+                            safetyTimerCard(Modifier)
+                        }
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            SectionLabel(stringResource(R.string.section_appearance))
+                            appearanceCard(Modifier)
+                        }
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            SectionLabel(stringResource(R.string.section_privacy_about))
+                            privacyAboutCard(Modifier)
+                        }
+                    }
+                }
+            }
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SectionLabel(stringResource(R.string.section_one_tap_setup))
+                oneTapSetupCard(Modifier)
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SectionLabel(stringResource(R.string.section_safety_timer))
+                safetyTimerCard(Modifier)
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SectionLabel(stringResource(R.string.section_appearance))
+                appearanceCard(Modifier)
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SectionLabel(stringResource(R.string.section_privacy_about))
+                privacyAboutCard(Modifier)
+            }
         }
     }
 }
