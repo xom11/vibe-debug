@@ -1,6 +1,17 @@
 # Vibe Debug — USB Debug Switch for Android
 
+[![GitHub Release](https://img.shields.io/github/v/release/xom11/vibe-debug?label=GitHub%20Release&color=059669)](https://github.com/xom11/vibe-debug/releases/latest)
+[![Obtainium](https://img.shields.io/badge/Get%20it%20on-Obtainium-7EE2A8?logo=android&logoColor=0B1F14)](https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/xom11/vibe-debug)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE)
+
 A clean, zero-ad, zero-internet-permission Android utility (**Vibe Debug**, `io.github.xom11.vibedebug`) built for everyday users and developers to inspect and switch **USB Debugging** without digging through nested Settings menus.
+
+<p align="center">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" width="22%" alt="Home 1-Tap Mode" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" width="22%" alt="Quick Settings, Widgets & Clean Launch" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="22%" alt="OEM ADB Setup" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4.png" width="22%" alt="Zero-Setup Mode A Guide" />
+</p>
 
 ## Key Capabilities
 

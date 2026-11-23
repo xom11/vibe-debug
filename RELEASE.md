@@ -26,25 +26,43 @@ Khi nâng phiên bản mới (ví dụ `2.0.1` / `versionCode = 4`):
 
 ---
 
-## 2. Đăng lên IzzyOnDroid (duyệt nhanh ~1–2 ngày)
+## 2. Đăng lên IzzyOnDroid (Codeberg — duyệt nhanh ~1–2 ngày)
 
-1. Mở issue mới tại: `https://gitlab.com/IzzyOnDroid/repo/-/issues`
-2. Nội dung gợi ý để copy-paste:
-   - **App Name:** Vibe Debug
-   - **Package ID:** `io.github.xom11.vibedebug`
-   - **Repo URL:** `https://github.com/xom11/vibe-debug`
-   - **License:** `GPL-3.0-or-later`
-   - **Release APK:** GitHub Releases (`vibe-debug-%v.apk`, ~1.3 MB)
-   - **Fastlane metadata:** Có sẵn trong `fastlane/metadata/android/` (`en-US` và `vi`, kèm `icon.png` 512×512 và `featureGraphic.png` 1024×500)
-   - **Reproducible build:** Tắt `dependenciesInfo` & `vcsInfo`, ghim `distributionSha256Sum` trong `gradle-wrapper.properties`.
+IzzyOnDroid hiện tiếp nhận yêu cầu mới trên **Codeberg** (đã chuyển từ GitLab sang Codeberg):
+1. Mở link tạo issue sẵn form tại:
+   `https://codeberg.org/IzzyOnDroid/repodata/issues/new?template=.forgejo%2Fissue_template%2Fapp-inclusion-request.yaml`
+2. Điền đúng các trường theo bảng chuẩn dưới đây (đã khớp 100% template của `IzzyOnDroid/repodata`):
+   - **Title:** `[AppRequest] Vibe Debug`
+   - **Guidelines:** Tích cả 4 ô (tôi là developer, tuân thủ policy, chưa có trong repo, đã có thư mục `fastlane/` kèm 8 screenshots & graphics).
+   - **Link to the source code:** `https://github.com/xom11/vibe-debug`
+   - **License used:** `GPL-3.0-or-later`
+   - **Categories:** Chọn `Development` và `System`
+   - **Summary:**
+     `Inspect and switch USB & Wireless Debugging in 1 tap with auto-off timer`
+   - **Description:** Copy nguyên văn `fastlane/metadata/android/en-US/full_description.txt`
+   - **Build instructions:**
+     ```text
+     JDK 21 and Android SDK 36 (compileSdk = 36, targetSdk = 36).
+     Build unsigned reproducible release APK from repo root:
+       ./gradlew assembleRelease -PfdroidBuild=true
+     The output APK matches the signed GitHub Release asset (`vibe-debug-%v.apk`, SHA-256 signing key `ec31e1dd2bbbe1d88d7bd8e3778d0323dd9e24e865ec74ab8f94da6317c1822c`) bit-for-bit (`dependenciesInfo` and `vcsInfo` disabled, Gradle wrapper checksum pinned).
+     ```
+   - **AI Tools Usage (khai báo minh bạch để qua vòng `needs/llm-check`):**
+     - *Assistance Level:* `Substantial – Used throughout development` (hoặc `Moderate` theo mức bạn muốn khai)
+     - *AI Tool(s):* `Antigravity / Gemini / Claude`
+     - *What did the tools help with, and how?:* `Assisted with Jetpack Compose adaptive UI boilerplate, bilingual en-US/vi strings, Robolectric unit test scaffolding, and GitHub Actions/F-Droid reproducible build configuration.`
+     - *AI Accountability:* Tích cả 2 ô xác nhận developer đã review/edit code và tự kiểm thử thực tế trên thiết bị.
 
 ---
 
-## 3. Đăng lên F-Droid chính thức (`fdroiddata`)
+## 3. Đăng lên F-Droid chính thức (`fdroiddata` / RFP)
 
-1. Fork repo `https://gitlab.com/fdroid/fdroiddata`.
-2. Copy trực tiếp file `fastlane/io.github.xom11.vibedebug.yml` trong repo này sang `metadata/io.github.xom11.vibedebug.yml` của `fdroiddata` (đã điền sẵn `Repo`, `Binaries`, `Builds`, và `AllowedAPKSigningKeys`).
-3. Commit và mở **Merge Request** lên `fdroid/fdroiddata`.
+- **Cách nhanh (Merge Request trực tiếp):**
+  1. Fork repo `https://gitlab.com/fdroid/fdroiddata`.
+  2. Copy trực tiếp file `fastlane/io.github.xom11.vibedebug.yml` trong repo này sang `metadata/io.github.xom11.vibedebug.yml` của `fdroiddata` (đã điền sẵn `Repo`, `Binaries`, `Builds`, và `AllowedAPKSigningKeys`).
+  3. Commit và mở **Merge Request** lên `fdroid/fdroiddata`.
+- **Hoặc mở Request for Packaging (RFP) nếu muốn maintainer xem trước:**
+  `https://gitlab.com/fdroid/rfp/-/issues/new` (Application ID: `io.github.xom11.vibedebug`).
 
 ---
 
