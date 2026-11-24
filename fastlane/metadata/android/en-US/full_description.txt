@@ -8,13 +8,20 @@ Key features:
 
 • 1-Tap Mode (with WRITE_SECURE_SETTINGS):
   - Grant WRITE_SECURE_SETTINGS once via ADB or Shizuku (including the reinstall-with-grant command for ColorOS / OxygenOS 15–16+) to unlock instant 1-tap switching inside the app, across 2 focused Quick Settings tiles (USB Debug & Wireless Debug), and via 1 adaptive multi-size Home Screen widget (scaling from compact 1×1 / 2×1 icon controls to labeled 3×1 / 4×1 / 2×2 / 4×2 cards).
-  - Includes automatic Keep Screen Awake & Unlocked while USB Debugging is active and a clear warning when toggling Wireless Debugging on mobile data (5G/4G) without Wi-Fi.
+  - Optionally keeps the screen awake while USB Debugging is active and clearly warns you before turning on Wireless Debugging on mobile data (5G/4G) without Wi-Fi.
 
 • Clean Launch (Turn Off Debug & Launch):
   - Pick banking, digital ID, e-wallet, enterprise, or security-sensitive apps that refuse to run while Developer Options is active. Launching them from Shortcuts or a badged 1×1 home shortcut turns off Developer Options cleanly first.
 
+• Auto Turn-Off for Selected Apps (optional, needs 1-Tap Mode):
+  - Enable "Auto-turn off when opening apps" and grant Usage Access, and opening one of your selected apps from its regular icon turns debugging off automatically. Choose per app whether to turn off all of Developer Options or only USB & Wireless Debugging, and whether debugging comes back on a few seconds after you leave.
+  - Off by default. While enabled it runs as a visible foreground service with a persistent notification and a Stop button, pauses while the screen is off, and never uses Accessibility. Foreground app checks happen only on your device and are never stored.
+
 • Safety Auto-Off Timer:
-  - Automatically turn off USB Debugging after 15, 30, or 60 minutes using Android's battery-friendly AlarmManager.setWindow (no exact alarm permission or background service).
+  - Automatically turn off USB Debugging after 15, 30, or 60 minutes using a battery-friendly, inexact system alarm (no exact-alarm permission needed).
+
+• Troubleshooting:
+  - Copy device diagnostics (device model, Android version, permission and debug-setting states) to the clipboard to paste into a bug report. Nothing is sent automatically.
 
 • Privacy by Design:
-  - Declares zero INTERNET permission, zero background services, zero analytics, and zero ads.
+  - No INTERNET permission, no analytics, no ads, and no tracking. Everything stays on your device. Open source under GPL-3.0-or-later.

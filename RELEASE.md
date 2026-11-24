@@ -68,17 +68,104 @@ IzzyOnDroid hiện tiếp nhận yêu cầu mới trên **Codeberg** (đã chuy�
 
 ## 4. Nộp lên Google Play Console (Closed Testing → Production)
 
-- **Bản `.aab` đã ký:** `app/build/outputs/bundle/release/app-release.aab` (hoặc tải `play-store-aab-2.0.0` từ GitHub Actions Artifacts).
-- **Target API:** `compileSdk = 36`, `targetSdk = 36` (Android 16) với adaptive layout (`AdaptiveLayout.kt`) cho điện thoại, máy tính bảng và màn hình gập.
-- **Đồ hoạ Store:**
-  - App Icon (`512×512`): `fastlane/metadata/android/en-US/images/icon.png`
-  - Feature Graphic (`1024×500`): `fastlane/metadata/android/en-US/images/featureGraphic.png`
-  - Nội dung Store song ngữ: `fastlane/metadata/android/{en-US,vi}/`
-  -*(Nên chụp thêm 2–6 screenshot từ máy thật vào `fastlane/metadata/android/en-US/images/phoneScreenshots/` để dùng chung cho Play Store và F-Droid.)*
-- **Privacy Policy URL:** `https://github.com/xom11/vibe-debug/blob/main/PRIVACY.md`
-- **App Content & Data Safety:**
-  - **Data collected / shared:** **No** (không khai báo `INTERNET`, không thu thập và không chia sẻ dữ liệu).
-  - **App access:** *"All functionality is available without special access"* (không có tài khoản đăng nhập).
-  - **Ads:** **No**.
-  - **Closed testing:** Đủ tối thiểu **12 tester** opt-in & sử dụng liên tục trong **14 ngày** trước khi xin mở Production (áp dụng với tài khoản cá nhân tạo sau 13/11/2023).
-  - **Giải trình `WRITE_SECURE_SETTINGS` nếu reviewer hỏi:** Mặc định (Mode A) ứng dụng hoạt động đầy đủ không cần quyền đặc biệt (đọc trạng thái trực tiếp, hướng dẫn theo từng hãng, deep-link tới đúng công tắc trong Cài đặt, 2 ô Cài đặt nhanh trọng tâm và 1 Widget USB & Wi-Fi tự co giãn ngoài màn hình chính). Quyền `WRITE_SECURE_SETTINGS` chỉ mở khoá tuỳ chọn 1 chạm khi chính người dùng tự cấp qua ADB/Shizuku (tương tự *SystemUI Tuner*).
+### 4.1. Bản `.aab` để tải lên
+
+- Luôn lấy AAB **build từ đúng tag phát hành** (`vX.Y.Z`), không build từ `main`: tải artifact `play-store-aab-<version>` ở **Actions → Release**, hoặc build lại tại tag:
+  ```bash
+  git checkout vX.Y.Z && ./gradlew bundleRelease   # → app/build/outputs/bundle/release/app-release.aab
+  ```
+  Như vậy bản Play, bản GitHub Release và bản F-Droid cùng `versionCode` sẽ cùng mã nguồn.
+- **Target API:** `compileSdk = 36`, `targetSdk = 36` (Android 16), đạt yêu cầu target API của Play. Native lib duy nhất (`libandroidx.graphics.path.so`) đã align 16 KB.
+- AAB đã kèm sẵn R8 mapping (`BUNDLE-METADATA/.../proguard.map`), không cần upload mapping riêng.
+
+### 4.2. Play App Signing — ⚠️ quyết định một lần, không đổi lại được
+
+App đã phát hành trên GitHub / Obtainium / IzzyOnDroid (và F-Droid reproducible build) bằng khoá `ec31e1dd…`. Nếu để Google **tự tạo** app signing key, bản cài từ Play sẽ khác chữ ký → người dùng không cập nhật chéo được giữa Play và các nguồn khác (phải gỡ app, mất cấu hình).
+
+Khi tạo release đầu tiên:
+1. Ở bước **App integrity → App signing**, chọn **Use a different key / Change app signing key** → **Export and upload a key from Java keystore**.
+2. Tải `pepk.jar` và `encryption_public_key.pem` từ chính trang đó, rồi chạy **đúng lệnh Play Console hiển thị**, dạng:
+   ```bash
+   java -jar pepk.jar --keystore=release-keystore.jks --alias=<keyAlias> \
+     --output=vibedebug-signing-key.zip --include-cert --rsa-aes-encryption \
+     --encryption-key-path=encryption_public_key.pem
+   ```
+3. Upload `vibedebug-signing-key.zip`. Upload key: dùng chính `release-keystore.jks` (workflow `release.yml` đang ký AAB bằng khoá này, không cần đổi gì).
+4. Sau khi lưu, kiểm tra **App integrity → App signing key certificate → SHA-256** phải đúng `EC:31:E1:DD:…:C1:82:2C`.
+
+### 4.3. Store listing
+
+- **Nội dung song ngữ:** copy từ `fastlane/metadata/android/{en-US,vi}/` (`title.txt` ≤ 30, `short_description.txt` ≤ 80, `full_description.txt` ≤ 4000 ký tự).
+- **Đồ hoạ:**
+  - App icon `512×512`: `fastlane/metadata/android/en-US/images/icon.png`
+  - Feature graphic `1024×500` (PNG 24-bit, không alpha): `fastlane/metadata/android/en-US/images/featureGraphic.png`
+  - Phone screenshots `1200×2400` (đúng giới hạn tỉ lệ 2:1, không alpha): `fastlane/metadata/android/{en-US,vi}/images/phoneScreenshots/`
+  - Tablet 7" & 10" `1920×1080`: `fastlane/metadata/android/en-US/images/{sevenInch,tenInch}Screenshots/`
+  - Ảnh mới chụp từ máy thật cũng phải ≤ 2:1 và không có alpha (ảnh 1080×2400 cần pad ra 1200×2400).
+- **Category:** Tools. **Website:** `https://github.com/xom11/vibe-debug`. **Contact email:** bắt buộc, sẽ hiển thị công khai trên Play.
+
+### 4.4. App content (Policy → App content)
+
+| Mục | Khai báo |
+|---|---|
+| Privacy policy | `https://github.com/xom11/vibe-debug/blob/main/PRIVACY.md` |
+| Ads | **No** |
+| App access | **All or some functionality is restricted** → dán hướng dẫn ở mục 4.5 |
+| Content rating (IARC) | Category *Utility / Productivity / Other*, trả lời **No** cho mọi câu |
+| Target audience | **18+** (công cụ cho nhà phát triển; tránh nhóm dưới 13 để không thuộc chính sách Families) |
+| Data safety | **No** data collected or shared (không có `INTERNET`; mọi xử lý nằm trên máy) |
+| Advertising ID | **No** (manifest không có `AD_ID`) |
+| Financial features | *My app doesn't provide any financial features* |
+| Government apps / Health / News | **No** |
+| Foreground service permissions | Khai báo `FOREGROUND_SERVICE_SPECIAL_USE` → mục 4.6 |
+
+### 4.5. Hướng dẫn cho reviewer (App access → Instructions)
+
+```text
+No account or login. Core features (live debug status, OEM unlock guides, deep links to the exact
+Developer Options toggles, Quick Settings tiles and the home-screen widget) work without special access.
+
+1-Tap Mode and "Auto-turn off when opening apps" need android.permission.WRITE_SECURE_SETTINGS,
+which Android only lets the user grant from a computer:
+  1. Enable Developer Options and USB debugging, connect the phone to a computer with ADB.
+  2. Run: adb shell pm grant io.github.xom11.vibedebug android.permission.WRITE_SECURE_SETTINGS
+  3. Reopen Vibe Debug; the banner shows "1-Tap Mode active".
+To test auto-turn off: Shortcuts tab -> "Choose apps" -> select any installed app -> enable
+"Auto-turn off when opening apps" -> grant Usage Access in the dialog that follows -> open the
+selected app from its regular launcher icon.
+```
+
+### 4.6. Foreground service declaration (`specialUse`)
+
+Service `AppWatcherService` chỉ chạy khi người dùng đã cấp `WRITE_SECURE_SETTINGS` qua ADB **và** Usage Access, nên reviewer khó tự tái hiện → **video là bắt buộc thực tế**, quay đủ luồng.
+
+**Mô tả (dán vào ô task description):**
+```text
+Vibe Debug lets users pick apps (for example banking or digital ID apps) that refuse to run while
+Developer Options or USB debugging is enabled. Only when the user explicitly turns on
+"Auto-turn off when opening apps" (off by default; requires the user-granted WRITE_SECURE_SETTINGS
+permission and Usage Access, shown with an in-app disclosure first) does the app start a specialUse
+foreground service. While the screen is on, the service checks the current foreground app on-device
+with UsageStatsManager (about every 200 ms, pausing completely while the screen is off), turns
+debugging off the moment a selected app comes to the foreground, and restores it a few seconds after
+the user leaves. This must react immediately when the user opens the app from its normal launcher
+icon (the selected app checks Developer Options at startup), so it cannot be deferred to
+WorkManager/JobScheduler, and no other foreground service type fits. The ongoing notification shows
+how many apps are protected and has a Stop action; turning the feature off stops the service.
+No data leaves the device (the app has no INTERNET permission) and AccessibilityService is not used.
+```
+
+**Kịch bản video (30–60 giây, quay màn hình máy thật, upload YouTube dạng Unlisted):**
+1. Mở Vibe Debug → banner *1-Tap Mode active*, USB debugging đang **BẬT**.
+2. Tab **Shortcuts** → **Choose apps** → chọn 1 app (ví dụ app ngân hàng) → bật **Auto-turn off when opening apps** → hộp thoại giải thích Usage Access → cấp quyền.
+3. Kéo thanh thông báo: thông báo cố định *Watching 1 protected app* kèm nút **Stop**.
+4. Về màn hình chính, mở app đã chọn từ icon gốc → app mở bình thường; quay lại Cài đặt nhanh / Vibe Debug cho thấy gỡ lỗi đã **TẮT**.
+5. Thoát app đã chọn → sau ~8 giây gỡ lỗi tự **BẬT** lại.
+6. Bấm **Stop** trên thông báo → thông báo biến mất, tính năng tắt.
+
+Nếu bị từ chối: phương án dự phòng là build riêng cho Play không có `AppWatcherService` (giữ lối tắt Clean Launch thủ công).
+
+### 4.7. Closed testing → Production
+
+- Tài khoản cá nhân tạo sau 13/11/2023: cần **≥ 12 tester** opt-in và dùng liên tục **14 ngày** trong closed testing trước khi xin quyền Production.
+- **Giải trình `WRITE_SECURE_SETTINGS` nếu reviewer hỏi:** Mặc định (Mode A) ứng dụng hoạt động đầy đủ không cần quyền đặc biệt (đọc trạng thái trực tiếp, hướng dẫn theo từng hãng, deep-link tới đúng công tắc trong Cài đặt, 2 ô Cài đặt nhanh trọng tâm và 1 Widget USB & Wi-Fi tự co giãn ngoài màn hình chính). Quyền `WRITE_SECURE_SETTINGS` chỉ mở khoá tuỳ chọn 1 chạm khi chính người dùng tự cấp qua ADB/Shizuku (tương tự *SystemUI Tuner*).

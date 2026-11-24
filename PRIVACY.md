@@ -1,6 +1,9 @@
 # Privacy Policy — Vibe Debug (USB Debug Switch)
 
 **Effective date:** 2026-11-23  
+**Last updated:** 2026-11-24  
+**Developer:** xom11 (<https://github.com/xom11>)  
+**Contact:** <https://github.com/xom11/vibe-debug/issues>  
 **License:** GPL-3.0-or-later  
 
 ## English
@@ -19,6 +22,13 @@
    - This app list is never stored off-device or transmitted anywhere.
 5. **Local Preferences (`android:allowBackup="false"`):**
    - Your selected theme, Safe Launch allowlist, per-app modes, auto-off timer duration, and quick-tile flags are stored locally in private `SharedPreferences` with Android cloud backup disabled. Uninstalling the app deletes all local preferences immediately.
+6. **Device Diagnostics (user-initiated only):**
+   - The *Copy device diagnostics* button in Setup copies a plain-text report (app version, device manufacturer/model, Android version, locale, permission and debug-setting states, home launcher package, and which widget/tile surfaces are added) to your clipboard. It contains no account, contact, location, or usage-history data.
+   - Vibe Debug never sends this report anywhere; it only leaves your device if you paste it somewhere yourself.
+7. **Children:** Vibe Debug is a developer utility and is not directed at children.
+8. **Changes & Contact:**
+   - Any change to this policy is published in this file with a new *Last updated* date.
+   - Questions or requests: open an issue at <https://github.com/xom11/vibe-debug/issues>.
 
 ---
 
@@ -37,3 +47,10 @@
    - Chỉ được dùng cục bộ trong hộp thoại chọn app của tính năng *Tắt gỡ lỗi & Mở app* để bạn tự chọn ứng dụng cần bảo vệ; tuyệt đối không ghi ra ngoài hay gửi đi đâu.
 5. **Lưu trữ cục bộ (`android:allowBackup="false"`):**
    - Giao diện, danh sách app, chế độ từng app và cài đặt hẹn giờ chỉ lưu trong `SharedPreferences` riêng của ứng dụng và đã tắt sao lưu đám mây; xoá app là xoá sạch dữ liệu ngay lập tức.
+6. **Thông tin chẩn đoán (chỉ khi bạn bấm):**
+   - Nút *Sao chép thông tin chẩn đoán* trong tab Thiết lập chép vào bộ nhớ tạm một báo cáo dạng văn bản (phiên bản app, hãng/dòng máy, phiên bản Android, ngôn ngữ, trạng thái quyền và cài đặt gỡ lỗi, gói launcher đang dùng, widget/ô Cài đặt nhanh đã thêm). Báo cáo không chứa tài khoản, danh bạ, vị trí hay lịch sử sử dụng.
+   - Vibe Debug không gửi báo cáo này đi đâu; nó chỉ rời khỏi máy khi chính bạn dán vào nơi khác.
+7. **Trẻ em:** Vibe Debug là công cụ cho nhà phát triển, không hướng tới trẻ em.
+8. **Thay đổi & liên hệ:**
+   - Mọi thay đổi của chính sách này được cập nhật trong file này kèm ngày *Last updated* mới.
+   - Câu hỏi hoặc yêu cầu: mở issue tại <https://github.com/xom11/vibe-debug/issues>.

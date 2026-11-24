@@ -95,12 +95,12 @@ The app uses a responsive 3-tab layout (`HomeTab`, `ShortcutsTab`, `SetupTab`) s
     - **Other brands:** Shows `pm grant` plus reinstall fallback.
 - **USB Debug Automation (Mode B only):**
   - `Keep screen awake while USB Debugging` (`keepAwakeOnUsb`): automatically sets `stay_on_while_plugged_in = 7` and `FLAG_KEEP_SCREEN_ON` when USB Debugging turns ON, and restores `0` when USB Debugging turns OFF across all surfaces.
-  - Auto-Off timer toggle + `15 / 30 / 60 min` segmented control (disabled with clear *"Requires 1-Tap Mode"* helper text in Mode A). Uses standard inexact `AlarmManager.setWindow` via `AutoOffManager` & `AutoOffReceiver`.
+  - Auto-Off timer toggle + `15 / 30 / 60 min` segmented control (disabled with clear *"Requires 1-Tap Mode"* helper text in Mode A). Uses standard inexact `AlarmManager.setAndAllowWhileIdle` via `AutoOffManager` & `AutoOffReceiver`.
 - **Appearance & Behavior:**
   - Theme selector (`System` | `Dark` | `Light`).
   - In-app Language selector (`System` | `Tiếng Việt` | `English`) on Android 13+.
   - Auto-jump to USB Debugging on launch toggle (shown only in Mode A; OFF by default).
-- **Privacy & Version Card:** Zero network, zero background services guarantee + version readout.
+- **Privacy & Version Card:** Zero network, no ads/analytics guarantee (developer flags change only on user action or optional on-device per-app rules) + version readout.
 
 ---
 

@@ -8,13 +8,20 @@ Tính năng nổi bật:
 
 • Chế độ 1 chạm (WRITE_SECURE_SETTINGS):
   - Cấp quyền 1 lần qua ADB hoặc Shizuku (có sẵn lệnh cài đè cho ColorOS / OxygenOS 15–16+) để bật/tắt trực tiếp ngay trong app, trên 2 ô Cài đặt nhanh trọng tâm (Gỡ lỗi USB & Gỡ lỗi Wi-Fi) và 1 Widget USB & Wi-Fi tự co giãn ngoài màn hình chính (từ 1×1, 2×1 gọn nhẹ đến 3×1, 4×1, 2×2, 4×2).
-  - Hỗ trợ tự động giữ màn hình sáng, không khoá máy khi đang bật Gỡ lỗi USB và cảnh báo rõ ràng khi bật Gỡ lỗi không dây lúc đang dùng 5G/4G chưa có Wi-Fi.
+  - Tuỳ chọn giữ màn hình sáng khi đang bật Gỡ lỗi USB và cảnh báo rõ ràng trước khi bật Gỡ lỗi không dây lúc đang dùng 5G/4G chưa có Wi-Fi.
 
 • Tắt gỡ lỗi & Mở app (Clean Launch):
-  - Thêm ứng dụng ngân hàng, VNeID, ví điện tử hoặc app yêu cầu tắt gỡ lỗi để tự động tắt sạch Chế độ nhà phát triển chỉ với 1 chạm trước khi mở, hoặc ghim lối tắt 1×1 ra màn hình chính.
+  - Thêm ứng dụng ngân hàng, định danh điện tử, ví điện tử hoặc app yêu cầu tắt gỡ lỗi để tự động tắt sạch Chế độ nhà phát triển chỉ với 1 chạm trước khi mở, hoặc ghim lối tắt 1×1 ra màn hình chính.
+
+• Tự động tắt khi mở app đã chọn (tuỳ chọn, cần Chế độ 1 chạm):
+  - Bật "Tự động tắt khi mở app" và cấp quyền Truy cập dữ liệu sử dụng: mở app đã chọn từ icon gốc là gỡ lỗi tự tắt. Tuỳ từng app, chọn tắt cả Chế độ nhà phát triển hay chỉ tắt Gỡ lỗi USB & không dây, và có tự bật lại vài giây sau khi thoát hay không.
+  - Tắt mặc định. Khi bật, tính năng chạy dưới dạng dịch vụ nền hiển thị (foreground service) có thông báo cố định kèm nút Dừng, tự nghỉ khi tắt màn hình và không dùng Trợ năng (Accessibility). Việc kiểm tra app đang mở chỉ diễn ra trên máy và không được lưu lại.
 
 • Hẹn giờ tự tắt an toàn (15 / 30 / 60 phút):
-  - Tự động tắt Gỡ lỗi USB bằng bộ hẹn giờ tiết kiệm pin chuẩn Android, không chạy dịch vụ nền.
+  - Tự động tắt Gỡ lỗi USB bằng báo thức hệ thống tiết kiệm pin (không cần quyền báo thức chính xác).
+
+• Hỗ trợ xử lý lỗi:
+  - Sao chép thông tin chẩn đoán (dòng máy, phiên bản Android, trạng thái quyền và cài đặt gỡ lỗi) vào bộ nhớ tạm để dán vào báo lỗi. Không có gì được gửi đi tự động.
 
 • Riêng tư tuyệt đối:
-  - Không xin quyền INTERNET, không theo dõi, không quảng cáo, mã nguồn mở GPL-3.0-or-later.
+  - Không xin quyền INTERNET, không theo dõi, không quảng cáo, mọi thứ ở lại trên máy. Mã nguồn mở GPL-3.0-or-later.
