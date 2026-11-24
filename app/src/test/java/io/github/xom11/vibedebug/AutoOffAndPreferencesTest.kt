@@ -1,12 +1,19 @@
 package io.github.xom11.vibedebug
 
+import android.Manifest
+import android.app.AlarmManager
+import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Configuration
+import android.provider.Settings
 import androidx.test.core.app.ApplicationProvider
 import io.github.xom11.vibedebug.data.AppPreferences
 import io.github.xom11.vibedebug.data.AutoOffManager
 import io.github.xom11.vibedebug.data.ThemePreference
+import io.github.xom11.vibedebug.rules.BootCompletedReceiver
+import org.robolectric.Shadows
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -197,5 +204,31 @@ class AutoOffAndPreferencesTest {
         assertTrue(viContext.getString(R.string.safe_launch_desc).isNotBlank())
         assertTrue(viContext.getString(R.string.safe_launch_list_hint).isNotBlank())
         assertEquals("Gợi ý", viContext.getString(R.string.badge_banking_suggested))
+    }
+
+    @Test
+    fun `remainingMinutes rounds up partial minutes until deadline expires`() {
+        prefs.autoOffTargetAtMs = 100_000L
+        assertEquals(1, autoOffManager.remainingMinutes(nowMs = 99_000L))
+        assertEquals(1, autoOffManager.remainingMinutes(nowMs = 41_000L))
+        assertEquals(1, autoOffManager.remainingMinutes(nowMs = 40_000L))
+        assertEquals(2, autoOffManager.remainingMinutes(nowMs = 39_000L))
+        assertNull(autoOffManager.remainingMinutes(nowMs = 100_000L))
+    }
+
+    @Test
+    fun `BootCompletedReceiver resyncs or cancels AutoOffManager based on USB debugging state`() {
+        Shadows.shadowOf(context as Application).grantPermissions(Manifest.permission.WRITE_SECURE_SETTINGS)
+        val alarmManager = context.getSystemService(AlarmManager::class.java)
+        val receiver = BootCompletedReceiver()
+
+        Settings.Global.putInt(context.contentResolver, Settings.Global.ADB_ENABLED, 1)
+        prefs.autoOffTargetAtMs = System.currentTimeMillis() + 20 * 60_000L
+        receiver.onReceive(context, Intent(Intent.ACTION_BOOT_COMPLETED))
+        assertNotNull(Shadows.shadowOf(alarmManager).nextScheduledAlarm)
+
+        Settings.Global.putInt(context.contentResolver, Settings.Global.ADB_ENABLED, 0)
+        receiver.onReceive(context, Intent(Intent.ACTION_BOOT_COMPLETED))
+        assertEquals(0L, AppPreferences(context).autoOffTargetAtMs)
     }
 }

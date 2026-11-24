@@ -329,4 +329,30 @@ class QuickSurfaceHelperTest {
             QuickSurfaceHelper.resolvePinOutcome(permissionDenied = false, supported = true, requested = false)
         )
     }
+
+    @Test
+    @Config(sdk = [29])
+    fun `UsbDebugWidgetProvider on API 29 uses MAX_HEIGHT in portrait so 2x2 does not collapse to 1 row`() {
+        val provider = UsbDebugWidgetProvider()
+        val container = FrameLayout(context)
+        context.resources.configuration.orientation = android.content.res.Configuration.ORIENTATION_PORTRAIT
+
+        val portraitSquareOptions = android.os.Bundle().apply {
+            putInt(android.appwidget.AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 113)
+            putInt(android.appwidget.AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 75)
+            putInt(android.appwidget.AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 200)
+            putInt(android.appwidget.AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 155)
+        }
+        val inflatedSquare = provider.buildRemoteViews(context, appWidgetId = 92, options = portraitSquareOptions)
+            .apply(context, container)
+        assertTrue(inflatedSquare.findViewById<TextView>(R.id.state_hub_usb) != null)
+        assertTrue(inflatedSquare.findViewById<View>(R.id.hub_header_title) == null)
+    }
+
+    @Test
+    fun `resolveTier maps 40dp-tall horizontal pills to COMPACT_2X1 WIDE_3X1 and STRIP_4X1`() {
+        assertEquals(WidgetLayoutTier.COMPACT_2X1, UsbDebugWidgetProvider.resolveTier(widthDp = 95, heightDp = 40))
+        assertEquals(WidgetLayoutTier.WIDE_3X1, UsbDebugWidgetProvider.resolveTier(widthDp = 170, heightDp = 40))
+        assertEquals(WidgetLayoutTier.STRIP_4X1, UsbDebugWidgetProvider.resolveTier(widthDp = 235, heightDp = 40))
+    }
 }

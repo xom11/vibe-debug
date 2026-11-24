@@ -230,6 +230,8 @@
     <string name="dialog_xiaomi_pin_title">Allow Home screen shortcuts</string>
     <string name="dialog_xiaomi_pin_body">Xiaomi HyperOS / MIUI blocks apps from pinning widgets and shortcuts by default.\n\n1. Tap \"Open permissions\" below.\n2. Open \"Other permissions\" → enable \"Home screen shortcuts\" (Always allow).\n3. Return here and tap Add again.\n\nOr add manually: long-press your Home screen → Widgets → Android widgets → Vibe Debug.</string>
     <string name="action_open_app_permissions">Open permissions</string>
+    <string name="dialog_generic_pin_title">Add manually from Home screen</string>
+    <string name="dialog_generic_pin_body">Your launcher didn\'t confirm the pin request. This usually happens when Home screen layout is locked or your ROM restricts automatic shortcuts.\n\n1. Unlock Home screen layout in launcher settings (or allow \"Home screen shortcuts\" in App info on Vivo / ColorOS).\n2. Or long-press an empty space on your Home screen → Widgets → Vibe Debug.</string>
 
     <string name="section_safe_launch">Turn Off Debug &amp; Launch</string>
     <string name="safe_launch_banner_title">Apps blocking Developer Mode?</string>

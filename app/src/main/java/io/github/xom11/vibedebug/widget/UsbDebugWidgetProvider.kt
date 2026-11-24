@@ -7,10 +7,12 @@ import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.format.DateFormat
 import android.util.SizeF
 import android.view.View
 import android.widget.RemoteViews
@@ -25,10 +27,8 @@ import io.github.xom11.vibedebug.data.AutoOffManager
 import io.github.xom11.vibedebug.data.DevSettingsController
 import io.github.xom11.vibedebug.data.WirelessSwitchResult
 import io.github.xom11.vibedebug.model.DevState
-import io.github.xom11.vibedebug.rules.AppWatcherService
 import io.github.xom11.vibedebug.shortcut.QuickSurfaceHelper
 import io.github.xom11.vibedebug.shortcut.ShortcutDispatchActivity
-import java.text.DateFormat
 import java.util.Date
 
 @RequiresApi(Build.VERSION_CODES.S)
@@ -72,7 +72,6 @@ class UsbDebugWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,
     ) {
-        AppWatcherService.sync(context.applicationContext ?: context)
         for (widgetId in appWidgetIds) {
             appWidgetManager.updateAppWidget(widgetId, buildRemoteViews(context, widgetId))
         }
@@ -120,9 +119,9 @@ class UsbDebugWidgetProvider : AppWidgetProvider() {
                 mapOf(
                     SizeF(40f, 40f) to buildRemoteViewsForTier(context, appWidgetId, WidgetLayoutTier.ICON_1X1),
                     SizeF(40f, 115f) to buildRemoteViewsForTier(context, appWidgetId, WidgetLayoutTier.TALL_1X2),
-                    SizeF(95f, 48f) to buildRemoteViewsForTier(context, appWidgetId, WidgetLayoutTier.COMPACT_2X1),
-                    SizeF(170f, 48f) to buildRemoteViewsForTier(context, appWidgetId, WidgetLayoutTier.WIDE_3X1),
-                    SizeF(235f, 48f) to buildRemoteViewsForTier(context, appWidgetId, WidgetLayoutTier.STRIP_4X1),
+                    SizeF(95f, 40f) to buildRemoteViewsForTier(context, appWidgetId, WidgetLayoutTier.COMPACT_2X1),
+                    SizeF(170f, 40f) to buildRemoteViewsForTier(context, appWidgetId, WidgetLayoutTier.WIDE_3X1),
+                    SizeF(235f, 40f) to buildRemoteViewsForTier(context, appWidgetId, WidgetLayoutTier.STRIP_4X1),
                     SizeF(95f, 115f) to buildRemoteViewsForTier(context, appWidgetId, WidgetLayoutTier.SQUARE_2X2),
                     SizeF(220f, 115f) to buildRemoteViewsForTier(context, appWidgetId, WidgetLayoutTier.EXPANDED_4X2),
                 )
@@ -131,9 +130,24 @@ class UsbDebugWidgetProvider : AppWidgetProvider() {
         val resolvedOptions = options
             ?: runCatching { AppWidgetManager.getInstance(context).getAppWidgetOptions(appWidgetId) }
                 .getOrNull()
-        val minWidth = resolvedOptions?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 120) ?: 120
-        val minHeight = resolvedOptions?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 52) ?: 52
-        return buildRemoteViewsForTier(context, appWidgetId, resolveTier(minWidth, minHeight))
+        val isLandscape = context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        val widthDp = if (isLandscape) {
+            resolvedOptions?.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH)?.takeIf { it > 0 }
+                ?: resolvedOptions?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 120)
+                ?: 120
+        } else {
+            resolvedOptions?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)?.takeIf { it > 0 }
+                ?: 120
+        }
+        val heightDp = if (isLandscape) {
+            resolvedOptions?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)?.takeIf { it > 0 }
+                ?: 52
+        } else {
+            resolvedOptions?.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT)?.takeIf { it > 0 }
+                ?: resolvedOptions?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 52)
+                ?: 52
+        }
+        return buildRemoteViewsForTier(context, appWidgetId, resolveTier(widthDp, heightDp))
     }
 
     internal fun buildRemoteViewsForTier(
@@ -253,10 +267,8 @@ class UsbDebugWidgetProvider : AppWidgetProvider() {
             "setColorFilter",
             if (usbActive) COLOR_ON else COLOR_OFF
         )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val stateWord = context.getString(if (usbActive) R.string.widget_state_on else R.string.widget_state_off)
-            views.setContentDescription(R.id.widget_root, "${context.getString(R.string.widget_label)}: $stateWord")
-        }
+        val stateWord = context.getString(if (usbActive) R.string.widget_state_on else R.string.widget_state_off)
+        views.setContentDescription(R.id.widget_root, "${context.getString(R.string.widget_label)}: $stateWord")
         val tapIntent = buildActionPendingIntent(
             context = context,
             requestCode = appWidgetId * 16 + 1,
@@ -309,9 +321,7 @@ class UsbDebugWidgetProvider : AppWidgetProvider() {
             views.setTextColor(spec.stateViewId, stateColor)
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            views.setContentDescription(spec.buttonId, "$label: $stateText")
-        }
+        views.setContentDescription(spec.buttonId, "$label: $stateText")
 
         val pendingIntent = buildActionPendingIntent(
             context = context,
@@ -381,7 +391,7 @@ class UsbDebugWidgetProvider : AppWidgetProvider() {
         val subtitleText = when {
             state.blockedByPolicy -> context.getString(R.string.usb_sub_blocked)
             privileged && usbActive && autoOffTargetAtMs > nowMs -> {
-                val formatted = DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(autoOffTargetAtMs))
+                val formatted = DateFormat.getTimeFormat(context).format(Date(autoOffTargetAtMs))
                 context.getString(R.string.widget_hub_sub_auto_off, formatted)
             }
             privileged && usbActive && prefs.keepAwakeOnUsb ->

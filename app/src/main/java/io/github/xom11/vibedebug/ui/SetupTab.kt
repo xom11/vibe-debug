@@ -51,6 +51,7 @@ import io.github.xom11.vibedebug.model.OemBrand
 import io.github.xom11.vibedebug.navigation.SettingsIntents
 import io.github.xom11.vibedebug.ui.theme.AppTheme
 import io.github.xom11.vibedebug.ui.theme.MonoFont
+import java.util.Locale
 
 private val AUTO_OFF_OPTIONS = listOf(15, 30, 60)
 private val THEME_OPTIONS = listOf(ThemePreference.SYSTEM, ThemePreference.DARK, ThemePreference.LIGHT)
@@ -578,7 +579,7 @@ private fun LanguagePickerRow() {
     val context = LocalContext.current
     val localeManager = remember { context.getSystemService(LocaleManager::class.java) }
     var selectedIndex by remember {
-        val tags = localeManager?.applicationLocales?.toLanguageTags().orEmpty().lowercase()
+        val tags = localeManager?.applicationLocales?.toLanguageTags().orEmpty().lowercase(Locale.ROOT)
         val idx = when {
             tags.startsWith("vi") -> 1
             tags.startsWith("en") -> 2

@@ -64,6 +64,7 @@ import androidx.core.graphics.drawable.toBitmap
 import io.github.xom11.vibedebug.R
 import io.github.xom11.vibedebug.data.AppRuleMode
 import io.github.xom11.vibedebug.model.DevState
+import io.github.xom11.vibedebug.shortcut.HomePinFallbackKind
 import io.github.xom11.vibedebug.shortcut.HomePinOutcome
 import io.github.xom11.vibedebug.shortcut.LaunchableApp
 import io.github.xom11.vibedebug.shortcut.QuickSurfaceState
@@ -85,7 +86,8 @@ fun ShortcutsTab(
     hasUsageAccess: Boolean = false,
     appRuleModes: Map<String, AppRuleMode> = emptyMap(),
     quickSurfaceState: QuickSurfaceState = QuickSurfaceState(),
-    xiaomiPinBlockedTick: Int = 0,
+    homePinFallbackTick: Int = 0,
+    homePinFallbackKind: HomePinFallbackKind = HomePinFallbackKind.XIAOMI_PERMISSION,
     onShowSnackbar: (String) -> Unit,
     onShowManualTileDialog: (String) -> Unit,
     onAddUsbTile: ((TileAddOutcome) -> Unit) -> Unit,
@@ -111,13 +113,13 @@ fun ShortcutsTab(
     val adaptive = LocalAdaptiveLayout.current
     var showAppPicker by rememberSaveable { mutableStateOf(false) }
     var showUsageDisclosure by rememberSaveable { mutableStateOf(false) }
-    var showXiaomiPinPermissionDialog by rememberSaveable { mutableStateOf(false) }
+    var activePinFallbackDialog by rememberSaveable { mutableStateOf<HomePinFallbackKind?>(null) }
     var removeWidgetDialogLabel by rememberSaveable { mutableStateOf<String?>(null) }
     var removeShortcutDialogLabel by rememberSaveable { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(xiaomiPinBlockedTick) {
-        if (xiaomiPinBlockedTick > 0) {
-            showXiaomiPinPermissionDialog = true
+    LaunchedEffect(homePinFallbackTick) {
+        if (homePinFallbackTick > 0) {
+            activePinFallbackDialog = homePinFallbackKind
         }
     }
 
@@ -151,7 +153,7 @@ fun ShortcutsTab(
                     onShowSnackbar(context.getString(R.string.feedback_widget_pin_requested, label))
                 }
                 HomePinOutcome.NEEDS_OEM_PERMISSION -> {
-                    showXiaomiPinPermissionDialog = true
+                    activePinFallbackDialog = HomePinFallbackKind.XIAOMI_PERMISSION
                 }
                 HomePinOutcome.UNSUPPORTED -> {
                     onShowSnackbar(context.getString(R.string.feedback_widget_unsupported))
@@ -291,7 +293,7 @@ fun ShortcutsTab(
                                         onShowSnackbar(context.getString(R.string.safe_launch_pin_ok, label))
                                     }
                                     HomePinOutcome.NEEDS_OEM_PERMISSION -> {
-                                        showXiaomiPinPermissionDialog = true
+                                        activePinFallbackDialog = HomePinFallbackKind.XIAOMI_PERMISSION
                                     }
                                     HomePinOutcome.UNSUPPORTED -> {
                                         onShowSnackbar(context.getString(R.string.safe_launch_pin_unsupported))
@@ -372,14 +374,23 @@ fun ShortcutsTab(
         )
     }
 
-    if (showXiaomiPinPermissionDialog) {
-        XiaomiPinPermissionDialog(
-            onOpenPermissions = {
-                showXiaomiPinPermissionDialog = false
-                onOpenHomeShortcutPermissions()
-            },
-            onDismiss = { showXiaomiPinPermissionDialog = false },
-        )
+    activePinFallbackDialog?.let { kind ->
+        when (kind) {
+            HomePinFallbackKind.XIAOMI_PERMISSION -> XiaomiPinPermissionDialog(
+                onOpenPermissions = {
+                    activePinFallbackDialog = null
+                    onOpenHomeShortcutPermissions()
+                },
+                onDismiss = { activePinFallbackDialog = null },
+            )
+            HomePinFallbackKind.GENERIC_MANUAL -> GenericHomePinFallbackDialog(
+                onGoHome = {
+                    activePinFallbackDialog = null
+                    onOpenHomeScreen()
+                },
+                onDismiss = { activePinFallbackDialog = null },
+            )
+        }
     }
 
     if (showAppPicker) {
@@ -758,6 +769,22 @@ private fun XiaomiPinPermissionDialog(
         body = stringResource(R.string.dialog_xiaomi_pin_body),
         confirmText = stringResource(R.string.action_open_app_permissions),
         onConfirm = onOpenPermissions,
+        onDismiss = onDismiss,
+    )
+}
+
+@Composable
+private fun GenericHomePinFallbackDialog(
+    onGoHome: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    PermissionDisclosureDialog(
+        dialogTag = "dialog_home_pin_fallback",
+        confirmButtonTag = "btn_go_home_from_pin_fallback",
+        title = stringResource(R.string.dialog_generic_pin_title),
+        body = stringResource(R.string.dialog_generic_pin_body),
+        confirmText = stringResource(R.string.action_go_home),
+        onConfirm = onGoHome,
         onDismiss = onDismiss,
     )
 }

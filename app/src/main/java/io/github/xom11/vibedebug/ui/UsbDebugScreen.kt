@@ -55,6 +55,7 @@ import io.github.xom11.vibedebug.data.AppRuleMode
 import io.github.xom11.vibedebug.data.ThemePreference
 import io.github.xom11.vibedebug.model.DevState
 import io.github.xom11.vibedebug.model.OemBrand
+import io.github.xom11.vibedebug.shortcut.HomePinFallbackKind
 import io.github.xom11.vibedebug.shortcut.HomePinOutcome
 import io.github.xom11.vibedebug.shortcut.QuickSurfaceState
 import io.github.xom11.vibedebug.shortcut.QuickTileType
@@ -85,8 +86,10 @@ fun UsbDebugScreen(
     quickSurfaceState: QuickSurfaceState = QuickSurfaceState(),
     wirelessWifiWarning: Boolean = false,
     wirelessBlockedTick: Int = 0,
-    xiaomiPinBlockedTick: Int = 0,
+    homePinFallbackTick: Int = 0,
+    homePinFallbackKind: HomePinFallbackKind = HomePinFallbackKind.XIAOMI_PERMISSION,
     initialTab: String? = null,
+    initialTabTick: Int = 0,
     debugPreviewBanner: String?,
     onRefreshState: () -> Unit,
     onRecheckPermission: () -> Boolean,
@@ -125,6 +128,11 @@ fun UsbDebugScreen(
     var currentTab by rememberSaveable(initialTab) {
         mutableStateOf(AppTab.fromRoute(initialTab))
     }
+    LaunchedEffect(initialTab, initialTabTick) {
+        if (initialTabTick > 0) {
+            currentTab = AppTab.fromRoute(initialTab)
+        }
+    }
     var manualQsTileLabel by rememberSaveable { mutableStateOf<String?>(null) }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -150,7 +158,11 @@ fun UsbDebugScreen(
             }
             SafeLaunchResult.NeedsPermission -> {
                 showSnackbar(context.getString(R.string.safe_launch_toast_need_perm))
-                onOpenDeveloperOptionsTop()
+                if (devState.devOptionsEnabled) {
+                    onOpenDeveloperOptionsTop()
+                } else {
+                    onOpenBuildNumberScreen()
+                }
             }
             SafeLaunchResult.BlockedByPolicy -> {
                 showSnackbar(context.getString(R.string.safe_launch_toast_blocked))
@@ -297,7 +309,8 @@ fun UsbDebugScreen(
                                     hasUsageAccess = hasUsageAccess,
                                     appRuleModes = appRuleModes,
                                     quickSurfaceState = quickSurfaceState,
-                                    xiaomiPinBlockedTick = xiaomiPinBlockedTick,
+                                    homePinFallbackTick = homePinFallbackTick,
+                                    homePinFallbackKind = homePinFallbackKind,
                                     onShowSnackbar = showSnackbar,
                                     onShowManualTileDialog = { manualQsTileLabel = it },
                                     onAddUsbTile = onAddUsbQuickTile,

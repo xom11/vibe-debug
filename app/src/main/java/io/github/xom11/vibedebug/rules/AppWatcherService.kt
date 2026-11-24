@@ -37,7 +37,7 @@ class AppWatcherService : Service() {
     private lateinit var prefs: AppPreferences
     private lateinit var controller: DevSettingsController
     private lateinit var detector: AndroidForegroundAppDetector
-    private lateinit var engine: AppRuleEngine
+    internal lateinit var engine: AppRuleEngine
 
     private var workerThread: HandlerThread? = null
     private var workerHandler: Handler? = null
@@ -77,7 +77,18 @@ class AppWatcherService : Service() {
         )
 
         ensureNotificationChannel()
-        startForegroundCompat(buildNotification())
+        if (!startForegroundCompat(buildNotification())) {
+            stopSelf()
+            return
+        }
+
+        val pendingPkg = pendingSafeLaunchPackage
+        val pendingAt = pendingSafeLaunchAtMs
+        pendingSafeLaunchPackage = null
+        pendingSafeLaunchAtMs = 0L
+        if (pendingPkg != null && System.currentTimeMillis() - pendingAt <= AppRuleEngine.SAFE_LAUNCH_GRACE_MS) {
+            engine.markLaunchedFromUi(pendingPkg, pendingAt)
+        }
 
         workerThread = HandlerThread("VibeDebugAppWatcher", Process.THREAD_PRIORITY_BACKGROUND).apply {
             start()
@@ -107,7 +118,10 @@ class AppWatcherService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForegroundCompat(buildNotification())
+        if (!startForegroundCompat(buildNotification())) {
+            stopSelf()
+            return START_NOT_STICKY
+        }
 
         if (intent?.action == ACTION_STOP_WATCHER) {
             prefs.autoAppRulesEnabled = false
@@ -157,14 +171,16 @@ class AppWatcherService : Service() {
         handler.post(pollRunnable)
     }
 
-    private fun startForegroundCompat(notification: Notification) {
+    private fun startForegroundCompat(notification: Notification): Boolean {
         val fgsType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
         } else {
             0
         }
-        ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, fgsType)
-        lastNotificationSignature = currentNotificationSignature()
+        return runCatching {
+            ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, fgsType)
+            lastNotificationSignature = currentNotificationSignature()
+        }.isSuccess
     }
 
     private fun ensureNotificationChannel() {
@@ -256,6 +272,10 @@ class AppWatcherService : Service() {
 
         @Volatile
         private var activeInstance: AppWatcherService? = null
+        @Volatile
+        private var pendingSafeLaunchPackage: String? = null
+        @Volatile
+        private var pendingSafeLaunchAtMs: Long = 0L
 
         fun shouldRun(context: Context): Boolean {
             val appContext = context.applicationContext ?: context
@@ -281,7 +301,13 @@ class AppWatcherService : Service() {
         }
 
         fun onSafeLaunch(packageName: String) {
-            activeInstance?.engine?.markLaunchedFromUi(packageName)
+            val instance = activeInstance
+            if (instance != null) {
+                instance.engine.markLaunchedFromUi(packageName)
+            } else {
+                pendingSafeLaunchPackage = packageName
+                pendingSafeLaunchAtMs = System.currentTimeMillis()
+            }
         }
 
         internal fun resolveNotificationText(
@@ -317,8 +343,15 @@ class BootCompletedReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         val action = intent?.action ?: return
         if (action == Intent.ACTION_BOOT_COMPLETED || action == Intent.ACTION_MY_PACKAGE_REPLACED) {
-            if (AppWatcherService.shouldRun(context)) {
-                AppWatcherService.sync(context)
+            val appContext = context.applicationContext ?: context
+            val prefs = AppPreferences(appContext)
+            val controller = DevSettingsController(AndroidSettingsGateway(appContext))
+            val state = controller.readState()
+            AutoOffManager(appContext, prefs).resync(state.adbEnabled)
+            controller.syncKeepAwakeWithUsb(prefs.keepAwakeOnUsb)
+            QuickSurfaceHelper.syncAllSurfaces(appContext)
+            if (AppWatcherService.shouldRun(appContext)) {
+                AppWatcherService.sync(appContext)
             }
         }
     }

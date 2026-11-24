@@ -1,10 +1,14 @@
 package io.github.xom11.vibedebug.shortcut
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
+import io.github.xom11.vibedebug.MainActivity
 import io.github.xom11.vibedebug.R
+import io.github.xom11.vibedebug.data.AndroidSettingsGateway
 import io.github.xom11.vibedebug.data.AppPreferences
+import io.github.xom11.vibedebug.data.DevSettingsController
 import io.github.xom11.vibedebug.navigation.SettingsIntents
 
 /**
@@ -32,7 +36,18 @@ class SafeLaunchActivity : Activity() {
 
             SafeLaunchResult.NeedsPermission -> {
                 showToast(getString(R.string.safe_launch_toast_need_perm))
-                SettingsIntents.launchDeveloperOptionsTopScreen(this)
+                val devEnabled = DevSettingsController(AndroidSettingsGateway(applicationContext))
+                    .readState()
+                    .devOptionsEnabled
+                if (devEnabled) {
+                    SettingsIntents.launchDeveloperOptionsTopScreen(this)
+                } else {
+                    startActivity(
+                        Intent(this, MainActivity::class.java).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                        }
+                    )
+                }
             }
 
             SafeLaunchResult.BlockedByPolicy -> {

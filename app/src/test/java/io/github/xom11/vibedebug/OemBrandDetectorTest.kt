@@ -5,6 +5,7 @@ import io.github.xom11.vibedebug.model.OemBrandDetector
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import java.util.Locale
 
 class OemBrandDetectorTest {
 
@@ -51,5 +52,19 @@ class OemBrandDetectorTest {
         assertEquals(OemBrand.GOOGLE_OTHER, OemBrandDetector.fromPreviewKey("google"))
         assertNull(OemBrandDetector.fromPreviewKey("unknown_brand"))
         assertNull(OemBrandDetector.fromPreviewKey(null))
+    }
+
+    @Test
+    fun `detect and fromPreviewKey are unaffected by Turkish locale dotted-I rules`() {
+        val previous = Locale.getDefault()
+        Locale.setDefault(Locale("tr", "TR"))
+        try {
+            assertEquals(OemBrand.XIAOMI, OemBrandDetector.detect("XIAOMI", "REDMI"))
+            assertEquals(OemBrand.VIVO, OemBrandDetector.detect("VIVO", "IQOO"))
+            assertEquals(OemBrand.XIAOMI, OemBrandDetector.fromPreviewKey("XIAOMI"))
+            assertEquals(OemBrand.VIVO, OemBrandDetector.fromPreviewKey("VIVO"))
+        } finally {
+            Locale.setDefault(previous)
+        }
     }
 }

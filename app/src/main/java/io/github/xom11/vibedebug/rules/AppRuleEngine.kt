@@ -130,8 +130,11 @@ class AppRuleEngine(
         if (!isWatcherConfigured()) return false
         if (!detector.isScreenInteractive()) return true
 
+        if (lastEventTs > nowMs) {
+            lastEventTs = 0L
+        }
         val lastCheck = usageCheckedAtMs
-        if (lastCheck == null || nowMs - lastCheck >= USAGE_RECHECK_MS) {
+        if (lastCheck == null || nowMs < lastCheck || nowMs - lastCheck >= USAGE_RECHECK_MS) {
             cachedUsageAccess = detector.hasUsageAccess()
             usageCheckedAtMs = nowMs
         }
@@ -272,6 +275,9 @@ class AppRuleEngine(
         return changed
     }
 
+    @Synchronized
+    internal fun currentForegroundPackage(): String? = currentForeground
+
     /** Marks [packageName] as launched via Safe Launch so restore waits during app startup. */
     @Synchronized
     fun markLaunchedFromUi(packageName: String, nowMs: Long = System.currentTimeMillis()) {
@@ -308,7 +314,17 @@ class AppRuleEngine(
             "com.google.android.permissioncontroller",
             "com.oplus.securitypermission",
             "com.coloros.securitypermission",
+            "com.oplus.biometrics",
+            "com.coloros.biometrics",
             "com.samsung.android.biometrics.app.setting",
+            "com.samsung.android.samsungpass",
+            "com.samsung.android.authfw",
+            "com.lbe.security.miui",
+            "com.miui.securitycenter",
+            "com.miui.biometric",
+            "com.vivo.permissionmanager",
+            "com.iqoo.secure",
+            "com.vivo.fingerprintui",
         )
     }
 }

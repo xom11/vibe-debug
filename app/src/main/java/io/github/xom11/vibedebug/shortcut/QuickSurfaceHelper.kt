@@ -35,6 +35,11 @@ enum class HomePinOutcome {
     UNSUPPORTED,
 }
 
+enum class HomePinFallbackKind {
+    XIAOMI_PERMISSION,
+    GENERIC_MANUAL,
+}
+
 sealed interface TileAddOutcome {
     data class Added(val tileLabel: String) : TileAddOutcome
     data class AlreadyAdded(val tileLabel: String) : TileAddOutcome
@@ -134,7 +139,7 @@ object QuickSurfaceHelper {
         }
 
         if (wasDisabled) {
-            Handler(Looper.getMainLooper()).postDelayed(invokeRequest, 250L)
+            Handler(Looper.getMainLooper()).postDelayed(invokeRequest, 400L)
         } else {
             invokeRequest()
         }

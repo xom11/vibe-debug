@@ -230,6 +230,8 @@
     <string name="dialog_xiaomi_pin_title">Cần cấp quyền Lối tắt màn hình chính</string>
     <string name="dialog_xiaomi_pin_body">HyperOS / MIUI của Xiaomi mặc định chặn ứng dụng tự ghim widget và lối tắt ra màn hình chính.\n\n1. Bấm \"Mở quyền ứng dụng\" bên dưới.\n2. Vào \"Quyền khác\" → bật \"Lối tắt màn hình chính\" (Luôn cho phép).\n3. Quay lại đây và bấm Thêm một lần nữa.\n\nHoặc thêm thủ công: nhấn giữ màn hình chính → Tiện ích → Tiện ích Android → Vibe Debug.</string>
     <string name="action_open_app_permissions">Mở quyền ứng dụng</string>
+    <string name="dialog_generic_pin_title">Thêm thủ công ngoài màn hình chính</string>
+    <string name="dialog_generic_pin_body">Màn hình chính chưa xác nhận yêu cầu ghim tự động. Thường do đang bật Khoá bố cục màn hình chính hoặc ROM chặn tạo lối tắt tự động.\n\n1. Tắt Khoá bố cục màn hình chính (hoặc cấp quyền \"Lối tắt màn hình chính\" trong Thông tin ứng dụng trên Vivo / ColorOS).\n2. Hoặc nhấn giữ khoảng trống ngoài màn hình chính → Tiện ích (Widgets) → Vibe Debug.</string>
 
     <string name="section_safe_launch">Tắt gỡ lỗi &amp; Mở app</string>
     <string name="safe_launch_banner_title">Có ứng dụng chặn gỡ lỗi?</string>

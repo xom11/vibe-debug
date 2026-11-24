@@ -58,20 +58,19 @@ class AutoOffManager(private val context: Context, private val prefs: AppPrefere
         prefs.autoOffTargetAtMs = 0L
     }
 
-    /** Returns remaining whole minutes until the target deadline, or null if expired/inactive. */
+    /** Returns remaining whole minutes (rounded up) until the target deadline, or null if expired/inactive. */
     fun remainingMinutes(nowMs: Long = System.currentTimeMillis()): Int? {
         val target = prefs.autoOffTargetAtMs
         if (target <= nowMs) return null
-        return ((target - nowMs) / MILLIS_PER_MINUTE).coerceAtLeast(0).toInt()
+        return ((target - nowMs + MILLIS_PER_MINUTE - 1L) / MILLIS_PER_MINUTE).coerceAtLeast(1L).toInt()
     }
 
     private fun scheduleWindow(targetAtMs: Long) {
         val manager = alarmManager ?: return
         runCatching {
-            manager.setWindow(
+            manager.setAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
                 targetAtMs,
-                WINDOW_LENGTH_MS,
                 createAlarmPendingIntent()
             )
         }
@@ -92,7 +91,6 @@ class AutoOffManager(private val context: Context, private val prefs: AppPrefere
     private companion object {
         const val ALARM_REQUEST_CODE = 1001
         const val MILLIS_PER_MINUTE = 60_000L
-        const val WINDOW_LENGTH_MS = 60_000L
         const val MIN_RESYNC_DELAY_MS = 1_000L
     }
 }

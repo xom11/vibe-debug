@@ -463,4 +463,88 @@ class AppRuleEngineTest {
             serviceController.destroy()
         }
     }
+
+    @Test
+    fun `OEM biometric and permission overlays stay in TRANSIENT_PACKAGES without triggering restore`() {
+        val gateway = FakeSettingsGateway(devOptions = true, adb = true, wirelessAdb = false)
+        val controller = DevSettingsController(gateway)
+        val detector = FakeForegroundDetector()
+        val engine = AppRuleEngine(prefs, controller, detector)
+
+        prefs.addSafeLaunchPackage("com.vietinbank.ipay")
+        prefs.autoAppRulesEnabled = true
+        prefs.autoRestoreOnExit = true
+
+        detector.emit(600_000L, "com.vietinbank.ipay")
+        engine.poll(nowMs = 600_100L)
+        assertFalse(gateway.devOptions)
+
+        listOf(
+            "com.lbe.security.miui",
+            "com.miui.biometric",
+            "com.vivo.permissionmanager",
+            "com.vivo.fingerprintui",
+            "com.oplus.biometrics",
+            "com.samsung.android.samsungpass",
+        ).forEachIndexed { idx, pkg ->
+            val ts = 601_000L + idx * 3_000L
+            detector.emit(ts, pkg)
+            engine.poll(nowMs = ts + 100L)
+        }
+        engine.poll(nowMs = 630_000L)
+        assertFalse(gateway.devOptions)
+        assertEquals("com.vietinbank.ipay", prefs.heldRulePackage)
+    }
+
+    @Test
+    fun `poll recovers cleanly when wall clock jumps backward`() {
+        val gateway = FakeSettingsGateway(devOptions = true, adb = true, wirelessAdb = false)
+        val controller = DevSettingsController(gateway)
+        val detector = FakeForegroundDetector()
+        val engine = AppRuleEngine(prefs, controller, detector)
+
+        prefs.addSafeLaunchPackage("com.vietinbank.ipay")
+        prefs.autoAppRulesEnabled = true
+        prefs.autoRestoreOnExit = true
+
+        detector.emit(500_000L, "com.vietinbank.ipay")
+        engine.poll(nowMs = 500_100L)
+        assertFalse(gateway.devOptions)
+
+        // Clock jumps backward from 500s to 200s; launcher event should still be detected and restore after 8s.
+        detector.emit(200_000L, "com.android.launcher")
+        engine.poll(nowMs = 200_100L)
+        assertFalse(gateway.devOptions)
+        engine.poll(nowMs = 208_200L)
+        assertTrue(gateway.devOptions)
+        assertTrue(gateway.adb)
+    }
+
+    @Test
+    fun `AppWatcherService onSafeLaunch queues pending package until service creates`() {
+        val app = context as Application
+        Shadows.shadowOf(app).grantPermissions(
+            Manifest.permission.WRITE_SECURE_SETTINGS,
+            Manifest.permission.PACKAGE_USAGE_STATS,
+        )
+        val appOps = context.getSystemService(AppOpsManager::class.java)
+        Shadows.shadowOf(appOps).setMode(
+            AppOpsManager.OPSTR_GET_USAGE_STATS,
+            Process.myUid(),
+            context.packageName,
+            AppOpsManager.MODE_ALLOWED,
+        )
+        prefs.autoAppRulesEnabled = true
+        prefs.addSafeLaunchPackage("com.vietinbank.ipay")
+
+        AppWatcherService.onSafeLaunch("com.vietinbank.ipay")
+        val serviceController = Robolectric.buildService(AppWatcherService::class.java)
+            .create()
+            .startCommand(0, 1)
+        try {
+            assertEquals("com.vietinbank.ipay", serviceController.get().engine.currentForegroundPackage())
+        } finally {
+            serviceController.destroy()
+        }
+    }
 }

@@ -1,5 +1,7 @@
 package io.github.xom11.vibedebug.model
 
+import java.util.Locale
+
 data class DevState(
     val devOptionsEnabled: Boolean,
     val adbEnabled: Boolean,
@@ -22,7 +24,7 @@ object OemBrandDetector {
 
     fun detect(manufacturer: String?, brand: String?): OemBrand {
         val candidates = listOfNotNull(manufacturer, brand)
-            .map { it.trim().lowercase() }
+            .map { it.trim().lowercase(Locale.ROOT) }
             .filter { it.isNotEmpty() }
 
         for (value in candidates) {
@@ -44,7 +46,7 @@ object OemBrandDetector {
     }
 
     fun fromPreviewKey(raw: String?): OemBrand? {
-        val normalized = raw?.trim()?.lowercase()?.takeIf { it.isNotEmpty() } ?: return null
+        val normalized = raw?.trim()?.lowercase(Locale.ROOT)?.takeIf { it.isNotEmpty() } ?: return null
         return when (normalized) {
             "samsung" -> OemBrand.SAMSUNG
             "oneplus", "oppo", "realme" -> OemBrand.ONEPLUS_OPPO_REALME

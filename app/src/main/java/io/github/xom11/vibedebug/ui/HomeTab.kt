@@ -55,10 +55,10 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import io.github.xom11.vibedebug.R
 import io.github.xom11.vibedebug.model.DevState
+import android.text.format.DateFormat
 import io.github.xom11.vibedebug.model.OemBrand
 import io.github.xom11.vibedebug.ui.theme.AppTheme
 import io.github.xom11.vibedebug.ui.theme.MonoFont
-import java.text.DateFormat
 import java.util.Date
 
 @Composable
@@ -493,6 +493,7 @@ private fun UsbHeroCard(
     modifier: Modifier = Modifier,
 ) {
     val palette = AppTheme.palette
+    val context = LocalContext.current
     val adaptive = LocalAdaptiveLayout.current
     val on = devState.adbEnabled && !devState.blockedByPolicy
     val enabled = !devState.blockedByPolicy
@@ -501,7 +502,7 @@ private fun UsbHeroCard(
     val subtitle = when {
         devState.blockedByPolicy -> stringResource(R.string.usb_sub_blocked)
         hasWritePermission && on && autoOffTargetAtMs > nowMs -> {
-            val formattedTime = DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(autoOffTargetAtMs))
+            val formattedTime = DateFormat.getTimeFormat(context).format(Date(autoOffTargetAtMs))
             stringResource(R.string.usb_sub_on_auto_off, formattedTime)
         }
         hasWritePermission && on -> stringResource(R.string.usb_sub_on_manual)

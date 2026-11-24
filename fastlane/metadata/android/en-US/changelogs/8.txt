@@ -1,0 +1,3 @@
+• Cross-OEM widget & shortcut pin fallback dialog for launchers that silently ignore pin requests
+• Prevent background foreground-service crashes from widgets/tiles on Android 12–16 and improve Doze auto-off timer reliability
+• Fix repeated tab switching, widget sizing across API 26–36, Turkish locale detection, and OEM biometric overlays in Auto-off rules

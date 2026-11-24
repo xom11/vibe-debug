@@ -1,0 +1,3 @@
+• Thêm hộp thoại hướng dẫn thủ công khi launcher các hãng chặn im lặng yêu cầu ghim widget/lối tắt
+• Chống lỗi khởi động Foreground Service từ nền qua widget/tile trên Android 12–16 và cải thiện hẹn giờ tự tắt trong Doze
+• Sửa chuyển tab lặp lại, kích thước widget API 26–36, nhận diện hãng theo locale và overlay sinh trắc học OEM
