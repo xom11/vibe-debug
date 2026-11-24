@@ -10,7 +10,7 @@
   - Google Play listing title candidate: `Vibe Debug: USB & ADB Switch` (never start the title with `"Android ..."`)
 - **Platform & Stack:**
   - Kotlin + Jetpack Compose (Material 3 with custom **Obsidian & Mint** dark/light `AppPalette` and System/Dark/Light selector)
-  - `minSdk = 26` (Android 8.0), `targetSdk = 36` (Android 16), `compileSdk = 36`
+  - `minSdk = 26` (Android 8.0), `targetSdk = 36` (Android 16), `compileSdk = 37.1` (required by Compose 1.13 / core 1.19 / lifecycle 2.11)
   - Reproducible FLOSS build configuration: `dependenciesInfo { includeInApk = false; includeInBundle = false }`, `vcsInfo.include = false`, `LICENSE` (`GPL-3.0-or-later`), and `PRIVACY.md`.
   - Bilingual resources: `res/values/strings.xml` (English default) and `res/values-vi/strings.xml` (natural, jargon-free Vietnamese), plus `locales_config.xml` and Android 13+ `LocaleManager` in-app picker.
 - **Permissions & Manifest (`AndroidManifest.xml`):**

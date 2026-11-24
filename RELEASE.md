@@ -42,7 +42,7 @@ IzzyOnDroid hiện tiếp nhận yêu cầu mới trên **Codeberg** (đã chuy�
    - **Description:** Copy nguyên văn `fastlane/metadata/android/en-US/full_description.txt`
    - **Build instructions:**
      ```text
-     JDK 21 and Android SDK 36 (compileSdk = 36, targetSdk = 36).
+     JDK 21 and Android SDK platform 37.1 (compileSdk = 37.1, targetSdk = 36); Gradle 9 wrapper (checksum pinned), AGP 9.
      Build unsigned reproducible release APK from repo root:
        ./gradlew assembleRelease -PfdroidBuild=true
      The output APK matches the signed GitHub Release asset (`vibe-debug-%v.apk`, SHA-256 signing key `ec31e1dd2bbbe1d88d7bd8e3778d0323dd9e24e865ec74ab8f94da6317c1822c`) bit-for-bit (`dependenciesInfo` and `vcsInfo` disabled, Gradle wrapper checksum pinned).
@@ -75,7 +75,8 @@ IzzyOnDroid hiện tiếp nhận yêu cầu mới trên **Codeberg** (đã chuy�
   git checkout vX.Y.Z && ./gradlew bundleRelease   # → app/build/outputs/bundle/release/app-release.aab
   ```
   Như vậy bản Play, bản GitHub Release và bản F-Droid cùng `versionCode` sẽ cùng mã nguồn.
-- **Target API:** `compileSdk = 36`, `targetSdk = 36` (Android 16), đạt yêu cầu target API của Play. Native lib duy nhất (`libandroidx.graphics.path.so`) đã align 16 KB.
+- **Target API:** `targetSdk = 36` (Android 16), đạt yêu cầu target API của Play (`compileSdk = 36` tới v2.2.4, `37.1` từ bản sau). Native lib duy nhất (`libandroidx.graphics.path.so`) đã align 16 KB.
+- ⚠️ Từ sau v2.2.4, `main` đã nâng AGP 9 / Kotlin 2.4 / Compose BOM 2026.11: trước khi tag bản kế tiếp, bump `versionCode`/`versionName` và test UI trên máy thật (CI emulator suite + thiết bị OEM).
 - AAB đã kèm sẵn R8 mapping (`BUNDLE-METADATA/.../proguard.map`), không cần upload mapping riêng.
 
 ### 4.2. Play App Signing — ⚠️ quyết định một lần, không đổi lại được
