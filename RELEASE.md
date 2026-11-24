@@ -94,15 +94,17 @@ Khi tạo release đầu tiên:
 3. Upload `vibedebug-signing-key.zip`. Upload key: dùng chính `release-keystore.jks` (workflow `release.yml` đang ký AAB bằng khoá này, không cần đổi gì).
 4. Sau khi lưu, kiểm tra **App integrity → App signing key certificate → SHA-256** phải đúng `EC:31:E1:DD:…:C1:82:2C`.
 
+> ✅ Đã làm ngày 2026-11-24: app signing key và upload key trên Play Console đều là `EC:31:E1:DD:…:C1:82:2C` (khoá Google tự tạo trước đó `18:69:0B:1B:…:58:FF` đã bị thay trước khi có bản nào được phân phối).
+
 ### 4.3. Store listing
 
 - **Nội dung song ngữ:** copy từ `fastlane/metadata/android/{en-US,vi}/` (`title.txt` ≤ 30, `short_description.txt` ≤ 80, `full_description.txt` ≤ 4000 ký tự).
 - **Đồ hoạ:**
   - App icon `512×512`: `fastlane/metadata/android/en-US/images/icon.png`
   - Feature graphic `1024×500` (PNG 24-bit, không alpha): `fastlane/metadata/android/en-US/images/featureGraphic.png`
-  - Phone screenshots `1200×2400` (đúng giới hạn tỉ lệ 2:1, không alpha): `fastlane/metadata/android/{en-US,vi}/images/phoneScreenshots/`
+  - Phone screenshots `1200×2400` (không alpha): `fastlane/metadata/android/{en-US,vi}/images/phoneScreenshots/`
   - Tablet 7" & 10" `1920×1080`: `fastlane/metadata/android/en-US/images/{sevenInch,tenInch}Screenshots/`
-  - Ảnh mới chụp từ máy thật cũng phải ≤ 2:1 và không có alpha (ảnh 1080×2400 cần pad ra 1200×2400).
+  - Play Console ghi khuyến nghị 16:9 / 9:16, nhưng thực tế đã nhận bộ ảnh gốc 1080×2400 (20:9) hiện đang nằm trên listing; bản 1200×2400 trong repo chỉ là phương án an toàn hơn, không bắt buộc thay.
 - **Category:** Tools. **Website:** `https://github.com/xom11/vibe-debug`. **Contact email:** bắt buộc, sẽ hiển thị công khai trên Play.
 
 ### 4.4. App content (Policy → App content)
@@ -111,7 +113,7 @@ Khi tạo release đầu tiên:
 |---|---|
 | Privacy policy | `https://github.com/xom11/vibe-debug/blob/main/PRIVACY.md` |
 | Ads | **No** |
-| App access | **All or some functionality is restricted** → dán hướng dẫn ở mục 4.5 |
+| Thông tin đăng nhập (trước đây là *App access*) | **Có** (mục "thao tác cần thực hiện trên một thiết bị khác") → *Thêm chi tiết*: tên `1-Tap Mode setup (no account, ADB grant)`, để trống username/password, dán hướng dẫn ở mục 4.5 vào ô *Mọi thông tin cần thiết khác* |
 | Content rating (IARC) | Category *Utility / Productivity / Other*, trả lời **No** cho mọi câu |
 | Target audience | **18+** (công cụ cho nhà phát triển; tránh nhóm dưới 13 để không thuộc chính sách Families) |
 | Data safety | **No** data collected or shared (không có `INTERNET`; mọi xử lý nằm trên máy) |
@@ -120,40 +122,23 @@ Khi tạo release đầu tiên:
 | Government apps / Health / News | **No** |
 | Foreground service permissions | Khai báo `FOREGROUND_SERVICE_SPECIAL_USE` → mục 4.6 |
 
-### 4.5. Hướng dẫn cho reviewer (App access → Instructions)
+### 4.5. Hướng dẫn cho reviewer (Thông tin đăng nhập → Mọi thông tin cần thiết khác, tối đa 500 ký tự)
 
 ```text
-No account or login. Core features (live debug status, OEM unlock guides, deep links to the exact
-Developer Options toggles, Quick Settings tiles and the home-screen widget) work without special access.
-
-1-Tap Mode and "Auto-turn off when opening apps" need android.permission.WRITE_SECURE_SETTINGS,
-which Android only lets the user grant from a computer:
-  1. Enable Developer Options and USB debugging, connect the phone to a computer with ADB.
-  2. Run: adb shell pm grant io.github.xom11.vibedebug android.permission.WRITE_SECURE_SETTINGS
-  3. Reopen Vibe Debug; the banner shows "1-Tap Mode active".
-To test auto-turn off: Shortcuts tab -> "Choose apps" -> select any installed app -> enable
-"Auto-turn off when opening apps" -> grant Usage Access in the dialog that follows -> open the
-selected app from its regular launcher icon.
+No account or login. Core features work with no setup. 1-Tap Mode and "Auto-turn off when opening apps" need WRITE_SECURE_SETTINGS, which can only be granted from a computer: enable USB debugging, connect ADB, run
+adb shell pm grant io.github.xom11.vibedebug android.permission.WRITE_SECURE_SETTINGS
+and reopen the app. Auto turn-off: Shortcuts tab > Choose apps > pick any app > enable "Auto-turn off when opening apps" > allow Usage Access > open that app from its icon.
 ```
 
 ### 4.6. Foreground service declaration (`specialUse`)
 
 Service `AppWatcherService` chỉ chạy khi người dùng đã cấp `WRITE_SECURE_SETTINGS` qua ADB **và** Usage Access, nên reviewer khó tự tái hiện → **video là bắt buộc thực tế**, quay đủ luồng.
 
-**Mô tả (dán vào ô task description):**
+Form trên Play Console: tích **Khác** → ô *Đường liên kết đến video* (bắt buộc, nút Lưu bị khoá nếu trống) và ô *Mô tả việc sử dụng quyền*.
+
+**Mô tả (dán vào ô *Mô tả việc sử dụng quyền*):**
 ```text
-Vibe Debug lets users pick apps (for example banking or digital ID apps) that refuse to run while
-Developer Options or USB debugging is enabled. Only when the user explicitly turns on
-"Auto-turn off when opening apps" (off by default; requires the user-granted WRITE_SECURE_SETTINGS
-permission and Usage Access, shown with an in-app disclosure first) does the app start a specialUse
-foreground service. While the screen is on, the service checks the current foreground app on-device
-with UsageStatsManager (about every 200 ms, pausing completely while the screen is off), turns
-debugging off the moment a selected app comes to the foreground, and restores it a few seconds after
-the user leaves. This must react immediately when the user opens the app from its normal launcher
-icon (the selected app checks Developer Options at startup), so it cannot be deferred to
-WorkManager/JobScheduler, and no other foreground service type fits. The ongoing notification shows
-how many apps are protected and has a Stop action; turning the feature off stops the service.
-No data leaves the device (the app has no INTERNET permission) and AccessibilityService is not used.
+Vibe Debug lets users pick apps (e.g. banking or digital ID apps) that refuse to run while Developer Options or USB debugging is on. Only when the user explicitly enables "Auto-turn off when opening apps" (off by default; needs the user-granted WRITE_SECURE_SETTINGS permission and Usage Access, shown with an in-app disclosure first) does the app start this foreground service. While the screen is on it checks the current foreground app on-device with UsageStatsManager, turns debugging off the moment a selected app opens from its normal launcher icon, and restores it a few seconds after the user leaves. It must start immediately and keep running because the selected apps check Developer Options at launch: a deferred or paused job (WorkManager/JobScheduler) would react too late and the app would refuse to open. The service pauses itself while the screen is off, shows an ongoing notification with a Stop action, and stops when the feature is turned off. No data leaves the device (no INTERNET permission) and AccessibilityService is not used.
 ```
 
 **Kịch bản video (30–60 giây, quay màn hình máy thật, upload YouTube dạng Unlisted):**
