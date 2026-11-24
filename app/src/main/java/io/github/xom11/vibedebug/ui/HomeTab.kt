@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -88,6 +89,7 @@ fun HomeTab(
 ) {
     val palette = AppTheme.palette
     val context = LocalContext.current
+    val resources = LocalResources.current
     val adaptive = LocalAdaptiveLayout.current
     val now = rememberNow(active = hasWritePermission && devState.adbEnabled && autoOffTargetAtMs > 0L)
     var selectedBrand by rememberSaveable(detectedBrand) { mutableStateOf(detectedBrand) }
@@ -135,7 +137,7 @@ fun HomeTab(
                 label = stringResource(R.string.cd_refresh),
                 onClick = {
                     onRefreshState()
-                    context.showToast(context.getString(R.string.toast_refreshed))
+                    context.showToast(resources.getString(R.string.toast_refreshed))
                 },
                 modifier = Modifier.testTag("btn_refresh"),
             )
@@ -248,15 +250,15 @@ fun HomeTab(
                     val next = !autoOffEnabled
                     onToggleAutoOff(next)
                     context.showToast(
-                        if (next) context.getString(R.string.toast_auto_off_enabled, autoOffMinutes)
-                        else context.getString(R.string.toast_auto_off_disabled)
+                        if (next) resources.getString(R.string.toast_auto_off_enabled, autoOffMinutes)
+                        else resources.getString(R.string.toast_auto_off_disabled)
                     )
                 },
                 onToggleAutoJumpChip = {
                     val next = !autoJumpEnabled
                     onAutoJumpChanged(next)
                     context.showToast(
-                        context.getString(if (next) R.string.toast_auto_jump_on else R.string.toast_auto_jump_off)
+                        resources.getString(if (next) R.string.toast_auto_jump_on else R.string.toast_auto_jump_off)
                     )
                 },
             )

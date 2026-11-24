@@ -47,6 +47,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -110,6 +111,7 @@ fun ShortcutsTab(
 ) {
     val palette = AppTheme.palette
     val context = LocalContext.current
+    val resources = LocalResources.current
     val adaptive = LocalAdaptiveLayout.current
     var showAppPicker by rememberSaveable { mutableStateOf(false) }
     var showUsageDisclosure by rememberSaveable { mutableStateOf(false) }
@@ -126,10 +128,10 @@ fun ShortcutsTab(
     fun handleTileOutcome(outcome: TileAddOutcome) {
         when (outcome) {
             is TileAddOutcome.Added -> {
-                onShowSnackbar(context.getString(R.string.feedback_tile_added, outcome.tileLabel))
+                onShowSnackbar(resources.getString(R.string.feedback_tile_added, outcome.tileLabel))
             }
             is TileAddOutcome.AlreadyAdded -> {
-                onShowSnackbar(context.getString(R.string.feedback_tile_already_added, outcome.tileLabel))
+                onShowSnackbar(resources.getString(R.string.feedback_tile_already_added, outcome.tileLabel))
             }
             TileAddOutcome.Dismissed -> Unit
             is TileAddOutcome.NeedsManualInstructions -> {
@@ -140,23 +142,23 @@ fun ShortcutsTab(
 
     fun removeTile(tile: QuickTileType) {
         val label = onRemoveTile(tile)
-        onShowSnackbar(context.getString(R.string.feedback_tile_removed, label))
+        onShowSnackbar(resources.getString(R.string.feedback_tile_removed, label))
     }
 
     fun handlePinHomeWidget() {
-        val label = context.getString(R.string.widget_hub_label)
+        val label = resources.getString(R.string.widget_hub_label)
         if (quickSurfaceState.isHomeWidgetAdded) {
             removeWidgetDialogLabel = label
         } else {
             when (onPinHomeWidget()) {
                 HomePinOutcome.REQUESTED -> {
-                    onShowSnackbar(context.getString(R.string.feedback_widget_pin_requested, label))
+                    onShowSnackbar(resources.getString(R.string.feedback_widget_pin_requested, label))
                 }
                 HomePinOutcome.NEEDS_OEM_PERMISSION -> {
                     activePinFallbackDialog = HomePinFallbackKind.XIAOMI_PERMISSION
                 }
                 HomePinOutcome.UNSUPPORTED -> {
-                    onShowSnackbar(context.getString(R.string.feedback_widget_unsupported))
+                    onShowSnackbar(resources.getString(R.string.feedback_widget_unsupported))
                 }
             }
         }
@@ -290,13 +292,13 @@ fun ShortcutsTab(
                                     HomePinOutcome.REQUESTED -> {
                                         onScheduleSurfaceRefresh()
                                         onWatchSafeLaunchPin(pkg)
-                                        onShowSnackbar(context.getString(R.string.safe_launch_pin_ok, label))
+                                        onShowSnackbar(resources.getString(R.string.safe_launch_pin_ok, label))
                                     }
                                     HomePinOutcome.NEEDS_OEM_PERMISSION -> {
                                         activePinFallbackDialog = HomePinFallbackKind.XIAOMI_PERMISSION
                                     }
                                     HomePinOutcome.UNSUPPORTED -> {
-                                        onShowSnackbar(context.getString(R.string.safe_launch_pin_unsupported))
+                                        onShowSnackbar(resources.getString(R.string.safe_launch_pin_unsupported))
                                     }
                                 }
                             },

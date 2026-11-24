@@ -43,6 +43,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -125,6 +126,7 @@ fun UsbDebugScreen(
 ) {
     val palette = AppTheme.palette
     val context = LocalContext.current
+    val resources = LocalResources.current
     var currentTab by rememberSaveable(initialTab) {
         mutableStateOf(AppTab.fromRoute(initialTab))
     }
@@ -147,17 +149,17 @@ fun UsbDebugScreen(
 
     LaunchedEffect(wirelessBlockedTick) {
         if (wirelessBlockedTick > 0) {
-            showSnackbar(context.getString(R.string.wireless_err_need_wifi))
+            showSnackbar(resources.getString(R.string.wireless_err_need_wifi))
         }
     }
 
     val handleSafeLaunch: (String, String) -> Unit = { pkg, label ->
         when (onLaunchSafeApp(pkg)) {
             SafeLaunchResult.LaunchedClean -> {
-                context.showToast(context.getString(R.string.safe_launch_toast_clean, label))
+                context.showToast(resources.getString(R.string.safe_launch_toast_clean, label))
             }
             SafeLaunchResult.NeedsPermission -> {
-                showSnackbar(context.getString(R.string.safe_launch_toast_need_perm))
+                showSnackbar(resources.getString(R.string.safe_launch_toast_need_perm))
                 if (devState.devOptionsEnabled) {
                     onOpenDeveloperOptionsTop()
                 } else {
@@ -165,10 +167,10 @@ fun UsbDebugScreen(
                 }
             }
             SafeLaunchResult.BlockedByPolicy -> {
-                showSnackbar(context.getString(R.string.safe_launch_toast_blocked))
+                showSnackbar(resources.getString(R.string.safe_launch_toast_blocked))
             }
             SafeLaunchResult.AppNotFound -> {
-                showSnackbar(context.getString(R.string.safe_launch_toast_not_found))
+                showSnackbar(resources.getString(R.string.safe_launch_toast_not_found))
             }
         }
     }

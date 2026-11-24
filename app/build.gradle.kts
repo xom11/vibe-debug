@@ -3,7 +3,6 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
 
@@ -37,7 +36,13 @@ val hasReleaseSigning = releaseStoreFile?.isFile == true &&
 
 android {
     namespace = "io.github.xom11.vibedebug"
-    compileSdk = 36
+    // Compose 1.13 / core 1.19 / lifecycle 2.11 require compileSdk 37.1 (AAR metadata);
+    // targetSdk intentionally stays at 36.
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 1
+        }
+    }
 
     defaultConfig {
         applicationId = "io.github.xom11.vibedebug"
@@ -47,13 +52,15 @@ android {
         versionName = "2.2.4"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // Only package the locales the app is translated into (keep in sync with
-        // res/xml/locales_config.xml); drops ~85 unused AndroidX translations.
-        resourceConfigurations += listOf("en", "vi")
-
         vectorDrawables {
             useSupportLibrary = true
         }
+    }
+
+    androidResources {
+        // Only package the locales the app is translated into (keep in sync with
+        // res/xml/locales_config.xml); drops ~85 unused AndroidX translations.
+        localeFilters += listOf("en", "vi")
     }
 
     lint {
@@ -104,13 +111,10 @@ android {
         }
     }
 
+    // Built-in Kotlin derives kotlin.compilerOptions.jvmTarget (17) from targetCompatibility.
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"
     }
 
     buildFeatures {

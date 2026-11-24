@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -80,6 +81,7 @@ fun SetupTab(
 ) {
     val palette = AppTheme.palette
     val context = LocalContext.current
+    val resources = LocalResources.current
     val adaptive = LocalAdaptiveLayout.current
     var showLegacyOplusNote by rememberSaveable { mutableStateOf(false) }
 
@@ -220,7 +222,7 @@ fun SetupTab(
                             onClick = {
                                 val granted = onRecheckPermission()
                                 context.showToast(
-                                    context.getString(
+                                    resources.getString(
                                         if (granted) R.string.toast_perm_granted_now
                                         else R.string.toast_perm_still_missing
                                     )
@@ -237,7 +239,7 @@ fun SetupTab(
                             onClick = {
                                 val granted = onRecheckPermission()
                                 context.showToast(
-                                    context.getString(
+                                    resources.getString(
                                         if (granted) R.string.toast_perm_granted_now
                                         else R.string.toast_perm_still_missing
                                     )
@@ -466,7 +468,7 @@ fun SetupTab(
                         onClick = {
                             context.copyText("Vibe Debug Diagnostics", DeviceDiagnostics.buildReport(context))
                             diagnosticsCopied = true
-                            context.showToast(context.getString(R.string.toast_diagnostics_copied))
+                            context.showToast(resources.getString(R.string.toast_diagnostics_copied))
                         },
                         modifier = Modifier
                             .fillMaxWidth()
