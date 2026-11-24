@@ -1,0 +1,2 @@
+• Fixed protected app count formatting (%d) in the Auto-Off watcher notification title
+• Improved singular/plural phrasing and live language updates for the watcher status notification

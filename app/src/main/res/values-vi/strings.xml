@@ -259,6 +259,7 @@
 
     <string name="watcher_notif_channel_name">Tự tắt gỡ lỗi theo ứng dụng</string>
     <string name="watcher_notif_channel_desc">Thông báo im lặng hiển thị khi Vibe Debug đang canh tự động tắt gỡ lỗi cho app đã chọn.</string>
+    <string name="watcher_notif_watching_title_one">Đang canh 1 app tự tắt gỡ lỗi</string>
     <string name="watcher_notif_watching_title">Đang canh %d app tự tắt gỡ lỗi</string>
     <string name="watcher_notif_watching_body">Sẽ tự tắt gỡ lỗi khi bạn mở app đã chọn.</string>
     <string name="watcher_notif_holding_title">Đã tạm tắt gỡ lỗi cho %s</string>

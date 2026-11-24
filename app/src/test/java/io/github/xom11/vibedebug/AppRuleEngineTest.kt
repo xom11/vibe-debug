@@ -3,30 +3,37 @@ package io.github.xom11.vibedebug
 import android.Manifest
 import android.app.AppOpsManager
 import android.app.Application
+import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.res.Configuration
 import android.os.Process
 import android.provider.Settings
+import androidx.core.app.NotificationCompat
 import androidx.test.core.app.ApplicationProvider
 import io.github.xom11.vibedebug.data.AppPreferences
 import io.github.xom11.vibedebug.data.AppRuleMode
 import io.github.xom11.vibedebug.data.DevSettingsController
 import io.github.xom11.vibedebug.data.SettingsGateway
 import io.github.xom11.vibedebug.rules.AppRuleEngine
+import io.github.xom11.vibedebug.rules.AppWatcherService
 import io.github.xom11.vibedebug.rules.ForegroundAppDetector
 import io.github.xom11.vibedebug.shortcut.SafeLaunchHelper
 import io.github.xom11.vibedebug.shortcut.SafeLaunchResult
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 import org.robolectric.annotation.Config
+import java.util.Locale
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
@@ -346,5 +353,114 @@ class AppRuleEngineTest {
         assertEquals(0, Settings.Global.getInt(context.contentResolver, Settings.Global.ADB_ENABLED, 1))
         assertTrue(prefs.heldDevOptions)
         assertTrue(prefs.heldUsbDebug)
+    }
+
+    @Test
+    fun `AppWatcherService formats watching and holding notification text cleanly across locales`() {
+        val enContext = context.createConfigurationContext(
+            Configuration(context.resources.configuration).apply { setLocale(Locale.ENGLISH) }
+        )
+        val viContext = context.createConfigurationContext(
+            Configuration(context.resources.configuration).apply { setLocale(Locale.forLanguageTag("vi")) }
+        )
+
+        val (enOneTitle, enOneBody) = AppWatcherService.resolveNotificationText(
+            context = enContext,
+            heldPkg = "",
+            protectedCount = 1,
+            autoRestoreOnExit = true,
+        )
+        assertEquals("Watching 1 protected app", enOneTitle)
+        assertFalse(enOneTitle.contains("%"))
+        assertFalse(enOneBody.contains("%"))
+
+        val (enMultiTitle, enMultiBody) = AppWatcherService.resolveNotificationText(
+            context = enContext,
+            heldPkg = "",
+            protectedCount = 3,
+            autoRestoreOnExit = true,
+        )
+        assertEquals("Watching 3 protected apps", enMultiTitle)
+        assertFalse(enMultiTitle.contains("%"))
+        assertFalse(enMultiBody.contains("%"))
+
+        val (viOneTitle, viOneBody) = AppWatcherService.resolveNotificationText(
+            context = viContext,
+            heldPkg = "",
+            protectedCount = 1,
+            autoRestoreOnExit = true,
+        )
+        assertEquals("Đang canh 1 app tự tắt gỡ lỗi", viOneTitle)
+        assertFalse(viOneTitle.contains("%"))
+        assertFalse(viOneBody.contains("%"))
+
+        val (viMultiTitle, viMultiBody) = AppWatcherService.resolveNotificationText(
+            context = viContext,
+            heldPkg = "",
+            protectedCount = 3,
+            autoRestoreOnExit = true,
+        )
+        assertEquals("Đang canh 3 app tự tắt gỡ lỗi", viMultiTitle)
+        assertFalse(viMultiTitle.contains("%"))
+        assertFalse(viMultiBody.contains("%"))
+
+        val (enHoldTitle, enHoldRestoreBody) = AppWatcherService.resolveNotificationText(
+            context = enContext,
+            heldPkg = "com.vietinbank.ipay",
+            protectedCount = 2,
+            autoRestoreOnExit = true,
+        )
+        assertTrue(enHoldTitle.contains("com.vietinbank.ipay"))
+        assertFalse(enHoldTitle.contains("%"))
+        assertEquals(enContext.getString(R.string.watcher_notif_holding_restore_body), enHoldRestoreBody)
+
+        val (viHoldTitle, viHoldStayOffBody) = AppWatcherService.resolveNotificationText(
+            context = viContext,
+            heldPkg = "com.vietinbank.ipay",
+            protectedCount = 2,
+            autoRestoreOnExit = false,
+        )
+        assertTrue(viHoldTitle.contains("com.vietinbank.ipay"))
+        assertFalse(viHoldTitle.contains("%"))
+        assertEquals(viContext.getString(R.string.watcher_notif_holding_stay_off_body), viHoldStayOffBody)
+    }
+
+    @Test
+    fun `AppWatcherService posts foreground notification with formatted protected app count`() {
+        val app = context as Application
+        Shadows.shadowOf(app).grantPermissions(
+            Manifest.permission.WRITE_SECURE_SETTINGS,
+            Manifest.permission.PACKAGE_USAGE_STATS,
+        )
+        val appOps = context.getSystemService(AppOpsManager::class.java)
+        Shadows.shadowOf(appOps).setMode(
+            AppOpsManager.OPSTR_GET_USAGE_STATS,
+            Process.myUid(),
+            context.packageName,
+            AppOpsManager.MODE_ALLOWED,
+        )
+
+        prefs.autoAppRulesEnabled = true
+        prefs.addSafeLaunchPackage("com.vietinbank.ipay")
+        prefs.addSafeLaunchPackage("com.VCB")
+
+        val serviceController = Robolectric.buildService(AppWatcherService::class.java)
+            .create()
+            .startCommand(0, 1)
+        try {
+            val service = serviceController.get()
+            val notifManager = context.getSystemService(NotificationManager::class.java)
+            val fgNotification = Shadows.shadowOf(service).lastForegroundNotification
+                ?: Shadows.shadowOf(notifManager).getNotification(AppWatcherService.NOTIFICATION_ID)
+            assertNotNull(fgNotification)
+
+            val title = NotificationCompat.getContentTitle(fgNotification!!)?.toString().orEmpty()
+            val body = NotificationCompat.getContentText(fgNotification)?.toString().orEmpty()
+            assertTrue("Expected formatted app count in title: $title", title.contains("2"))
+            assertFalse("Unexpected unformatted % in title: $title", title.contains("%"))
+            assertFalse("Unexpected unformatted % in body: $body", body.contains("%"))
+        } finally {
+            serviceController.destroy()
+        }
     }
 }

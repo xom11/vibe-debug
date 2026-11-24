@@ -259,6 +259,7 @@
 
     <string name="watcher_notif_channel_name">Auto-disable for strict apps</string>
     <string name="watcher_notif_channel_desc">Silent status shown while Vibe Debug automatically turns off debugging for selected apps.</string>
+    <string name="watcher_notif_watching_title_one">Watching 1 protected app</string>
     <string name="watcher_notif_watching_title">Watching %d protected apps</string>
     <string name="watcher_notif_watching_body">Debugging turns off automatically when opened.</string>
     <string name="watcher_notif_holding_title">Debugging paused for %s</string>

@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
@@ -142,6 +143,12 @@ class AppWatcherService : Service() {
         super.onDestroy()
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        ensureNotificationChannel()
+        updateNotificationIfNeeded()
+    }
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun scheduleImmediatePoll() {
@@ -157,18 +164,29 @@ class AppWatcherService : Service() {
             0
         }
         ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, fgsType)
+        lastNotificationSignature = currentNotificationSignature()
     }
 
     private fun ensureNotificationChannel() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = getSystemService(NotificationManager::class.java) ?: return
-        if (manager.getNotificationChannel(NOTIFICATION_CHANNEL_ID) != null) return
+        val name = getString(R.string.watcher_notif_channel_name)
+        val desc = getString(R.string.watcher_notif_channel_desc)
+        val existing = manager.getNotificationChannel(NOTIFICATION_CHANNEL_ID)
+        if (existing != null) {
+            if (existing.name?.toString() != name || existing.description != desc) {
+                existing.name = name
+                existing.description = desc
+                manager.createNotificationChannel(existing)
+            }
+            return
+        }
         val channel = NotificationChannel(
             NOTIFICATION_CHANNEL_ID,
-            getString(R.string.watcher_notif_channel_name),
+            name,
             NotificationManager.IMPORTANCE_LOW
         ).apply {
-            description = getString(R.string.watcher_notif_channel_desc)
+            description = desc
             setShowBadge(false)
             enableLights(false)
             enableVibration(false)
@@ -176,31 +194,25 @@ class AppWatcherService : Service() {
         manager.createNotificationChannel(channel)
     }
 
+    private fun currentNotificationSignature(): String {
+        val localeTags = resources.configuration.locales.toLanguageTags()
+        return "${prefs.heldRulePackage}|${prefs.safeLaunchPackages.size}|${prefs.autoRestoreOnExit}|$localeTags"
+    }
+
     private fun updateNotificationIfNeeded() {
-        val heldPkg = prefs.heldRulePackage
-        val count = prefs.safeLaunchPackages.size
-        val restore = prefs.autoRestoreOnExit
-        val sig = "$heldPkg|$count|$restore"
+        val sig = currentNotificationSignature()
         if (sig == lastNotificationSignature) return
         lastNotificationSignature = sig
         getSystemService(NotificationManager::class.java)?.notify(NOTIFICATION_ID, buildNotification())
     }
 
     private fun buildNotification(): Notification {
-        val heldPkg = prefs.heldRulePackage
-        val title: String
-        val body: String
-        if (heldPkg.isNotEmpty()) {
-            val label = SafeLaunchHelper.getAppLabel(applicationContext, heldPkg)
-            title = getString(R.string.watcher_notif_holding_title, label)
-            body = getString(
-                if (prefs.autoRestoreOnExit) R.string.watcher_notif_holding_restore_body
-                else R.string.watcher_notif_holding_stay_off_body
-            )
-        } else {
-            title = getString(R.string.watcher_notif_watching_title)
-            body = getString(R.string.watcher_notif_watching_body, prefs.safeLaunchPackages.size)
-        }
+        val (title, body) = resolveNotificationText(
+            context = this,
+            heldPkg = prefs.heldRulePackage,
+            protectedCount = prefs.safeLaunchPackages.size,
+            autoRestoreOnExit = prefs.autoRestoreOnExit,
+        )
 
         val openAppIntent = Intent(applicationContext, MainActivity::class.java).apply {
             putExtra(MainActivity.EXTRA_OPEN_TAB, "shortcuts")
@@ -270,6 +282,32 @@ class AppWatcherService : Service() {
 
         fun onSafeLaunch(packageName: String) {
             activeInstance?.engine?.markLaunchedFromUi(packageName)
+        }
+
+        internal fun resolveNotificationText(
+            context: Context,
+            heldPkg: String,
+            protectedCount: Int,
+            autoRestoreOnExit: Boolean,
+        ): Pair<String, String> {
+            return if (heldPkg.isNotEmpty()) {
+                val appCtx = context.applicationContext ?: context
+                val label = SafeLaunchHelper.getAppLabel(appCtx, heldPkg)
+                val title = context.getString(R.string.watcher_notif_holding_title, label)
+                val body = context.getString(
+                    if (autoRestoreOnExit) R.string.watcher_notif_holding_restore_body
+                    else R.string.watcher_notif_holding_stay_off_body
+                )
+                title to body
+            } else {
+                val title = if (protectedCount == 1) {
+                    context.getString(R.string.watcher_notif_watching_title_one)
+                } else {
+                    context.getString(R.string.watcher_notif_watching_title, protectedCount)
+                }
+                val body = context.getString(R.string.watcher_notif_watching_body)
+                title to body
+            }
         }
     }
 }

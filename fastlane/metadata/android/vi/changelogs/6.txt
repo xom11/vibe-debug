@@ -1,0 +1,2 @@
+• Sửa lỗi hiển thị nguyên ký tự %d trên tiêu đề thông báo "Đang canh … app tự tắt gỡ lỗi"
+• Cập nhật ngay nội dung thông báo canh app khi đổi ngôn ngữ trong ứng dụng

@@ -395,6 +395,7 @@ class MainActivity : ComponentActivity() {
                         if (!enabled) {
                             preferences.clearRuleHold()
                         }
+                        AppWatcherService.sync(applicationContext)
                     },
                     onSetAppRuleMode = { pkg, mode ->
                         preferences.setAppRuleMode(pkg, mode)

@@ -43,12 +43,21 @@ android {
         applicationId = "io.github.xom11.vibedebug"
         minSdk = 26
         targetSdk = 36
-        versionCode = 5
-        versionName = "2.2.0"
+        versionCode = 6
+        versionName = "2.2.1"
 
         vectorDrawables {
             useSupportLibrary = true
         }
+    }
+
+    lint {
+        fatal += setOf(
+            "StringFormatInvalid",
+            "StringFormatMatches",
+            "StringFormatCount",
+        )
+        disable += "ProduceStateDoesNotAssignValue"
     }
 
     dependenciesInfo {
