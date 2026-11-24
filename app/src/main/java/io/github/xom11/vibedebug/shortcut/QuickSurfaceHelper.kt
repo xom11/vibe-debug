@@ -1,5 +1,6 @@
 package io.github.xom11.vibedebug.shortcut
 
+import android.app.AppOpsManager
 import android.app.StatusBarManager
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
@@ -12,6 +13,7 @@ import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.Process
 import android.provider.Settings
 import android.service.quicksettings.TileService
 import android.widget.Toast
@@ -20,9 +22,18 @@ import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import io.github.xom11.vibedebug.R
 import io.github.xom11.vibedebug.data.AppPreferences
+import io.github.xom11.vibedebug.model.OemBrand
+import io.github.xom11.vibedebug.model.OemBrandDetector
+import io.github.xom11.vibedebug.navigation.SettingsIntents
 import io.github.xom11.vibedebug.tile.UsbDebugTileService
 import io.github.xom11.vibedebug.tile.WirelessDebugTileService
 import io.github.xom11.vibedebug.widget.UsbDebugWidgetProvider
+
+enum class HomePinOutcome {
+    REQUESTED,
+    NEEDS_OEM_PERMISSION,
+    UNSUPPORTED,
+}
 
 sealed interface TileAddOutcome {
     data class Added(val tileLabel: String) : TileAddOutcome
@@ -75,6 +86,9 @@ object QuickSurfaceHelper {
     internal const val RESULT_TILE_NOT_ADDED = 0
     internal const val RESULT_TILE_ALREADY_ADDED = 1
     internal const val RESULT_TILE_ADDED = 2
+
+    internal const val MIUI_OP_INSTALL_SHORTCUT = 10017
+    internal const val MIUI_MODE_ASK = 5
 
     fun requestAddUsbTile(
         context: Context,
@@ -300,17 +314,78 @@ object QuickSurfaceHelper {
         }
     }
 
-    fun requestPinUsbWidget(context: Context): Boolean {
-        val manager = AppWidgetManager.getInstance(context)
-        if (!manager.isRequestPinAppWidgetSupported) return false
-        return runCatching {
-            manager.requestPinAppWidget(
-                ComponentName(context, UsbDebugWidgetProvider::class.java),
-                null,
-                null
-            )
-        }.getOrDefault(false)
+    /** Returns true when running on Xiaomi / MIUI / HyperOS where home shortcut pinning is gated. */
+    fun isXiaomiPinRestrictedDevice(context: Context): Boolean {
+        return OemBrandDetector.detect(Build.MANUFACTURER, Build.BRAND) == OemBrand.XIAOMI ||
+            SettingsIntents.hasMiuiPermissionEditor(context)
     }
+
+    internal fun isMiuiShortcutOpDenied(mode: Int): Boolean {
+        return mode == AppOpsManager.MODE_IGNORED || mode == AppOpsManager.MODE_ERRORED
+    }
+
+    internal fun queryMiuiInstallShortcutOpMode(context: Context): Int? {
+        if (!isXiaomiPinRestrictedDevice(context)) return null
+        val appContext = context.applicationContext ?: context
+        return runCatching {
+            val appOps = appContext.getSystemService(AppOpsManager::class.java) ?: return null
+            val method = AppOpsManager::class.java.getMethod(
+                "checkOpNoThrow",
+                Int::class.javaPrimitiveType,
+                Int::class.javaPrimitiveType,
+                String::class.java,
+            )
+            method.invoke(appOps, MIUI_OP_INSTALL_SHORTCUT, Process.myUid(), appContext.packageName) as? Int
+        }.getOrNull()
+    }
+
+    /** Returns true when Xiaomi's custom OP_INSTALL_SHORTCUT (10017) explicitly denies pinning. */
+    fun isHomeShortcutPinPermissionDenied(context: Context): Boolean {
+        return queryMiuiInstallShortcutOpMode(context)?.let(::isMiuiShortcutOpDenied) ?: false
+    }
+
+    /** Returns true when MIUI's custom AppOp 10017 can be queried via reflection on this device. */
+    fun isMiuiInstallShortcutOpReadable(context: Context): Boolean {
+        return queryMiuiInstallShortcutOpMode(context) != null
+    }
+
+    internal fun resolvePinOutcome(
+        permissionDenied: Boolean,
+        supported: Boolean,
+        requested: Boolean,
+    ): HomePinOutcome = when {
+        permissionDenied -> HomePinOutcome.NEEDS_OEM_PERMISSION
+        !supported -> HomePinOutcome.UNSUPPORTED
+        requested -> HomePinOutcome.REQUESTED
+        else -> HomePinOutcome.UNSUPPORTED
+    }
+
+    fun requestPinUsbWidgetWithOutcome(context: Context): HomePinOutcome {
+        if (isHomeShortcutPinPermissionDenied(context)) {
+            return HomePinOutcome.NEEDS_OEM_PERMISSION
+        }
+        val manager = AppWidgetManager.getInstance(context)
+        val supported = manager.isRequestPinAppWidgetSupported
+        val requested = if (supported) {
+            runCatching {
+                manager.requestPinAppWidget(
+                    ComponentName(context, UsbDebugWidgetProvider::class.java),
+                    null,
+                    null
+                )
+            }.getOrDefault(false)
+        } else {
+            false
+        }
+        return resolvePinOutcome(
+            permissionDenied = false,
+            supported = supported,
+            requested = requested,
+        )
+    }
+
+    fun requestPinUsbWidget(context: Context): Boolean =
+        requestPinUsbWidgetWithOutcome(context) == HomePinOutcome.REQUESTED
 
     fun requestPinUsbShortcut(context: Context): Boolean {
         val shortcutManager = context.getSystemService(ShortcutManager::class.java) ?: return false

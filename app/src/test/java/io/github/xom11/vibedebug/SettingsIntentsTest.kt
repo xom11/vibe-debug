@@ -92,4 +92,34 @@ class SettingsIntentsTest {
         assertEquals(Settings.ACTION_USAGE_ACCESS_SETTINGS, fallbackIntent.action)
         assertNull(fallbackIntent.data)
     }
+
+    @Test
+    fun `buildMiuiAppPermEditor and app details intents carry target package extras`() {
+        val implicit = SettingsIntents.buildMiuiAppPermEditorIntent("io.github.xom11.vibedebug")
+        assertEquals(SettingsIntents.ACTION_MIUI_APP_PERM_EDITOR, implicit.action)
+        assertEquals(
+            "io.github.xom11.vibedebug",
+            implicit.getStringExtra(SettingsIntents.EXTRA_MIUI_PKGNAME)
+        )
+        assertNull(implicit.component)
+
+        val explicit = SettingsIntents.buildMiuiAppPermEditorExplicitIntent("io.github.xom11.vibedebug")
+        assertEquals(SettingsIntents.ACTION_MIUI_APP_PERM_EDITOR, explicit.action)
+        assertEquals(
+            SettingsIntents.MIUI_SECURITY_CENTER_PACKAGE,
+            explicit.component?.packageName
+        )
+        assertEquals(
+            SettingsIntents.MIUI_PERM_EDITOR_ACTIVITY,
+            explicit.component?.className
+        )
+        assertEquals(
+            "io.github.xom11.vibedebug",
+            explicit.getStringExtra(SettingsIntents.EXTRA_MIUI_PKGNAME)
+        )
+
+        val details = SettingsIntents.buildAppDetailsIntent("io.github.xom11.vibedebug")
+        assertEquals(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, details.action)
+        assertEquals("package:io.github.xom11.vibedebug", details.dataString)
+    }
 }

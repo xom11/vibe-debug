@@ -148,9 +148,14 @@ object SafeLaunchHelper {
         }
     }
 
-    /** Requests pinning a badged 1x1 Safe Launch home shortcut for [packageName]. */
-    fun requestPinSafeLaunchShortcut(context: Context, packageName: String): Boolean {
-        if (!ShortcutManagerCompat.isRequestPinShortcutSupported(context)) return false
+    /** Requests pinning a badged 1x1 Safe Launch home shortcut for [packageName] and reports OEM permission blocks. */
+    fun requestPinSafeLaunchShortcutWithOutcome(context: Context, packageName: String): HomePinOutcome {
+        if (QuickSurfaceHelper.isHomeShortcutPinPermissionDenied(context)) {
+            return HomePinOutcome.NEEDS_OEM_PERMISSION
+        }
+        if (!ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
+            return HomePinOutcome.UNSUPPORTED
+        }
         val pm = context.packageManager
         val appInfo = runCatching {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -159,7 +164,7 @@ object SafeLaunchHelper {
                 @Suppress("DEPRECATION")
                 pm.getApplicationInfo(packageName, 0)
             }
-        }.getOrNull() ?: return false
+        }.getOrNull() ?: return HomePinOutcome.UNSUPPORTED
 
         val label = runCatching { pm.getApplicationLabel(appInfo).toString() }
             .getOrDefault(packageName)
@@ -192,10 +197,20 @@ object SafeLaunchHelper {
             .setIntent(launchIntent)
             .build()
 
-        return runCatching {
+        val requested = runCatching {
             ShortcutManagerCompat.requestPinShortcut(context, shortcut, null)
         }.getOrDefault(false)
+
+        return QuickSurfaceHelper.resolvePinOutcome(
+            permissionDenied = false,
+            supported = true,
+            requested = requested,
+        )
     }
+
+    /** Requests pinning a badged 1x1 Safe Launch home shortcut for [packageName]. */
+    fun requestPinSafeLaunchShortcut(context: Context, packageName: String): Boolean =
+        requestPinSafeLaunchShortcutWithOutcome(context, packageName) == HomePinOutcome.REQUESTED
 
     // Dark badge + mint ring at bottom-right distinguishes Safe Launch shortcuts from stock app icons.
     private fun createBadgedIcon(source: Bitmap): Bitmap {

@@ -1,6 +1,7 @@
 package io.github.xom11.vibedebug
 
 import android.Manifest
+import android.app.AppOpsManager
 import android.app.Application
 import android.content.ComponentName
 import android.content.Context
@@ -13,6 +14,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.test.core.app.ApplicationProvider
 import io.github.xom11.vibedebug.data.AppPreferences
+import io.github.xom11.vibedebug.shortcut.HomePinOutcome
 import io.github.xom11.vibedebug.shortcut.QuickSurfaceHelper
 import io.github.xom11.vibedebug.shortcut.QuickTileType
 import io.github.xom11.vibedebug.shortcut.TileAddOutcome
@@ -297,6 +299,34 @@ class QuickSurfaceHelperTest {
         assertEquals(
             context.getString(R.string.tile_subtitle_need_wifi),
             expanded.findViewById<TextView>(R.id.state_hub_wireless).text.toString()
+        )
+    }
+
+    @Test
+    fun `isMiuiShortcutOpDenied treats MODE_IGNORED and MODE_ERRORED as denied and ALLOW or ASK as permitted`() {
+        assertFalse(QuickSurfaceHelper.isMiuiShortcutOpDenied(AppOpsManager.MODE_ALLOWED))
+        assertFalse(QuickSurfaceHelper.isMiuiShortcutOpDenied(QuickSurfaceHelper.MIUI_MODE_ASK))
+        assertTrue(QuickSurfaceHelper.isMiuiShortcutOpDenied(AppOpsManager.MODE_IGNORED))
+        assertTrue(QuickSurfaceHelper.isMiuiShortcutOpDenied(AppOpsManager.MODE_ERRORED))
+    }
+
+    @Test
+    fun `resolvePinOutcome maps permission block launcher support and request success`() {
+        assertEquals(
+            HomePinOutcome.NEEDS_OEM_PERMISSION,
+            QuickSurfaceHelper.resolvePinOutcome(permissionDenied = true, supported = true, requested = true)
+        )
+        assertEquals(
+            HomePinOutcome.UNSUPPORTED,
+            QuickSurfaceHelper.resolvePinOutcome(permissionDenied = false, supported = false, requested = false)
+        )
+        assertEquals(
+            HomePinOutcome.REQUESTED,
+            QuickSurfaceHelper.resolvePinOutcome(permissionDenied = false, supported = true, requested = true)
+        )
+        assertEquals(
+            HomePinOutcome.UNSUPPORTED,
+            QuickSurfaceHelper.resolvePinOutcome(permissionDenied = false, supported = true, requested = false)
         )
     }
 }

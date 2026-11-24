@@ -55,6 +55,7 @@ import io.github.xom11.vibedebug.data.AppRuleMode
 import io.github.xom11.vibedebug.data.ThemePreference
 import io.github.xom11.vibedebug.model.DevState
 import io.github.xom11.vibedebug.model.OemBrand
+import io.github.xom11.vibedebug.shortcut.HomePinOutcome
 import io.github.xom11.vibedebug.shortcut.QuickSurfaceState
 import io.github.xom11.vibedebug.shortcut.QuickTileType
 import io.github.xom11.vibedebug.shortcut.SafeLaunchResult
@@ -84,6 +85,7 @@ fun UsbDebugScreen(
     quickSurfaceState: QuickSurfaceState = QuickSurfaceState(),
     wirelessWifiWarning: Boolean = false,
     wirelessBlockedTick: Int = 0,
+    xiaomiPinBlockedTick: Int = 0,
     initialTab: String? = null,
     debugPreviewBanner: String?,
     onRefreshState: () -> Unit,
@@ -108,7 +110,9 @@ fun UsbDebugScreen(
     onAddUsbQuickTile: ((TileAddOutcome) -> Unit) -> Unit,
     onAddWirelessQuickTile: ((TileAddOutcome) -> Unit) -> Unit,
     onRemoveQuickTile: (QuickTileType) -> String = { "" },
-    onPinHomeWidget: () -> Boolean = { false },
+    onPinHomeWidget: () -> HomePinOutcome = { HomePinOutcome.UNSUPPORTED },
+    onWatchSafeLaunchPin: (String) -> Unit = {},
+    onOpenHomeShortcutPermissions: () -> Unit = {},
     onScheduleSurfaceRefresh: () -> Unit = {},
     onOpenHomeScreen: () -> Unit = {},
     onSetUsbDebugging: (Boolean) -> Unit,
@@ -293,12 +297,15 @@ fun UsbDebugScreen(
                                     hasUsageAccess = hasUsageAccess,
                                     appRuleModes = appRuleModes,
                                     quickSurfaceState = quickSurfaceState,
+                                    xiaomiPinBlockedTick = xiaomiPinBlockedTick,
                                     onShowSnackbar = showSnackbar,
                                     onShowManualTileDialog = { manualQsTileLabel = it },
                                     onAddUsbTile = onAddUsbQuickTile,
                                     onAddWirelessTile = onAddWirelessQuickTile,
                                     onRemoveTile = onRemoveQuickTile,
                                     onPinHomeWidget = onPinHomeWidget,
+                                    onWatchSafeLaunchPin = onWatchSafeLaunchPin,
+                                    onOpenHomeShortcutPermissions = onOpenHomeShortcutPermissions,
                                     onScheduleSurfaceRefresh = onScheduleSurfaceRefresh,
                                     onOpenHomeScreen = onOpenHomeScreen,
                                     onAddSafeLaunchPackage = onAddSafeLaunchPackage,

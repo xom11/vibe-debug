@@ -1,0 +1,2 @@
+• Nhận biết trường hợp Xiaomi HyperOS / MIUI chặn quyền "Lối tắt màn hình chính" khi ghim Widget hoặc lối tắt Mở an toàn
+• Thêm hộp thoại hướng dẫn kèm nút mở thẳng trang quyền ứng dụng Xiaomi và cách thêm thủ công

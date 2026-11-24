@@ -1,0 +1,2 @@
+• Detect Xiaomi HyperOS / MIUI "Home screen shortcuts" permission blocks when pinning widgets or Safe Launch shortcuts
+• Added a guided dialog with 1-tap jump to Xiaomi's app permissions screen and manual fallback instructions

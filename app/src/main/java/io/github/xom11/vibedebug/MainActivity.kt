@@ -42,6 +42,7 @@ import io.github.xom11.vibedebug.navigation.SettingsIntents
 import io.github.xom11.vibedebug.rules.AndroidForegroundAppDetector
 import io.github.xom11.vibedebug.rules.AppRuleEngine
 import io.github.xom11.vibedebug.rules.AppWatcherService
+import io.github.xom11.vibedebug.shortcut.HomePinOutcome
 import io.github.xom11.vibedebug.shortcut.QuickSurfaceHelper
 import io.github.xom11.vibedebug.shortcut.SafeLaunchHelper
 import io.github.xom11.vibedebug.shortcut.SafeLaunchResult
@@ -62,6 +63,7 @@ class MainActivity : ComponentActivity() {
     private var currentPreviewConfig by mutableStateOf<DebugPreviewConfig?>(null)
     private var requestedTab by mutableStateOf<String?>(null)
     private var windowFocusTick by mutableIntStateOf(0)
+    private var isWindowFocused by mutableStateOf(true)
     private var notificationPromptShown = false
 
     private val notificationPermissionLauncher =
@@ -104,6 +106,7 @@ class MainActivity : ComponentActivity() {
             }
             var wirelessWifiWarning by remember { mutableStateOf(false) }
             var wirelessBlockedTick by remember { mutableIntStateOf(0) }
+            var xiaomiPinBlockedTick by remember { mutableIntStateOf(0) }
             var pendingWirelessEnableAtMs by remember { mutableLongStateOf(0L) }
             val surfaceRefreshScope = rememberCoroutineScope()
 
@@ -124,6 +127,36 @@ class MainActivity : ComponentActivity() {
                     listOf(500L, 1000L, 1500L).forEach { delayMs ->
                         delay(delayMs)
                         refreshSurfaceState()
+                    }
+                }
+            }
+
+            val watchSilentXiaomiPinRejection: (() -> Boolean) -> Unit = { checkPinned ->
+                if (
+                    QuickSurfaceHelper.isXiaomiPinRestrictedDevice(applicationContext) &&
+                    !QuickSurfaceHelper.isMiuiInstallShortcutOpReadable(applicationContext)
+                ) {
+                    surfaceRefreshScope.launch {
+                        val startMs = SystemClock.elapsedRealtime()
+                        val startFocusTick = windowFocusTick
+                        var sawFocusLoss = !isWindowFocused
+                        var fastBounceBack = false
+                        while (SystemClock.elapsedRealtime() - startMs < 750L) {
+                            delay(50L)
+                            if (!isWindowFocused) {
+                                sawFocusLoss = true
+                            } else if (sawFocusLoss || windowFocusTick > startFocusTick) {
+                                fastBounceBack = (SystemClock.elapsedRealtime() - startMs) < 450L
+                                break
+                            }
+                        }
+                        if (!sawFocusLoss || fastBounceBack) {
+                            delay(250L)
+                            refreshSurfaceState()
+                            if (!checkPinned()) {
+                                xiaomiPinBlockedTick++
+                            }
+                        }
                     }
                 }
             }
@@ -285,6 +318,7 @@ class MainActivity : ComponentActivity() {
                     quickSurfaceState = quickSurfaceState,
                     wirelessWifiWarning = wirelessWifiWarning,
                     wirelessBlockedTick = wirelessBlockedTick,
+                    xiaomiPinBlockedTick = xiaomiPinBlockedTick,
                     initialTab = requestedTab ?: preview?.initialTab,
                     debugPreviewBanner = preview?.bannerText,
                     onRefreshState = { refreshLiveState() },
@@ -470,9 +504,22 @@ class MainActivity : ComponentActivity() {
                         label
                     },
                     onPinHomeWidget = {
-                        val requested = QuickSurfaceHelper.requestPinUsbWidget(this@MainActivity)
-                        if (requested) schedulePostPinRefresh()
-                        requested
+                        val outcome = QuickSurfaceHelper.requestPinUsbWidgetWithOutcome(this@MainActivity)
+                        if (outcome == HomePinOutcome.REQUESTED) {
+                            schedulePostPinRefresh()
+                            watchSilentXiaomiPinRejection {
+                                QuickSurfaceHelper.readSurfaceState(applicationContext, preferences).isHomeWidgetAdded
+                            }
+                        }
+                        outcome
+                    },
+                    onWatchSafeLaunchPin = { pkg ->
+                        watchSilentXiaomiPinRejection {
+                            pkg in QuickSurfaceHelper.readSurfaceState(applicationContext, preferences).pinnedSafeLaunchPackages
+                        }
+                    },
+                    onOpenHomeShortcutPermissions = {
+                        SettingsIntents.launchHomeShortcutPermissionScreen(this@MainActivity)
                     },
                     onScheduleSurfaceRefresh = schedulePostPinRefresh,
                     onOpenHomeScreen = {
@@ -586,6 +633,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
+        isWindowFocused = hasFocus
         if (hasFocus) {
             windowFocusTick++
         }

@@ -227,6 +227,9 @@
     <string name="dialog_remove_shortcut_title">Remove Home Screen Shortcut</string>
     <string name="dialog_remove_shortcut_body">Android only allows removing pinned icons directly on your Home screen:\n\n1. Go to your Home screen.\n2. Long-press the \"%1$s\" icon and tap Remove.</string>
     <string name="action_go_home">Go to Home screen</string>
+    <string name="dialog_xiaomi_pin_title">Allow Home screen shortcuts</string>
+    <string name="dialog_xiaomi_pin_body">Xiaomi HyperOS / MIUI blocks apps from pinning widgets and shortcuts by default.\n\n1. Tap \"Open permissions\" below.\n2. Open \"Other permissions\" → enable \"Home screen shortcuts\" (Always allow).\n3. Return here and tap Add again.\n\nOr add manually: long-press your Home screen → Widgets → Android widgets → Vibe Debug.</string>
+    <string name="action_open_app_permissions">Open permissions</string>
 
     <string name="section_safe_launch">Turn Off Debug &amp; Launch</string>
     <string name="safe_launch_banner_title">Apps blocking Developer Mode?</string>

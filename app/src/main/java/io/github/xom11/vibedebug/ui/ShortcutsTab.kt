@@ -64,6 +64,7 @@ import androidx.core.graphics.drawable.toBitmap
 import io.github.xom11.vibedebug.R
 import io.github.xom11.vibedebug.data.AppRuleMode
 import io.github.xom11.vibedebug.model.DevState
+import io.github.xom11.vibedebug.shortcut.HomePinOutcome
 import io.github.xom11.vibedebug.shortcut.LaunchableApp
 import io.github.xom11.vibedebug.shortcut.QuickSurfaceState
 import io.github.xom11.vibedebug.shortcut.QuickTileType
@@ -84,12 +85,15 @@ fun ShortcutsTab(
     hasUsageAccess: Boolean = false,
     appRuleModes: Map<String, AppRuleMode> = emptyMap(),
     quickSurfaceState: QuickSurfaceState = QuickSurfaceState(),
+    xiaomiPinBlockedTick: Int = 0,
     onShowSnackbar: (String) -> Unit,
     onShowManualTileDialog: (String) -> Unit,
     onAddUsbTile: ((TileAddOutcome) -> Unit) -> Unit,
     onAddWirelessTile: ((TileAddOutcome) -> Unit) -> Unit,
     onRemoveTile: (QuickTileType) -> String = { "" },
-    onPinHomeWidget: () -> Boolean = { false },
+    onPinHomeWidget: () -> HomePinOutcome = { HomePinOutcome.UNSUPPORTED },
+    onWatchSafeLaunchPin: (String) -> Unit = {},
+    onOpenHomeShortcutPermissions: () -> Unit = {},
     onScheduleSurfaceRefresh: () -> Unit = {},
     onOpenHomeScreen: () -> Unit = {},
     onAddSafeLaunchPackage: (String) -> Unit,
@@ -107,8 +111,15 @@ fun ShortcutsTab(
     val adaptive = LocalAdaptiveLayout.current
     var showAppPicker by rememberSaveable { mutableStateOf(false) }
     var showUsageDisclosure by rememberSaveable { mutableStateOf(false) }
+    var showXiaomiPinPermissionDialog by rememberSaveable { mutableStateOf(false) }
     var removeWidgetDialogLabel by rememberSaveable { mutableStateOf<String?>(null) }
     var removeShortcutDialogLabel by rememberSaveable { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(xiaomiPinBlockedTick) {
+        if (xiaomiPinBlockedTick > 0) {
+            showXiaomiPinPermissionDialog = true
+        }
+    }
 
     fun handleTileOutcome(outcome: TileAddOutcome) {
         when (outcome) {
@@ -135,11 +146,17 @@ fun ShortcutsTab(
         if (quickSurfaceState.isHomeWidgetAdded) {
             removeWidgetDialogLabel = label
         } else {
-            val requested = onPinHomeWidget()
-            onShowSnackbar(
-                if (requested) context.getString(R.string.feedback_widget_pin_requested, label)
-                else context.getString(R.string.feedback_widget_unsupported)
-            )
+            when (onPinHomeWidget()) {
+                HomePinOutcome.REQUESTED -> {
+                    onShowSnackbar(context.getString(R.string.feedback_widget_pin_requested, label))
+                }
+                HomePinOutcome.NEEDS_OEM_PERMISSION -> {
+                    showXiaomiPinPermissionDialog = true
+                }
+                HomePinOutcome.UNSUPPORTED -> {
+                    onShowSnackbar(context.getString(R.string.feedback_widget_unsupported))
+                }
+            }
         }
     }
 
@@ -267,12 +284,19 @@ fun ShortcutsTab(
                             onRuleModeChanged = { mode -> onSetAppRuleMode(pkg, mode) },
                             onOpenNow = { label -> onLaunchSafeApp(pkg, label) },
                             onPinShortcut = { label ->
-                                val ok = SafeLaunchHelper.requestPinSafeLaunchShortcut(context, pkg)
-                                if (ok) onScheduleSurfaceRefresh()
-                                onShowSnackbar(
-                                    if (ok) context.getString(R.string.safe_launch_pin_ok, label)
-                                    else context.getString(R.string.safe_launch_pin_unsupported)
-                                )
+                                when (SafeLaunchHelper.requestPinSafeLaunchShortcutWithOutcome(context, pkg)) {
+                                    HomePinOutcome.REQUESTED -> {
+                                        onScheduleSurfaceRefresh()
+                                        onWatchSafeLaunchPin(pkg)
+                                        onShowSnackbar(context.getString(R.string.safe_launch_pin_ok, label))
+                                    }
+                                    HomePinOutcome.NEEDS_OEM_PERMISSION -> {
+                                        showXiaomiPinPermissionDialog = true
+                                    }
+                                    HomePinOutcome.UNSUPPORTED -> {
+                                        onShowSnackbar(context.getString(R.string.safe_launch_pin_unsupported))
+                                    }
+                                }
                             },
                             onUnpinShortcut = { label ->
                                 removeShortcutDialogLabel = label
@@ -345,6 +369,16 @@ fun ShortcutsTab(
                 onOpenUsageAccessSettings()
             },
             onDismiss = { showUsageDisclosure = false },
+        )
+    }
+
+    if (showXiaomiPinPermissionDialog) {
+        XiaomiPinPermissionDialog(
+            onOpenPermissions = {
+                showXiaomiPinPermissionDialog = false
+                onOpenHomeShortcutPermissions()
+            },
+            onDismiss = { showXiaomiPinPermissionDialog = false },
         )
     }
 
@@ -701,6 +735,43 @@ private fun UsageAccessDisclosureDialog(
     onOpenSettings: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    PermissionDisclosureDialog(
+        dialogTag = "dialog_usage_access_disclosure",
+        confirmButtonTag = null,
+        title = stringResource(R.string.usage_dialog_title),
+        body = stringResource(R.string.usage_dialog_body),
+        confirmText = stringResource(R.string.usage_dialog_open_settings),
+        onConfirm = onOpenSettings,
+        onDismiss = onDismiss,
+    )
+}
+
+@Composable
+private fun XiaomiPinPermissionDialog(
+    onOpenPermissions: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    PermissionDisclosureDialog(
+        dialogTag = "dialog_xiaomi_pin_permission",
+        confirmButtonTag = "btn_open_xiaomi_pin_permissions",
+        title = stringResource(R.string.dialog_xiaomi_pin_title),
+        body = stringResource(R.string.dialog_xiaomi_pin_body),
+        confirmText = stringResource(R.string.action_open_app_permissions),
+        onConfirm = onOpenPermissions,
+        onDismiss = onDismiss,
+    )
+}
+
+@Composable
+private fun PermissionDisclosureDialog(
+    dialogTag: String,
+    confirmButtonTag: String?,
+    title: String,
+    body: String,
+    confirmText: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
     val palette = AppTheme.palette
     val adaptive = LocalAdaptiveLayout.current
     AlertDialog(
@@ -708,34 +779,35 @@ private fun UsageAccessDisclosureDialog(
         modifier = Modifier
             .widthIn(max = adaptive.dialogMaxWidthDp.dp)
             .fillMaxWidth(0.92f)
-            .testTag("dialog_usage_access_disclosure"),
+            .testTag(dialogTag),
         properties = DialogProperties(usePlatformDefaultWidth = false),
         containerColor = palette.surface,
         titleContentColor = palette.text,
         textContentColor = palette.soft,
         title = {
             Text(
-                text = stringResource(R.string.usage_dialog_title),
+                text = title,
                 fontWeight = FontWeight.SemiBold,
             )
         },
         text = {
             Text(
-                text = stringResource(R.string.usage_dialog_body),
+                text = body,
                 fontSize = 13.sp,
                 lineHeight = 20.sp,
             )
         },
         confirmButton = {
             Button(
-                onClick = onOpenSettings,
+                onClick = onConfirm,
+                modifier = if (confirmButtonTag != null) Modifier.testTag(confirmButtonTag) else Modifier,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = palette.mint,
                     contentColor = palette.onMint,
                 ),
             ) {
                 Text(
-                    text = stringResource(R.string.usage_dialog_open_settings),
+                    text = confirmText,
                     fontWeight = FontWeight.SemiBold,
                 )
             }
