@@ -318,9 +318,9 @@ fun IconAction(
 @Composable
 fun AccentSwitch(
     checked: Boolean,
+    modifier: Modifier = Modifier,
     onCheckedChange: ((Boolean) -> Unit)? = null,
     enabled: Boolean = true,
-    modifier: Modifier = Modifier,
 ) {
     val palette = AppTheme.palette
     Switch(

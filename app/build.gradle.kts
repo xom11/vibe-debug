@@ -47,6 +47,10 @@ android {
         versionName = "2.2.4"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+        // Only package the locales the app is translated into (keep in sync with
+        // res/xml/locales_config.xml); drops ~85 unused AndroidX translations.
+        resourceConfigurations += listOf("en", "vi")
+
         vectorDrawables {
             useSupportLibrary = true
         }

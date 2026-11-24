@@ -371,6 +371,10 @@ class AppRuleEngineTest {
             autoRestoreOnExit = true,
         )
         assertEquals("Watching 1 protected app", enOneTitle)
+        assertEquals(
+            enContext.resources.getQuantityString(R.plurals.watcher_notif_watching_title, 1, 1),
+            enOneTitle,
+        )
         assertFalse(enOneTitle.contains("%"))
         assertFalse(enOneBody.contains("%"))
 
@@ -383,6 +387,22 @@ class AppRuleEngineTest {
         assertEquals("Watching 3 protected apps", enMultiTitle)
         assertFalse(enMultiTitle.contains("%"))
         assertFalse(enMultiBody.contains("%"))
+
+        // Zero and other non-one counts use the plural "other" form, as before the plurals migration.
+        val (enZeroTitle, _) = AppWatcherService.resolveNotificationText(
+            context = enContext,
+            heldPkg = "",
+            protectedCount = 0,
+            autoRestoreOnExit = true,
+        )
+        assertEquals("Watching 0 protected apps", enZeroTitle)
+        val (enTwoTitle, _) = AppWatcherService.resolveNotificationText(
+            context = enContext,
+            heldPkg = "",
+            protectedCount = 2,
+            autoRestoreOnExit = true,
+        )
+        assertEquals("Watching 2 protected apps", enTwoTitle)
 
         val (viOneTitle, viOneBody) = AppWatcherService.resolveNotificationText(
             context = viContext,

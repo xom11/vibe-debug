@@ -1,18 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Vibe Debug</string>
-    <string name="app_subtitle">Kiểm tra &amp; mở nhanh công tắc Gỡ lỗi USB</string>
 
     <!-- Quick Settings Tiles, Home Widget & App Shortcuts -->
     <string name="tile_label">Gỡ lỗi USB</string>
     <string name="tile_wireless_label">Gỡ lỗi Wi-Fi</string>
-    <string name="tile_dev_options_label">Tùy chọn nhà phát triển</string>
-    <string name="tile_keep_awake_label">Giữ màn hình sáng</string>
     <string name="tile_subtitle_on">Đang BẬT</string>
     <string name="tile_subtitle_off">Đang TẮT</string>
     <string name="tile_subtitle_unsupported">Android 11+</string>
     <string name="tile_subtitle_blocked">Bị chính sách chặn</string>
-    <string name="tile_subtitle_awake_charging">Khi đang sạc</string>
     <string name="tile_subtitle_auto_off_in">Tự tắt sau %d phút</string>
     <string name="tile_subtitle_need_wifi">Cần kết nối Wi-Fi</string>
     <string name="widget_state_need_wifi">Cần Wi-Fi</string>
@@ -20,35 +16,15 @@
     <string name="widget_label">Gỡ lỗi USB</string>
     <string name="widget_short_usb">Gỡ lỗi USB</string>
     <string name="widget_short_wireless">Gỡ lỗi Wi-Fi</string>
-    <string name="widget_short_dev">Dev Mode</string>
-    <string name="widget_short_awake">Giữ sáng</string>
-    <string name="widget_description">Xem trạng thái và bật/tắt nhanh Gỡ lỗi USB từ màn hình chính (kéo giãn 1×1 / 2×1).</string>
-    <string name="widget_wireless_description">Xem trạng thái và bật/tắt nhanh Gỡ lỗi Wi-Fi từ màn hình chính (kéo giãn 1×1 / 2×1).</string>
-    <string name="widget_dev_options_description">Hiện hoặc tắt nhanh Tuỳ chọn nhà phát triển từ màn hình chính (kéo giãn 1×1 / 2×1).</string>
-    <string name="widget_keep_awake_description">Bật/tắt Giữ màn hình sáng khi cắm sạc từ màn hình chính (kéo giãn 1×1 / 2×1).</string>
     <string name="widget_state_on">BẬT</string>
     <string name="widget_state_off">TẮT</string>
-    <string name="widget_hint_one_tap">Chạm để bật/tắt</string>
-    <string name="widget_hint_open">Chạm để mở</string>
     <string name="widget_hub_label">Gỡ lỗi USB &amp; Wi-Fi</string>
     <string name="widget_hub_description">Bật/tắt nhanh Gỡ lỗi USB và Wi-Fi ngay trên màn hình chính.</string>
-    <string name="widget_hub_card_title">Bảng điều khiển đa năng</string>
-    <string name="widget_hub_card_desc">Ghim 1 widget duy nhất, nắm viền kéo giãn tùy ý (2×1 · 4×1 · 2×2 · 4×2) để hiện đủ 4 nút bấm và thông tin hẹn giờ.</string>
-    <string name="widget_hub_pin_btn">Thêm Widget Bảng điều khiển</string>
-    <string name="widget_hub_added_btn">Đã thêm Bảng điều khiển · Cách gỡ</string>
-    <string name="widget_resize_hint">Mẹo: Các widget lẻ mặc định 1×1 nhưng có thể nắm kéo rộng thành thanh 2×1 ngoài màn hình chính.</string>
     <string name="widget_btn_usb">USB</string>
     <string name="widget_btn_wireless">Wi-Fi</string>
-    <string name="widget_btn_dev">Dev</string>
-    <string name="widget_btn_awake">Giữ sáng</string>
     <string name="widget_mode_one_tap">1-CHẠM</string>
     <string name="widget_mode_settings">MỞ NHANH</string>
     <string name="widget_mode_blocked">BỊ CHẶN</string>
-    <string name="widget_sub_auto_off_at">Tự tắt %1$s</string>
-    <string name="widget_sub_usb_awake">Đang bật · Giữ sáng màn hình</string>
-    <string name="widget_sub_one_tap_on">Đang bật · 1 chạm</string>
-    <string name="widget_sub_one_tap_off">Đang tắt · 1 chạm</string>
-    <string name="widget_sub_mode_a">Chạm mở trong Cài đặt</string>
     <string name="widget_sub_dev_unlock">Chạm mở khoá Dev Mode</string>
     <string name="widget_hub_usb_status">Gỡ lỗi USB · %1$s</string>
     <string name="widget_hub_sub_ready">Chế độ 1 chạm · Chạm nút để bật/tắt</string>
@@ -76,22 +52,11 @@
     <string name="nav_setup">Thiết lập</string>
 
     <!-- Quick Surfaces & Feedback -->
-    <string name="quick_surfaces_title">Tạo lối tắt nhanh (Thanh Wi-Fi &amp; Màn hình chính)</string>
-    <string name="quick_surfaces_subtitle">Đặt nút bật/tắt ngay trên thanh kéo từ trên xuống (chỗ bật Wi-Fi, Đèn pin) hoặc ghim Widget ra màn hình chính chỉ với 1 chạm.</string>
-    <string name="btn_add_qs_usb">Thêm nút Gỡ lỗi USB lên thanh Wi-Fi</string>
-    <string name="btn_add_qs_wireless">Thêm nút Gỡ lỗi không dây lên thanh Wi-Fi</string>
-    <string name="btn_pin_home_widget">Thêm Widget (1×1)</string>
-    <string name="btn_remove_home_widget">Gỡ Widget (1×1)</string>
-    <string name="btn_pin_home_shortcut">Ghim lối tắt (1×1)</string>
-    <string name="btn_unpin_home_shortcut">Gỡ lối tắt (1×1)</string>
-
     <string name="feedback_tile_added">Đã thêm nút \"%1$s\" vào thanh Cài đặt nhanh!</string>
     <string name="feedback_tile_already_added">Nút \"%1$s\" đã có sẵn trên thanh Cài đặt nhanh — kéo từ trên xuống để dùng ngay.</string>
     <string name="feedback_tile_removed">Đã gỡ nút \"%1$s\" khỏi thanh Cài đặt nhanh.</string>
     <string name="feedback_widget_pin_requested">Bấm Thêm trên hộp thoại của máy để đặt Widget \"%1$s\" ra màn hình chính.</string>
     <string name="feedback_widget_unsupported">Màn hình chính hiện tại không hỗ trợ ghim tự động. Hãy nhấn giữ khoảng trống ngoài màn hình chính rồi chọn Tiện ích (Widgets).</string>
-    <string name="feedback_shortcut_pin_requested">Bấm Thêm trên hộp thoại của máy để đặt lối tắt 1×1 ra màn hình chính.</string>
-    <string name="feedback_shortcut_unsupported">Màn hình chính hiện tại không hỗ trợ ghim tự động. Bạn có thể nhấn giữ biểu tượng ứng dụng để kéo lối tắt ra ngoài.</string>
 
     <string name="dialog_manual_qs_title">Cách thêm lên thanh Wi-Fi / Cài đặt nhanh</string>
     <string name="dialog_manual_qs_body">1. Vuốt từ mép trên màn hình xuống 2 lần (chỗ bật Wi-Fi, Bluetooth, Đèn pin).\n2. Bấm biểu tượng Chỉnh sửa (hình cây bút ✏️ hoặc dấu ⋮).\n3. Tìm ô \"%1$s\" ở phía dưới rồi kéo lên khu vực các nút đang dùng.</string>
@@ -100,11 +65,8 @@
     <!-- Common Status Badges -->
     <string name="status_on">Đang BẬT</string>
     <string name="status_off">Đang TẮT</string>
-    <string name="label_usb_debugging">Gỡ lỗi USB</string>
     <string name="label_wireless_debugging">Gỡ lỗi không dây</string>
     <string name="label_developer_mode">Chế độ nhà phát triển</string>
-    <string name="label_keep_awake">Giữ màn hình sáng</string>
-    <string name="status_hero_title">Trạng thái hiện tại trên máy</string>
 
     <!-- Home Tab -->
     <string name="home_device_line">Android %1$s · API %2$d · %3$s</string>
@@ -156,8 +118,6 @@
     <string name="usb_awake_setup_subtitle">Giữ màn hình luôn sáng, không tự khoá máy khi đang bật Gỡ lỗi USB và cắm cáp; tự trả về bình thường ngay khi tắt Gỡ lỗi USB.</string>
 
     <!-- OEM Unlock Guide (State A1: Unprivileged & Dev OFF) -->
-    <string name="dev_off_banner_title">Chế độ nhà phát triển đang TẮT</string>
-    <string name="dev_off_banner_subtitle">Chỉ cần mở khoá một lần trong Cài đặt để thấy công tắc Gỡ lỗi USB.</string>
     <string name="guide_card_title">Cách mở trên máy %1$s</string>
     <string name="brand_samsung">Samsung</string>
     <string name="brand_oneplus_oppo_realme">OPPO / Realme / OnePlus</string>
@@ -180,15 +140,7 @@
     <string name="btn_open_build_number">Mở tới chỗ bấm 7 lần</string>
     <string name="note_pin_and_back">Nhập mật khẩu màn hình khoá nếu máy hỏi, rồi bấm Quay lại đây.</string>
 
-    <!-- Legacy/Quick Jump & Banking -->
-    <string name="btn_go_turn_on_adb">Đi tới BẬT Gỡ lỗi USB</string>
-    <string name="btn_go_turn_off_adb">Đi tới TẮT Gỡ lỗi USB</string>
-    <string name="adb_jump_hint">Tự mở Tuỳ chọn nhà phát triển và cuộn tới đúng dòng Gỡ lỗi USB.</string>
-
-    <string name="banking_card_title">VNeID hoặc app ngân hàng báo lỗi?</string>
-    <string name="banking_card_body">Một số ứng dụng ngân hàng hoặc VNeID yêu cầu tắt hẳn công tắc tổng Chế độ nhà phát triển ở đầu trang (lần sau muốn bật lại sẽ cần bấm 7 lần vào Số phiên bản, trừ khi đã bật chế độ 1 chạm).</string>
-    <string name="btn_open_dev_options_top">Mở đầu trang để tắt hẳn Chế độ nhà phát triển</string>
-
+    <!-- Quick Jump -->
     <string name="pref_auto_jump_title">Tự nhảy thẳng tới Gỡ lỗi USB khi mở app</string>
     <string name="pref_auto_jump_subtitle">Tự động chuyển sang dòng Gỡ lỗi USB trong Cài đặt ngay khi mở ứng dụng ở chế độ mở nhanh.</string>
     <string name="auto_jump_countdown_notice">Đang mở tới công tắc Gỡ lỗi USB…</string>
@@ -196,11 +148,6 @@
 
     <!-- Mode B: Privileged 1-Tap Mode -->
     <string name="mode_one_tap_badge">Chế độ 1 chạm đang hoạt động</string>
-    <string name="mode_one_tap_subtitle">Đã cấp quyền bật/tắt trực tiếp ngay trong ứng dụng.</string>
-    <string name="switch_usb_desc">Tự mở lại Chế độ nhà phát triển nếu đang tắt</string>
-    <string name="switch_wireless_desc">Gỡ lỗi qua Wi-Fi trên Android 11 trở lên</string>
-    <string name="switch_dev_options_desc">Tắt sạch toàn bộ khi vào ngân hàng, VNeID, game…</string>
-    <string name="btn_open_system_dev_settings">Mở Tuỳ chọn nhà phát triển hệ thống</string>
 
     <!-- Shortcuts Tab -->
     <string name="shortcuts_title">Lối tắt</string>
@@ -208,20 +155,10 @@
     <string name="section_qs_tiles">Thanh Cài đặt nhanh</string>
     <string name="section_home_widgets">Widget màn hình chính</string>
     <string name="widget_hub_compact_sub">Đã thêm · Nhấn giữ ngoài màn hình để xoá</string>
-    <string name="widget_single_row_label">Hoặc ghim từng nút lẻ (1×1 · 2×1)</string>
-    <string name="action_pin_short">Ghim</string>
-    <string name="legend_qs_tile">Cài đặt nhanh</string>
-    <string name="legend_home_widget">Widget</string>
     <string name="cd_toggle_qs_tile">Ô Cài đặt nhanh: %1$s</string>
-    <string name="cd_toggle_home_widget">Widget màn hình chính: %1$s</string>
-    <string name="tile_usb_desc">Bật/tắt nhanh kết nối gỡ lỗi qua cáp USB.</string>
-    <string name="tile_wireless_desc">Bật/tắt nhanh gỡ lỗi không dây (Android 11+).</string>
-    <string name="tile_dev_options_desc">Hiện hoặc tắt sạch toàn bộ Chế độ nhà phát triển.</string>
-    <string name="tile_keep_awake_desc">Giữ màn hình luôn sáng trong lúc cắm sạc.</string>
     <string name="action_add_tile">Thêm</string>
     <string name="action_remove_tile">Xoá</string>
 
-    <string name="section_home_surfaces">Màn hình chính</string>
     <string name="dialog_remove_widget_title">Xoá Widget ngoài màn hình chính</string>
     <string name="dialog_remove_widget_body">Nhấn giữ widget \"%1$s\" trên màn hình chính rồi chọn Xoá / Gỡ.</string>
     <string name="dialog_remove_shortcut_title">Gỡ lối tắt ngoài màn hình chính</string>
@@ -264,8 +201,9 @@
 
     <string name="watcher_notif_channel_name">Tự tắt gỡ lỗi theo ứng dụng</string>
     <string name="watcher_notif_channel_desc">Thông báo im lặng hiển thị khi Vibe Debug đang canh tự động tắt gỡ lỗi cho app đã chọn.</string>
-    <string name="watcher_notif_watching_title_one">Đang canh 1 app tự tắt gỡ lỗi</string>
-    <string name="watcher_notif_watching_title">Đang canh %d app tự tắt gỡ lỗi</string>
+    <plurals name="watcher_notif_watching_title">
+        <item quantity="other">Đang canh %d app tự tắt gỡ lỗi</item>
+    </plurals>
     <string name="watcher_notif_watching_body">Sẽ tự tắt gỡ lỗi khi bạn mở app đã chọn.</string>
     <string name="watcher_notif_holding_title">Đã tạm tắt gỡ lỗi cho %s</string>
     <string name="watcher_notif_holding_restore_body">Sẽ tự bật lại sau khi bạn thoát ứng dụng.</string>
@@ -277,7 +215,6 @@
     <string name="loading_apps">Đang tải danh sách ứng dụng…</string>
     <string name="no_matching_apps">Không tìm thấy ứng dụng phù hợp.</string>
     <string name="badge_banking_suggested">Gợi ý</string>
-    <string name="badge_added">Đã thêm</string>
     <string name="action_close">Đóng</string>
 
     <!-- Setup Tab -->
@@ -327,15 +264,7 @@
     <string name="btn_copy_diagnostics">Sao chép thông tin chẩn đoán</string>
     <string name="toast_diagnostics_copied">Đã sao chép thông tin chẩn đoán (không chứa dữ liệu cá nhân).</string>
 
-    <!-- Legacy Technician / Copy Strings -->
-    <string name="tech_footer_header">Dành cho kỹ thuật viên (Bật chế độ 1 chạm)</string>
-    <string name="tech_perm_label">Quyền WRITE_SECURE_SETTINGS:</string>
-    <string name="tech_perm_granted">Đã cấp</string>
-    <string name="tech_perm_not_granted">Chưa cấp</string>
-    <string name="tech_cmd_intro">Chạy lệnh này 1 lần từ máy tính có ADB (hoặc qua Shizuku) để mở khoá công tắc 1 chạm:</string>
-    <string name="action_copy_command">Sao chép lệnh ADB</string>
+    <!-- Copy Actions -->
     <string name="action_copy">Sao chép</string>
     <string name="action_copied">Đã sao chép</string>
-    <string name="tech_note_oneplus">• OnePlus / OPPO / Realme (OxygenOS / ColorOS): Bật mục \"Tắt giám sát quyền\" (Disable permission monitoring) ở gần cuối Tuỳ chọn nhà phát triển trước khi chạy lệnh pm grant, xong có thể tắt lại.</string>
-    <string name="tech_note_xiaomi">• Xiaomi / Redmi / POCO (HyperOS / MIUI): Bật thêm \"Gỡ lỗi USB (Cài đặt bảo mật)\" trong Tuỳ chọn nhà phát triển trước khi chạy lệnh pm grant.</string>
 </resources>

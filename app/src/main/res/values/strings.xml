@@ -1,18 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Vibe Debug</string>
-    <string name="app_subtitle">Quick USB Debugging monitor &amp; shortcut</string>
 
     <!-- Quick Settings Tiles, Home Widget & App Shortcuts -->
     <string name="tile_label">USB Debug</string>
     <string name="tile_wireless_label">Wireless Debug</string>
-    <string name="tile_dev_options_label">Developer Options</string>
-    <string name="tile_keep_awake_label">Keep Awake</string>
     <string name="tile_subtitle_on">ON</string>
     <string name="tile_subtitle_off">OFF</string>
     <string name="tile_subtitle_unsupported">Android 11+</string>
     <string name="tile_subtitle_blocked">Blocked by policy</string>
-    <string name="tile_subtitle_awake_charging">While charging</string>
     <string name="tile_subtitle_auto_off_in">Auto off in %dm</string>
     <string name="tile_subtitle_need_wifi">Connect Wi-Fi</string>
     <string name="widget_state_need_wifi">No Wi-Fi</string>
@@ -20,35 +16,15 @@
     <string name="widget_label">USB Debug</string>
     <string name="widget_short_usb">USB Debug</string>
     <string name="widget_short_wireless">Wi-Fi Debug</string>
-    <string name="widget_short_dev">Dev Mode</string>
-    <string name="widget_short_awake">Keep Awake</string>
-    <string name="widget_description">Check and switch USB Debugging from your home screen (1×1 / 2×1 resizable).</string>
-    <string name="widget_wireless_description">Check and switch Wireless Debugging from your home screen (1×1 / 2×1 resizable).</string>
-    <string name="widget_dev_options_description">Show or turn off Developer Options from your home screen (1×1 / 2×1 resizable).</string>
-    <string name="widget_keep_awake_description">Toggle Keep Awake while charging from your home screen (1×1 / 2×1 resizable).</string>
     <string name="widget_state_on">ON</string>
     <string name="widget_state_off">OFF</string>
-    <string name="widget_hint_one_tap">Tap to switch</string>
-    <string name="widget_hint_open">Tap to open</string>
     <string name="widget_hub_label">USB &amp; Wi-Fi</string>
     <string name="widget_hub_description">Switch USB and Wi-Fi debugging right from your Home screen.</string>
-    <string name="widget_hub_card_title">Multi-Size Control Panel</string>
-    <string name="widget_hub_card_desc">Pin one widget and drag its edges (2×1 · 4×1 · 2×2 · 4×2) to get all 4 switches and live timer info on your Home screen.</string>
-    <string name="widget_hub_pin_btn">Add Control Panel Widget</string>
-    <string name="widget_hub_added_btn">Control Panel added · Remove</string>
-    <string name="widget_resize_hint">Tip: Individual 1×1 widgets can also be stretched horizontally into 2×1 status pills on your Home screen.</string>
     <string name="widget_btn_usb">USB</string>
     <string name="widget_btn_wireless">Wi-Fi</string>
-    <string name="widget_btn_dev">Dev</string>
-    <string name="widget_btn_awake">Awake</string>
     <string name="widget_mode_one_tap">1-TAP</string>
     <string name="widget_mode_settings">OPEN</string>
     <string name="widget_mode_blocked">LOCKED</string>
-    <string name="widget_sub_auto_off_at">Auto-off %1$s</string>
-    <string name="widget_sub_usb_awake">On · Keeping screen awake</string>
-    <string name="widget_sub_one_tap_on">On · 1-tap switch</string>
-    <string name="widget_sub_one_tap_off">Off · 1-tap switch</string>
-    <string name="widget_sub_mode_a">Tap to open in Settings</string>
     <string name="widget_sub_dev_unlock">Tap to unlock Dev Mode</string>
     <string name="widget_hub_usb_status">USB Debug · %1$s</string>
     <string name="widget_hub_sub_ready">1-Tap Mode · Tap any switch</string>
@@ -76,22 +52,11 @@
     <string name="nav_setup">Setup</string>
 
     <!-- Quick Surfaces & Feedback -->
-    <string name="quick_surfaces_title">Quick Shortcuts (Quick Settings &amp; Home)</string>
-    <string name="quick_surfaces_subtitle">Add a toggle next to Wi-Fi / Flashlight in your top shade or pin a widget to your home screen in 1 tap.</string>
-    <string name="btn_add_qs_usb">Add USB Debug to Quick Settings (Wi-Fi bar)</string>
-    <string name="btn_add_qs_wireless">Add Wireless Debug to Quick Settings</string>
-    <string name="btn_pin_home_widget">Add Widget (1×1)</string>
-    <string name="btn_remove_home_widget">Remove Widget (1×1)</string>
-    <string name="btn_pin_home_shortcut">Pin Shortcut (1×1)</string>
-    <string name="btn_unpin_home_shortcut">Remove Shortcut (1×1)</string>
-
     <string name="feedback_tile_added">Added \"%1$s\" tile to your Quick Settings panel!</string>
     <string name="feedback_tile_already_added">\"%1$s\" is already in Quick Settings — swipe down from the top to use it.</string>
     <string name="feedback_tile_removed">Removed \"%1$s\" tile from Quick Settings.</string>
     <string name="feedback_widget_pin_requested">Confirm on the launcher prompt to place the \"%1$s\" widget.</string>
     <string name="feedback_widget_unsupported">Your launcher does not support 1-tap widget pinning. Long-press your home screen and choose Widgets.</string>
-    <string name="feedback_shortcut_pin_requested">Confirm on the launcher prompt to place the 1×1 shortcut.</string>
-    <string name="feedback_shortcut_unsupported">Your launcher does not support 1-tap shortcut pinning. Long-press the app icon to drag shortcuts.</string>
 
     <string name="dialog_manual_qs_title">How to add to Quick Settings</string>
     <string name="dialog_manual_qs_body">1. Swipe down twice from the top of your screen (where Wi-Fi and Flashlight live).\n2. Tap the Edit (pencil ✏️ or ⋮) button.\n3. Drag \"%1$s\" into your active tiles.</string>
@@ -100,11 +65,8 @@
     <!-- Common Status Badges -->
     <string name="status_on">ON</string>
     <string name="status_off">OFF</string>
-    <string name="label_usb_debugging">USB Debugging</string>
     <string name="label_wireless_debugging">Wireless Debugging</string>
     <string name="label_developer_mode">Developer Options</string>
-    <string name="label_keep_awake">Keep Awake</string>
-    <string name="status_hero_title">Current Device Status</string>
 
     <!-- Home Tab -->
     <string name="home_device_line">Android %1$s · API %2$d · %3$s</string>
@@ -156,8 +118,6 @@
     <string name="usb_awake_setup_subtitle">Prevents screen sleep and lock while plugged in with USB Debugging ON, then restores normal sleep when USB Debugging turns OFF.</string>
 
     <!-- OEM Unlock Guide (State A1: Unprivileged & Dev OFF) -->
-    <string name="dev_off_banner_title">Developer Mode is OFF</string>
-    <string name="dev_off_banner_subtitle">Unlock it once in Settings to access the USB Debugging switch.</string>
     <string name="guide_card_title">Unlock Guide for %1$s</string>
     <string name="brand_samsung">Samsung</string>
     <string name="brand_oneplus_oppo_realme">OPPO / Realme / OnePlus</string>
@@ -180,15 +140,7 @@
     <string name="btn_open_build_number">Open Build Number Screen</string>
     <string name="note_pin_and_back">Enter your screen lock PIN/password if prompted, then press Back to return here.</string>
 
-    <!-- Legacy/Quick Jump & Banking -->
-    <string name="btn_go_turn_on_adb">Go to Turn ON USB Debugging</string>
-    <string name="btn_go_turn_off_adb">Go to Turn OFF USB Debugging</string>
-    <string name="adb_jump_hint">Opens Developer Options and highlights the USB debugging switch.</string>
-
-    <string name="banking_card_title">Blocked by banking or ID apps?</string>
-    <string name="banking_card_body">Some banking or digital ID apps require turning off the master Developer Options switch at the top of the screen (you will need to tap Build number 7 times next time unless 1-tap mode is enabled).</string>
-    <string name="btn_open_dev_options_top">Open top of Developer Options to turn off</string>
-
+    <!-- Quick Jump -->
     <string name="pref_auto_jump_title">Auto-jump to USB Debugging on launch</string>
     <string name="pref_auto_jump_subtitle">Immediately open the highlighted USB Debugging setting when launching in quick-open mode.</string>
     <string name="auto_jump_countdown_notice">Opening USB Debugging setting…</string>
@@ -196,11 +148,6 @@
 
     <!-- Mode B: Privileged 1-Tap Mode -->
     <string name="mode_one_tap_badge">1-Tap Mode Active</string>
-    <string name="mode_one_tap_subtitle">Direct switches are unlocked via WRITE_SECURE_SETTINGS.</string>
-    <string name="switch_usb_desc">Auto-enables Developer Mode if currently off</string>
-    <string name="switch_wireless_desc">Debug over Wi-Fi on Android 11 and newer</string>
-    <string name="switch_dev_options_desc">Turn off cleanly for strict apps or games</string>
-    <string name="btn_open_system_dev_settings">Open System Developer Options</string>
 
     <!-- Shortcuts Tab -->
     <string name="shortcuts_title">Shortcuts</string>
@@ -208,20 +155,10 @@
     <string name="section_qs_tiles">Quick Settings Shade</string>
     <string name="section_home_widgets">Home Screen Widget</string>
     <string name="widget_hub_compact_sub">Added · Long-press widget on Home screen to remove</string>
-    <string name="widget_single_row_label">Or pin individual switches (1×1 · 2×1)</string>
-    <string name="action_pin_short">Pin</string>
-    <string name="legend_qs_tile">Quick Settings</string>
-    <string name="legend_home_widget">Widget</string>
     <string name="cd_toggle_qs_tile">Quick Settings tile: %1$s</string>
-    <string name="cd_toggle_home_widget">Home widget: %1$s</string>
-    <string name="tile_usb_desc">Switch or open USB Debugging in 1 tap.</string>
-    <string name="tile_wireless_desc">Switch Wi-Fi debugging on Android 11+.</string>
-    <string name="tile_dev_options_desc">Show or turn off Developer Options cleanly.</string>
-    <string name="tile_keep_awake_desc">Keep screen awake while plugged in.</string>
     <string name="action_add_tile">Add</string>
     <string name="action_remove_tile">Remove</string>
 
-    <string name="section_home_surfaces">Home Screen</string>
     <string name="dialog_remove_widget_title">Remove Home Screen Widget</string>
     <string name="dialog_remove_widget_body">Long-press the \"%1$s\" widget on your Home screen and tap Remove.</string>
     <string name="dialog_remove_shortcut_title">Remove Home Screen Shortcut</string>
@@ -264,8 +201,10 @@
 
     <string name="watcher_notif_channel_name">Auto-disable for strict apps</string>
     <string name="watcher_notif_channel_desc">Silent status shown while Vibe Debug automatically turns off debugging for selected apps.</string>
-    <string name="watcher_notif_watching_title_one">Watching 1 protected app</string>
-    <string name="watcher_notif_watching_title">Watching %d protected apps</string>
+    <plurals name="watcher_notif_watching_title">
+        <item quantity="one">Watching %d protected app</item>
+        <item quantity="other">Watching %d protected apps</item>
+    </plurals>
     <string name="watcher_notif_watching_body">Debugging turns off automatically when opened.</string>
     <string name="watcher_notif_holding_title">Debugging paused for %s</string>
     <string name="watcher_notif_holding_restore_body">Will restore shortly after you leave the app.</string>
@@ -277,7 +216,6 @@
     <string name="loading_apps">Loading installed apps…</string>
     <string name="no_matching_apps">No matching apps found.</string>
     <string name="badge_banking_suggested">Suggested</string>
-    <string name="badge_added">Added</string>
     <string name="action_close">Close</string>
 
     <!-- Setup Tab -->
@@ -327,15 +265,7 @@
     <string name="btn_copy_diagnostics">Copy device diagnostics</string>
     <string name="toast_diagnostics_copied">Device diagnostics copied (no personal data included).</string>
 
-    <!-- Legacy Technician / Copy Strings -->
-    <string name="tech_footer_header">For technicians (Enable 1-tap mode)</string>
-    <string name="tech_perm_label">WRITE_SECURE_SETTINGS status:</string>
-    <string name="tech_perm_granted">Granted</string>
-    <string name="tech_perm_not_granted">Not granted</string>
-    <string name="tech_cmd_intro">Run once from a computer with ADB (or via Shizuku) to unlock direct 1-tap switches:</string>
-    <string name="action_copy_command">Copy ADB command</string>
+    <!-- Copy Actions -->
     <string name="action_copy">Copy</string>
     <string name="action_copied">Copied</string>
-    <string name="tech_note_oneplus">• OnePlus / OPPO / Realme (OxygenOS / ColorOS): Turn ON \"Disable permission monitoring\" near the bottom of Developer Options before running pm grant, then turn it back off.</string>
-    <string name="tech_note_xiaomi">• Xiaomi / Redmi / POCO (HyperOS / MIUI): Turn ON \"USB debugging (Security settings)\" in Developer Options before running pm grant.</string>
 </resources>

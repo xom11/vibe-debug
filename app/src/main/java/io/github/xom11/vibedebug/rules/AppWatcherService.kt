@@ -184,7 +184,6 @@ class AppWatcherService : Service() {
     }
 
     private fun ensureNotificationChannel() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = getSystemService(NotificationManager::class.java) ?: return
         val name = getString(R.string.watcher_notif_channel_name)
         val desc = getString(R.string.watcher_notif_channel_desc)
@@ -326,11 +325,11 @@ class AppWatcherService : Service() {
                 )
                 title to body
             } else {
-                val title = if (protectedCount == 1) {
-                    context.getString(R.string.watcher_notif_watching_title_one)
-                } else {
-                    context.getString(R.string.watcher_notif_watching_title, protectedCount)
-                }
+                val title = context.resources.getQuantityString(
+                    R.plurals.watcher_notif_watching_title,
+                    protectedCount,
+                    protectedCount,
+                )
                 val body = context.getString(R.string.watcher_notif_watching_body)
                 title to body
             }
