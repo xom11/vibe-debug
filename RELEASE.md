@@ -151,6 +151,8 @@ Vibe Debug lets users pick apps (e.g. banking or digital ID apps) that refuse to
 
 Nếu bị từ chối: phương án dự phòng là build riêng cho Play không có `AppWatcherService` (giữ lối tắt Clean Launch thủ công).
 
+> ✅ Đã nộp ngày 2026-11-25: video demo (OnePlus 12R, Android 16, 64 giây, đã làm mờ dữ liệu cá nhân, có chú thích tiếng Anh) ở chế độ **Unlisted**: <https://www.youtube.com/watch?v=YaoZqcMVnXE>. Bản v2.2.4 (`versionCode 9`) trên kênh *Thử nghiệm khép kín – Alpha* (178 quốc gia) cùng trang thông tin cửa hàng và các khai báo đã được gửi Google xem xét; danh sách tester chưa thêm.
+
 ### 4.7. Closed testing → Production
 
 - Tài khoản cá nhân tạo sau 13/11/2023: cần **≥ 12 tester** opt-in và dùng liên tục **14 ngày** trong closed testing trước khi xin quyền Production.
