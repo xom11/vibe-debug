@@ -1,0 +1,3 @@
+• Thêm nút "Sao chép thông tin chẩn đoán" trong tab Thiết lập (100% cục bộ, không chứa dữ liệu cá nhân) để hỗ trợ bắt bệnh nhanh theo từng hãng máy
+• Sửa lỗi cắt chữ dòng WRITE_SECURE_SETTINGS khi bật cỡ chữ hệ thống lớn (1.3x+)
+• Đã kiểm thử tự động xuyên suốt Android API 26, 30, 33, 34, 35 và 36

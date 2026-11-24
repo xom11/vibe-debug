@@ -1,0 +1,3 @@
+• Added 1-tap "Copy device diagnostics" button in Setup (100% on-device, no personal data) to help troubleshoot OEM/launcher issues
+• Fixed monospace permission subtitle clipping at large system font sizes (1.3x+)
+• Verified across Android API 26, 30, 33, 34, 35, and 36

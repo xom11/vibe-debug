@@ -719,8 +719,8 @@ private fun ChecklistRow(
                     text = subtitle,
                     fontFamily = MonoFont,
                     fontSize = 11.sp,
+                    lineHeight = 15.sp,
                     color = palette.muted,
-                    maxLines = 1,
                 )
             }
         }

@@ -43,8 +43,8 @@ android {
         applicationId = "io.github.xom11.vibedebug"
         minSdk = 26
         targetSdk = 36
-        versionCode = 8
-        versionName = "2.2.3"
+        versionCode = 9
+        versionName = "2.2.4"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         vectorDrawables {

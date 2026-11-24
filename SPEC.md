@@ -3,7 +3,7 @@
 ## 1. App Identity & Google Play Compliance
 
 - **Package Name:** `io.github.xom11.vibedebug`
-- **Version:** `2.2.3` (`versionCode = 8`)
+- **Version:** `2.2.4` (`versionCode = 9`)
 - **App Name:**
   - English (`res/values/strings.xml`): `Vibe Debug`
   - Vietnamese (`res/values-vi/strings.xml`): `Vibe Debug`
