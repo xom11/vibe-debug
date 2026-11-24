@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -45,12 +46,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.xom11.vibedebug.BuildConfig
 import io.github.xom11.vibedebug.R
+import io.github.xom11.vibedebug.data.DeviceDiagnostics
 import io.github.xom11.vibedebug.data.ThemePreference
 import io.github.xom11.vibedebug.model.DevState
 import io.github.xom11.vibedebug.model.OemBrand
 import io.github.xom11.vibedebug.navigation.SettingsIntents
 import io.github.xom11.vibedebug.ui.theme.AppTheme
 import io.github.xom11.vibedebug.ui.theme.MonoFont
+import kotlinx.coroutines.delay
 import java.util.Locale
 
 private val AUTO_OFF_OPTIONS = listOf(15, 30, 60)
@@ -409,6 +412,13 @@ fun SetupTab(
     }
 
     val privacyAboutCard: @Composable (Modifier) -> Unit = { cardModifier ->
+        var diagnosticsCopied by remember { mutableStateOf(false) }
+        LaunchedEffect(diagnosticsCopied) {
+            if (diagnosticsCopied) {
+                delay(2000L)
+                diagnosticsCopied = false
+            }
+        }
         SurfaceCard(
             modifier = cardModifier.testTag("card_privacy_about"),
             verticalArrangement = Arrangement.SpaceBetween,
@@ -447,6 +457,25 @@ fun SetupTab(
                     title = stringResource(R.string.label_app_version),
                     value = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
                 )
+                RowDivider()
+                Box(Modifier.padding(14.dp)) {
+                    OutlineActionButton(
+                        text = stringResource(
+                            if (diagnosticsCopied) R.string.action_copied else R.string.btn_copy_diagnostics
+                        ),
+                        onClick = {
+                            context.copyText("Vibe Debug Diagnostics", DeviceDiagnostics.buildReport(context))
+                            diagnosticsCopied = true
+                            context.showToast(context.getString(R.string.toast_diagnostics_copied))
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("btn_copy_diagnostics"),
+                        color = if (diagnosticsCopied) palette.mint else palette.soft,
+                        border = if (diagnosticsCopied) palette.mintBorder else palette.line,
+                        icon = if (diagnosticsCopied) R.drawable.ic_check else R.drawable.ic_copy,
+                    )
+                }
             }
         }
     }

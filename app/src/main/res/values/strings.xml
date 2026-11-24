@@ -324,6 +324,8 @@
     <string name="privacy_card_title">Zero Network · 100% On-Device</string>
     <string name="privacy_card_body">No INTERNET permission, no ads, no analytics. Developer flags change only when you tap or when optional on-device per-app rules are enabled.</string>
     <string name="label_app_version">Version</string>
+    <string name="btn_copy_diagnostics">Copy device diagnostics</string>
+    <string name="toast_diagnostics_copied">Device diagnostics copied (no personal data included).</string>
 
     <!-- Legacy Technician / Copy Strings -->
     <string name="tech_footer_header">For technicians (Enable 1-tap mode)</string>

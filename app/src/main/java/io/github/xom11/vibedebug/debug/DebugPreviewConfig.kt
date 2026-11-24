@@ -6,6 +6,7 @@ import io.github.xom11.vibedebug.BuildConfig
 import io.github.xom11.vibedebug.model.DevState
 import io.github.xom11.vibedebug.model.OemBrand
 import io.github.xom11.vibedebug.model.OemBrandDetector
+import java.util.Locale
 
 /** Debug-only preview configuration parsed from launcher intent extras. */
 data class DebugPreviewConfig(
@@ -41,7 +42,7 @@ data class DebugPreviewConfig(
 
             val rawState = intent.getStringExtra(EXTRA_PREVIEW_STATE)
                 ?.trim()
-                ?.lowercase()
+                ?.lowercase(Locale.ROOT)
                 ?.takeIf { it.isNotEmpty() }
                 ?: return null
 
@@ -51,7 +52,7 @@ data class DebugPreviewConfig(
             )
             val initialTab = intent.getStringExtra(EXTRA_PREVIEW_TAB)
                 ?.trim()
-                ?.lowercase()
+                ?.lowercase(Locale.ROOT)
                 ?.takeIf { it in VALID_TABS }
 
             val preset: Pair<DevState, Boolean> = when (rawState) {
