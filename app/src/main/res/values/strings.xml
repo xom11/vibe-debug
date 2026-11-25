@@ -161,8 +161,6 @@
 
     <string name="dialog_remove_widget_title">Remove Home Screen Widget</string>
     <string name="dialog_remove_widget_body">Long-press the \"%1$s\" widget on your Home screen and tap Remove.</string>
-    <string name="dialog_remove_shortcut_title">Remove Home Screen Shortcut</string>
-    <string name="dialog_remove_shortcut_body">Android only allows removing pinned icons directly on your Home screen:\n\n1. Go to your Home screen.\n2. Long-press the \"%1$s\" icon and tap Remove.</string>
     <string name="action_go_home">Go to Home screen</string>
     <string name="dialog_xiaomi_pin_title">Allow Home screen shortcuts</string>
     <string name="dialog_xiaomi_pin_body">Xiaomi HyperOS / MIUI blocks apps from pinning widgets and shortcuts by default.\n\n1. Tap \"Open permissions\" below.\n2. Open \"Other permissions\" → enable \"Home screen shortcuts\" (Always allow).\n3. Return here and tap Add again.\n\nOr add manually: long-press your Home screen → Widgets → Android widgets → Vibe Debug.</string>
@@ -172,17 +170,18 @@
 
     <string name="section_safe_launch">Turn Off Debug &amp; Launch</string>
     <string name="safe_launch_banner_title">Apps blocking Developer Mode?</string>
-    <string name="safe_launch_desc">Add banking, digital ID, e-wallet, or security-sensitive apps to turn off debugging automatically when opened (or via Clean Launch shortcuts).</string>
-    <string name="safe_launch_list_hint">With auto mode on, opening the regular app icon turns off debugging automatically; you can also tap Open now or Pin a shortcut.</string>
+    <string name="safe_launch_desc">Select banking, digital ID, e-wallet, or security-sensitive apps. Opening their regular icon turns off Developer Mode automatically.</string>
+    <string name="safe_launch_list_hint">Turns off Developer Mode automatically when opened from Home screen.</string>
     <string name="safe_launch_add_btn">Choose apps</string>
-    <string name="safe_launch_edit_btn">Add / edit apps</string>
-    <string name="safe_launch_open_now">Open now</string>
-    <string name="safe_launch_pin">Pin</string>
-    <string name="safe_launch_unpin">Remove shortcut</string>
+    <string name="protected_apps_count_title">Protected apps (%1$d)</string>
+    <string name="protected_apps_show_more">Show %1$d more</string>
+    <string name="protected_apps_collapse">Show less</string>
+    <string name="action_clear_all">Clear all</string>
+    <string name="action_undo">Undo</string>
+    <string name="feedback_app_removed">Removed %1$s</string>
+    <string name="feedback_apps_cleared">Cleared %1$d apps</string>
     <string name="cd_remove_app">Remove %s</string>
-    <string name="safe_launch_mode_a_hint">1-Tap Mode (Setup tab) is needed for automatic disable. Right now, tapping Open opens Developer Options so you can turn it off first.</string>
-    <string name="safe_launch_pin_ok">Confirm on the launcher prompt to pin \"%s\" to your home screen.</string>
-    <string name="safe_launch_pin_unsupported">Your launcher does not support pinning app shortcuts.</string>
+    <string name="safe_launch_mode_a_hint">Enable 1-Tap Mode in Setup so opening listed apps turns off Developer Mode automatically.</string>
 
     <string name="auto_rules_title">Auto-turn off when opening apps</string>
     <string name="auto_rules_sub_off">Detects when listed apps open from their regular icon (optional Usage Access).</string>
@@ -196,8 +195,6 @@
     <string name="usage_dialog_title">Allow Usage Access</string>
     <string name="usage_dialog_body">Vibe Debug uses Usage Access solely on your device to detect when one of your selected apps opens or closes so it can turn debugging off and restore it afterward.\n\nThis app has no INTERNET permission — no app usage data is ever stored, logged, or sent off your device.</string>
     <string name="usage_dialog_open_settings">Open Settings</string>
-    <string name="rule_mode_dev_off">Turn off Dev Mode</string>
-    <string name="rule_mode_usb_off">USB &amp; Wi-Fi only</string>
 
     <string name="watcher_notif_channel_name">Auto-disable for strict apps</string>
     <string name="watcher_notif_channel_desc">Silent status shown while Vibe Debug automatically turns off debugging for selected apps.</string>
@@ -211,11 +208,33 @@
     <string name="watcher_notif_holding_stay_off_body">Debugging stays off while this app is active.</string>
     <string name="watcher_notif_action_stop">Stop</string>
 
-    <string name="dialog_pick_app_title">Select apps for Clean Launch</string>
+    <string name="dialog_pick_app_title">Choose protected apps</string>
     <string name="hint_search_apps">Search by name or package…</string>
     <string name="loading_apps">Loading installed apps…</string>
     <string name="no_matching_apps">No matching apps found.</string>
     <string name="badge_banking_suggested">Suggested</string>
+    <string name="badge_rasp_named">RASP · %1$s</string>
+    <string name="badge_checks_debug">Checks debug</string>
+    <string name="auto_detect_found_title">Detected %1$d apps that may block debugging</string>
+    <string name="auto_detect_preview_more">%1$s +%2$d more</string>
+    <string name="auto_detect_add_all">Add all (%1$d)</string>
+    <string name="auto_detect_review_scan">Review / Scan</string>
+    <string name="auto_detect_added_feedback">Added %1$d detected apps to your protected list.</string>
+    <string name="picker_filter_all">All</string>
+    <string name="picker_filter_detected">Detected (%1$d)</string>
+    <string name="picker_filter_selected">Selected (%1$d)</string>
+    <string name="deep_scan_prompt">Deep scan installed APKs for unknown anti-debug checks</string>
+    <string name="deep_scan_action">Deep scan</string>
+    <string name="deep_scan_progress">Scanning %1$d/%2$d · %3$s</string>
+    <string name="deep_scan_done">Deep scan complete · %1$d detected</string>
+    <string name="deep_scan_rescan">Rescan</string>
+    <string name="detect_reason_gov_id">Digital ID / Gov</string>
+    <string name="detect_reason_banking">Banking</string>
+    <string name="detect_reason_ewallet">E-Wallet / Pay</string>
+    <string name="detect_reason_fintech">Securities / Fintech</string>
+    <string name="detect_reason_enterprise">Work / MFA</string>
+    <string name="detect_reason_dex_checks">Checks USB/Dev debug in code</string>
+    <string name="detect_reason_domain">Banking/Gov package pattern</string>
     <string name="action_close">Close</string>
 
     <!-- Setup Tab -->

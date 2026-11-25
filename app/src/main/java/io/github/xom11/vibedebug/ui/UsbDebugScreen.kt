@@ -25,8 +25,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -52,7 +54,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.xom11.vibedebug.R
-import io.github.xom11.vibedebug.data.AppRuleMode
 import io.github.xom11.vibedebug.data.ThemePreference
 import io.github.xom11.vibedebug.model.DevState
 import io.github.xom11.vibedebug.model.OemBrand
@@ -60,7 +61,6 @@ import io.github.xom11.vibedebug.shortcut.HomePinFallbackKind
 import io.github.xom11.vibedebug.shortcut.HomePinOutcome
 import io.github.xom11.vibedebug.shortcut.QuickSurfaceState
 import io.github.xom11.vibedebug.shortcut.QuickTileType
-import io.github.xom11.vibedebug.shortcut.SafeLaunchResult
 import io.github.xom11.vibedebug.shortcut.TileAddOutcome
 import io.github.xom11.vibedebug.ui.theme.AppTheme
 import io.github.xom11.vibedebug.ui.theme.MonoFont
@@ -83,7 +83,6 @@ fun UsbDebugScreen(
     autoAppRulesEnabled: Boolean = false,
     autoRestoreOnExit: Boolean = true,
     hasUsageAccess: Boolean = false,
-    appRuleModes: Map<String, AppRuleMode> = emptyMap(),
     quickSurfaceState: QuickSurfaceState = QuickSurfaceState(),
     wirelessWifiWarning: Boolean = false,
     wirelessBlockedTick: Int = 0,
@@ -101,12 +100,12 @@ fun UsbDebugScreen(
     onKeepAwakeOnUsbChanged: (Boolean) -> Unit = {},
     onThemePreferenceChanged: (ThemePreference) -> Unit,
     onAddSafeLaunchPackage: (String) -> Unit,
+    onAddSafeLaunchPackages: (List<String>) -> Unit = { pkgs -> pkgs.forEach(onAddSafeLaunchPackage) },
     onRemoveSafeLaunchPackage: (String) -> Unit,
+    onClearSafeLaunchPackages: () -> Unit = {},
     onAutoAppRulesEnabledChanged: (Boolean) -> Unit = {},
     onAutoRestoreOnExitChanged: (Boolean) -> Unit = {},
-    onSetAppRuleMode: (String, AppRuleMode) -> Unit = { _, _ -> },
     onOpenUsageAccessSettings: () -> Unit = {},
-    onLaunchSafeApp: (String) -> SafeLaunchResult,
     onOpenBuildNumberScreen: () -> Unit,
     onOpenEnableAdbScreen: () -> Unit,
     onOpenEnableWirelessAdbScreen: () -> Unit,
@@ -115,7 +114,6 @@ fun UsbDebugScreen(
     onAddWirelessQuickTile: ((TileAddOutcome) -> Unit) -> Unit,
     onRemoveQuickTile: (QuickTileType) -> String = { "" },
     onPinHomeWidget: () -> HomePinOutcome = { HomePinOutcome.UNSUPPORTED },
-    onWatchSafeLaunchPin: (String) -> Unit = {},
     onOpenHomeShortcutPermissions: () -> Unit = {},
     onScheduleSurfaceRefresh: () -> Unit = {},
     onOpenHomeScreen: () -> Unit = {},
@@ -147,31 +145,24 @@ fun UsbDebugScreen(
         }
     }
 
-    LaunchedEffect(wirelessBlockedTick) {
-        if (wirelessBlockedTick > 0) {
-            showSnackbar(resources.getString(R.string.wireless_err_need_wifi))
+    val showActionSnackbar: (String, String, () -> Unit) -> Unit = { message, actionLabel, onAction ->
+        scope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            val result = snackbarHostState.showSnackbar(
+                message = message,
+                actionLabel = actionLabel,
+                withDismissAction = true,
+                duration = SnackbarDuration.Short,
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                onAction()
+            }
         }
     }
 
-    val handleSafeLaunch: (String, String) -> Unit = { pkg, label ->
-        when (onLaunchSafeApp(pkg)) {
-            SafeLaunchResult.LaunchedClean -> {
-                context.showToast(resources.getString(R.string.safe_launch_toast_clean, label))
-            }
-            SafeLaunchResult.NeedsPermission -> {
-                showSnackbar(resources.getString(R.string.safe_launch_toast_need_perm))
-                if (devState.devOptionsEnabled) {
-                    onOpenDeveloperOptionsTop()
-                } else {
-                    onOpenBuildNumberScreen()
-                }
-            }
-            SafeLaunchResult.BlockedByPolicy -> {
-                showSnackbar(resources.getString(R.string.safe_launch_toast_blocked))
-            }
-            SafeLaunchResult.AppNotFound -> {
-                showSnackbar(resources.getString(R.string.safe_launch_toast_not_found))
-            }
+    LaunchedEffect(wirelessBlockedTick) {
+        if (wirelessBlockedTick > 0) {
+            showSnackbar(resources.getString(R.string.wireless_err_need_wifi))
         }
     }
 
@@ -309,27 +300,26 @@ fun UsbDebugScreen(
                                     autoAppRulesEnabled = autoAppRulesEnabled,
                                     autoRestoreOnExit = autoRestoreOnExit,
                                     hasUsageAccess = hasUsageAccess,
-                                    appRuleModes = appRuleModes,
                                     quickSurfaceState = quickSurfaceState,
                                     homePinFallbackTick = homePinFallbackTick,
                                     homePinFallbackKind = homePinFallbackKind,
                                     onShowSnackbar = showSnackbar,
+                                    onShowActionSnackbar = showActionSnackbar,
                                     onShowManualTileDialog = { manualQsTileLabel = it },
                                     onAddUsbTile = onAddUsbQuickTile,
                                     onAddWirelessTile = onAddWirelessQuickTile,
                                     onRemoveTile = onRemoveQuickTile,
                                     onPinHomeWidget = onPinHomeWidget,
-                                    onWatchSafeLaunchPin = onWatchSafeLaunchPin,
                                     onOpenHomeShortcutPermissions = onOpenHomeShortcutPermissions,
                                     onScheduleSurfaceRefresh = onScheduleSurfaceRefresh,
                                     onOpenHomeScreen = onOpenHomeScreen,
                                     onAddSafeLaunchPackage = onAddSafeLaunchPackage,
+                                    onAddSafeLaunchPackages = onAddSafeLaunchPackages,
                                     onRemoveSafeLaunchPackage = onRemoveSafeLaunchPackage,
+                                    onClearSafeLaunchPackages = onClearSafeLaunchPackages,
                                     onAutoAppRulesEnabledChanged = onAutoAppRulesEnabledChanged,
                                     onAutoRestoreOnExitChanged = onAutoRestoreOnExitChanged,
-                                    onSetAppRuleMode = onSetAppRuleMode,
                                     onOpenUsageAccessSettings = onOpenUsageAccessSettings,
-                                    onLaunchSafeApp = handleSafeLaunch,
                                     onOpenDeveloperOptionsTop = onOpenDeveloperOptionsTop,
                                     onRefreshState = onRefreshState,
                                 )

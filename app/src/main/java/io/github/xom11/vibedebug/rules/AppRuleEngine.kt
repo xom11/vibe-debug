@@ -167,7 +167,7 @@ class AppRuleEngine(
             restoreDeadlineMs = 0L
             applyRuleForPackage(
                 pkg = fg,
-                mode = prefs.getAppRuleMode(fg),
+                mode = AppRuleMode.DEV_OFF,
                 recordHold = prefs.autoRestoreOnExit
             )
         }

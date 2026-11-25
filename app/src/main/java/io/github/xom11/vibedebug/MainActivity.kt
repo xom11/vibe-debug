@@ -32,7 +32,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import io.github.xom11.vibedebug.data.AndroidSettingsGateway
 import io.github.xom11.vibedebug.data.AppPreferences
-import io.github.xom11.vibedebug.data.AppRuleMode
 import io.github.xom11.vibedebug.data.AutoOffManager
 import io.github.xom11.vibedebug.data.DevSettingsController
 import io.github.xom11.vibedebug.data.WirelessSwitchResult
@@ -45,8 +44,6 @@ import io.github.xom11.vibedebug.rules.AppWatcherService
 import io.github.xom11.vibedebug.shortcut.HomePinFallbackKind
 import io.github.xom11.vibedebug.shortcut.HomePinOutcome
 import io.github.xom11.vibedebug.shortcut.QuickSurfaceHelper
-import io.github.xom11.vibedebug.shortcut.SafeLaunchHelper
-import io.github.xom11.vibedebug.shortcut.SafeLaunchResult
 import io.github.xom11.vibedebug.ui.UsbDebugScreen
 import io.github.xom11.vibedebug.ui.theme.UsbDebugSwitchTheme
 import io.github.xom11.vibedebug.ui.theme.resolveIsDarkTheme
@@ -101,7 +98,6 @@ class MainActivity : ComponentActivity() {
             var safeLaunchPackages by remember { mutableStateOf(preferences.safeLaunchPackages) }
             var autoAppRulesEnabled by remember { mutableStateOf(preferences.autoAppRulesEnabled) }
             var autoRestoreOnExit by remember { mutableStateOf(preferences.autoRestoreOnExit) }
-            var appRuleModes by remember { mutableStateOf(preferences.appRuleModes) }
             var hasUsageAccess by remember { mutableStateOf(foregroundDetector.hasUsageAccess()) }
             var quickSurfaceState by remember {
                 mutableStateOf(QuickSurfaceHelper.readSurfaceState(applicationContext, preferences))
@@ -121,7 +117,6 @@ class MainActivity : ComponentActivity() {
                 autoAppRulesEnabled = preferences.autoAppRulesEnabled
                 autoRestoreOnExit = preferences.autoRestoreOnExit
                 safeLaunchPackages = preferences.safeLaunchPackages
-                appRuleModes = preferences.appRuleModes
                 hasUsageAccess = foregroundDetector.hasUsageAccess()
             }
 
@@ -303,6 +298,27 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            val addProtectedPackages: (List<String>) -> Unit = { pkgs ->
+                val wasEmpty = preferences.safeLaunchPackages.isEmpty()
+                preferences.addSafeLaunchPackages(pkgs)
+                safeLaunchPackages = preferences.safeLaunchPackages
+                if (
+                    wasEmpty &&
+                    preferences.safeLaunchPackages.isNotEmpty() &&
+                    !preferences.autoAppRulesEnabled &&
+                    effectivePermission &&
+                    !effectiveState.blockedByPolicy
+                ) {
+                    autoAppRulesEnabled = true
+                    preferences.autoAppRulesEnabled = true
+                }
+                hasUsageAccess = foregroundDetector.hasUsageAccess()
+                AppWatcherService.sync(applicationContext)
+                if (autoAppRulesEnabled) {
+                    maybeRequestPostNotifications(hasUsageAccess)
+                }
+            }
+
             UsbDebugSwitchTheme(themePreference = themePreference) {
                 UsbDebugScreen(
                     devState = effectiveState,
@@ -319,7 +335,6 @@ class MainActivity : ComponentActivity() {
                     autoAppRulesEnabled = autoAppRulesEnabled,
                     autoRestoreOnExit = autoRestoreOnExit,
                     hasUsageAccess = hasUsageAccess,
-                    appRuleModes = appRuleModes,
                     quickSurfaceState = quickSurfaceState,
                     wirelessWifiWarning = wirelessWifiWarning,
                     wirelessBlockedTick = wirelessBlockedTick,
@@ -392,25 +407,27 @@ class MainActivity : ComponentActivity() {
                         themePreference = pref
                         preferences.themePreference = pref
                     },
-                    onAddSafeLaunchPackage = { pkg ->
-                        val wasEmpty = preferences.safeLaunchPackages.isEmpty()
-                        preferences.addSafeLaunchPackage(pkg)
-                        safeLaunchPackages = preferences.safeLaunchPackages
-                        if (wasEmpty && !preferences.autoAppRulesEnabled && effectivePermission && !effectiveState.blockedByPolicy) {
-                            autoAppRulesEnabled = true
-                            preferences.autoAppRulesEnabled = true
-                        }
-                        hasUsageAccess = foregroundDetector.hasUsageAccess()
-                        AppWatcherService.sync(applicationContext)
-                        if (autoAppRulesEnabled) {
-                            maybeRequestPostNotifications(hasUsageAccess)
-                        }
-                    },
+                    onAddSafeLaunchPackage = { pkg -> addProtectedPackages(listOf(pkg)) },
+                    onAddSafeLaunchPackages = addProtectedPackages,
                     onRemoveSafeLaunchPackage = { pkg ->
                         preferences.removeSafeLaunchPackage(pkg)
                         safeLaunchPackages = preferences.safeLaunchPackages
-                        appRuleModes = preferences.appRuleModes
                         if (preferences.safeLaunchPackages.isEmpty() && preferences.heldRulePackage.isNotEmpty()) {
+                            AppRuleEngine(
+                                prefs = preferences,
+                                controller = controller,
+                                detector = foregroundDetector,
+                                autoOffManager = autoOffManager,
+                                onSurfaceSync = { QuickSurfaceHelper.syncAllSurfaces(applicationContext) },
+                            ).releaseHoldOnStop()
+                            refreshLiveState()
+                        }
+                        AppWatcherService.sync(applicationContext)
+                    },
+                    onClearSafeLaunchPackages = {
+                        preferences.clearSafeLaunchPackages()
+                        safeLaunchPackages = preferences.safeLaunchPackages
+                        if (preferences.heldRulePackage.isNotEmpty()) {
                             AppRuleEngine(
                                 prefs = preferences,
                                 controller = controller,
@@ -448,54 +465,8 @@ class MainActivity : ComponentActivity() {
                         }
                         AppWatcherService.sync(applicationContext)
                     },
-                    onSetAppRuleMode = { pkg, mode ->
-                        preferences.setAppRuleMode(pkg, mode)
-                        appRuleModes = preferences.appRuleModes
-                    },
                     onOpenUsageAccessSettings = {
                         SettingsIntents.launchUsageAccessScreen(this@MainActivity)
-                    },
-                    onLaunchSafeApp = { pkg ->
-                        val sim = previewState
-                        if (sim != null) {
-                            when {
-                                sim.blockedByPolicy -> SafeLaunchResult.BlockedByPolicy
-                                !effectivePermission -> SafeLaunchResult.NeedsPermission
-                                else -> {
-                                    val launchIntent = packageManager.getLaunchIntentForPackage(pkg)
-                                    if (launchIntent == null) {
-                                        SafeLaunchResult.AppNotFound
-                                    } else {
-                                        val mode = preferences.getAppRuleMode(pkg)
-                                        autoOffTargetAtMs = 0L
-                                        previewState = if (mode == AppRuleMode.DEV_OFF) {
-                                            sim.copy(
-                                                devOptionsEnabled = false,
-                                                adbEnabled = false,
-                                                wirelessAdbEnabled = false,
-                                            )
-                                        } else {
-                                            sim.copy(
-                                                adbEnabled = false,
-                                                wirelessAdbEnabled = false,
-                                            )
-                                        }
-                                        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                        runCatching { startActivity(launchIntent) }
-                                            .fold(
-                                                onSuccess = { SafeLaunchResult.LaunchedClean },
-                                                onFailure = { SafeLaunchResult.AppNotFound },
-                                            )
-                                    }
-                                }
-                            }
-                        } else {
-                            val result = SafeLaunchHelper.launchSafely(this@MainActivity, pkg)
-                            if (result == SafeLaunchResult.LaunchedClean) {
-                                refreshLiveState()
-                            }
-                            result
-                        }
                     },
                     onOpenBuildNumberScreen = {
                         SettingsIntents.launchBuildNumberScreen(this@MainActivity)
@@ -529,11 +500,6 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         outcome
-                    },
-                    onWatchSafeLaunchPin = { pkg ->
-                        watchSilentHomePinRejection {
-                            pkg in QuickSurfaceHelper.readSurfaceState(applicationContext, preferences).pinnedSafeLaunchPackages
-                        }
                     },
                     onOpenHomeShortcutPermissions = {
                         SettingsIntents.launchHomeShortcutPermissionScreen(this@MainActivity)

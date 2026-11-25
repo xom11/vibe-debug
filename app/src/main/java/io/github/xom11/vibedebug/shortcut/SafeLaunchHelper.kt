@@ -2,6 +2,7 @@ package io.github.xom11.vibedebug.shortcut
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.pm.ShortcutManager
 import android.graphics.Bitmap
@@ -15,17 +16,31 @@ import androidx.core.graphics.drawable.toBitmap
 import io.github.xom11.vibedebug.R
 import io.github.xom11.vibedebug.data.AndroidSettingsGateway
 import io.github.xom11.vibedebug.data.AppPreferences
+import io.github.xom11.vibedebug.data.AppRuleMode
 import io.github.xom11.vibedebug.data.AutoOffManager
 import io.github.xom11.vibedebug.data.DevSettingsController
 import io.github.xom11.vibedebug.rules.AndroidForegroundAppDetector
 import io.github.xom11.vibedebug.rules.AppRuleEngine
 import io.github.xom11.vibedebug.rules.AppWatcherService
+import io.github.xom11.vibedebug.rules.StrictAppAnalysis
+import io.github.xom11.vibedebug.rules.StrictAppCatalog
+import io.github.xom11.vibedebug.rules.StrictAppDetector
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
 
 /** Metadata for an installed app that can be launched via Safe Launch. */
 data class LaunchableApp(
     val packageName: String,
     val label: String,
-    val isBankingSuggested: Boolean
+    val isBankingSuggested: Boolean,
+    val analysis: StrictAppAnalysis = StrictAppAnalysis(),
+    val isSystemOnly: Boolean = false,
+    val lastUpdateTime: Long = 0L,
+    val apkPaths: List<String> = emptyList(),
+    val appCategory: Int = ApplicationInfo.CATEGORY_UNDEFINED,
 )
 
 /** Outcome of attempting to turn off Developer Options and launch an app cleanly. */
@@ -49,25 +64,13 @@ object SafeLaunchHelper {
     private const val BADGE_BG_COLOR = 0xFF0E1113.toInt()
     private const val BADGE_RING_COLOR = 0xFF7EE2A8.toInt()
 
-    val SUGGESTED_VN_BANKING_PACKAGES: Set<String> = setOf(
-        "com.vnid",
-        "com.VCB",
-        "com.vnpay.vpbankonline",
-        "com.vietinbank.ipay",
-        "com.vnpay.bidv",
-        "vn.com.techcombank.bb.app",
-        "com.mbmobile",
-        "com.tpb.mb.gprsandroid",
-        "mobile.acb.com.vn",
-        "com.mservice.momotransfer",
-        "vn.com.vng.zalopay",
-        "xyz.be.cake",
-        "com.bplus.vtpay"
-    )
+    val SUGGESTED_VN_BANKING_PACKAGES: Set<String> = StrictAppCatalog.KNOWN_STRICT_PACKAGES
 
-    /** Lists deduplicated launcher apps (excluding this app), prioritizing suggested banking apps. */
+    /** Lists deduplicated launcher apps (excluding this app), ranked by strict-app detection confidence. */
     fun queryLaunchableApps(context: Context): List<LaunchableApp> {
-        val pm = context.packageManager
+        val appContext = context.applicationContext ?: context
+        val pm = appContext.packageManager
+        val dexCache = AppPreferences(appContext).readDexScanCache()
         val launcherIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
         val activities = runCatching {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -81,20 +84,128 @@ object SafeLaunchHelper {
         val seenPackages = HashSet<String>(activities.size)
         val apps = ArrayList<LaunchableApp>(activities.size)
         for (info in activities) {
-            val pkg = info.activityInfo?.packageName?.takeIf { it.isNotBlank() } ?: continue
-            if (pkg == context.packageName || !seenPackages.add(pkg)) continue
+            val activityInfo = info.activityInfo ?: continue
+            val pkg = activityInfo.packageName?.takeIf { it.isNotBlank() } ?: continue
+            if (pkg == appContext.packageName || !seenPackages.add(pkg)) continue
+
             val label = runCatching { info.loadLabel(pm).toString() }.getOrDefault(pkg).ifBlank { pkg }
+            val appInfo = activityInfo.applicationInfo
+            val isSystemApp = appInfo != null && (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+            val rawApkPaths = if (isSystemApp) {
+                emptyList()
+            } else {
+                buildList {
+                    appInfo?.sourceDir?.takeIf { it.isNotBlank() }?.let(::add)
+                    appInfo?.splitSourceDirs?.filter { it.isNotBlank() }?.let(::addAll)
+                }
+            }
+            val appCategory = appInfo?.category ?: ApplicationInfo.CATEGORY_UNDEFINED
+            val lastUpdateTime = runCatching {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    pm.getPackageInfo(pkg, PackageManager.PackageInfoFlags.of(0L)).lastUpdateTime
+                } else {
+                    @Suppress("DEPRECATION")
+                    pm.getPackageInfo(pkg, 0).lastUpdateTime
+                }
+            }.getOrDefault(0L)
+
+            val cachedDex = dexCache[pkg]?.takeIf {
+                it.lastUpdateTime == lastUpdateTime &&
+                    it.scannerVersion == StrictAppDetector.SCANNER_VERSION
+            }?.signals
+
+            val analysis = StrictAppDetector.analyzeFast(
+                packageName = pkg,
+                label = label,
+                apkPaths = rawApkPaths,
+                appCategory = appCategory,
+                cachedDex = cachedDex,
+            )
+
             apps += LaunchableApp(
                 packageName = pkg,
                 label = label,
-                isBankingSuggested = pkg in SUGGESTED_VN_BANKING_PACKAGES
+                isBankingSuggested = analysis.isSuggested,
+                analysis = analysis,
+                isSystemOnly = isSystemApp,
+                lastUpdateTime = lastUpdateTime,
+                apkPaths = rawApkPaths,
+                appCategory = appCategory,
             )
         }
-        return apps.sortedWith(
-            compareByDescending<LaunchableApp> { it.isBankingSuggested }
+        return sortLaunchableApps(apps)
+    }
+
+    /** Sorts launchable apps by detection confidence, score, label, and package name. */
+    fun sortLaunchableApps(apps: List<LaunchableApp>): List<LaunchableApp> =
+        apps.sortedWith(
+            compareByDescending<LaunchableApp> { it.analysis.confidence.ordinal }
+                .thenByDescending { it.analysis.score }
                 .thenBy { it.label.lowercase() }
                 .thenBy { it.packageName }
         )
+
+    /**
+     * Runs an on-demand streaming DEX scan on unflagged non-system apps to uncover hidden
+     * anti-debug / RASP checks and persists cached results by `(packageName, lastUpdateTime)`.
+     */
+    suspend fun runDeepStrictScan(
+        context: Context,
+        apps: List<LaunchableApp>,
+        onProgress: (scanned: Int, total: Int, currentLabel: String) -> Unit = { _, _, _ -> },
+    ): List<LaunchableApp> = withContext(Dispatchers.IO) {
+        val appContext = context.applicationContext ?: context
+        val prefs = AppPreferences(appContext)
+        val candidates = apps.filter {
+            !it.isSystemOnly &&
+                !it.analysis.isHighConfidence &&
+                !it.analysis.deepScanned &&
+                it.apkPaths.isNotEmpty()
+        }
+        if (candidates.isEmpty()) {
+            return@withContext sortLaunchableApps(apps)
+        }
+
+        val updatedByPkg = HashMap<String, LaunchableApp>(apps.size)
+        apps.forEach { updatedByPkg[it.packageName] = it }
+        val cacheUpdates = LinkedHashMap<String, AppPreferences.CachedDexEntry>()
+        val scanJob = currentCoroutineContext()[Job]
+
+        try {
+            candidates.forEachIndexed { idx, app ->
+                currentCoroutineContext().ensureActive()
+                withContext(Dispatchers.Main) {
+                    onProgress(idx + 1, candidates.size, app.label)
+                }
+                val (updatedAnalysis, dexSignals) = StrictAppDetector.analyzeDeep(
+                    packageName = app.packageName,
+                    label = app.label,
+                    apkPaths = app.apkPaths,
+                    appCategory = app.appCategory,
+                    fastAnalysis = app.analysis,
+                    isSystemOnly = app.isSystemOnly,
+                    isCancelled = { scanJob?.isActive == false },
+                )
+                if (dexSignals != null) {
+                    updatedByPkg[app.packageName] = app.copy(
+                        isBankingSuggested = updatedAnalysis.isSuggested,
+                        analysis = updatedAnalysis,
+                    )
+                    cacheUpdates[app.packageName] = AppPreferences.CachedDexEntry(
+                        lastUpdateTime = app.lastUpdateTime,
+                        scannerVersion = StrictAppDetector.SCANNER_VERSION,
+                        signals = dexSignals,
+                    )
+                }
+            }
+            prefs.lastDeepScanAtMs = System.currentTimeMillis()
+        } finally {
+            if (cacheUpdates.isNotEmpty()) {
+                prefs.putAllCachedDexSignals(cacheUpdates)
+            }
+        }
+
+        sortLaunchableApps(apps.map { updatedByPkg[it.packageName] ?: it })
     }
 
     /** Returns the user-visible label for [packageName], falling back to [packageName]. */
@@ -133,9 +244,8 @@ object SafeLaunchHelper {
             autoOffManager = AutoOffManager(appContext, prefs),
             onSurfaceSync = { QuickSurfaceHelper.syncAllSurfaces(appContext) },
         )
-        val mode = prefs.getAppRuleMode(packageName)
         val recordHold = prefs.autoAppRulesEnabled && prefs.autoRestoreOnExit && detector.hasUsageAccess()
-        engine.applyRuleForPackage(packageName, mode, recordHold = recordHold)
+        engine.applyRuleForPackage(packageName, AppRuleMode.DEV_OFF, recordHold = recordHold)
         AppWatcherService.onSafeLaunch(packageName)
         AppWatcherService.sync(appContext)
 

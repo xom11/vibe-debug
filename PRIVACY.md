@@ -17,9 +17,9 @@
 3. **Optional On-Device Per-App Auto Watcher (`PACKAGE_USAGE_STATS` & `FOREGROUND_SERVICE_SPECIAL_USE`):**
    - Disabled by default. Only when you explicitly enable *"Auto-turn off when opening apps"* and grant Usage Access does Vibe Debug check the current foreground package on-device (pausing automatically while the screen is off) so debugging turns off while your chosen strict apps are open and restores afterward.
    - Foreground package checks never use `AccessibilityService`, and no usage history is ever stored, logged, or sent off-device.
-4. **Installed App Visibility (`ACTION_MAIN` / `CATEGORY_LAUNCHER`):**
-   - Used solely on-device inside the *Turn Off Debug & Launch* picker so you can choose which installed launcher apps to include in your personal allowlist.
-   - This app list is never stored off-device or transmitted anywhere.
+4. **Installed App Visibility & On-Device Anti-Debug Scanning (`ACTION_MAIN` / `CATEGORY_LAUNCHER`):**
+   - Used solely on-device inside *Turn Off Debug & Launch* to let you choose installed launcher apps, match them against the built-in catalog, and inspect local APK package signatures/DEX anti-debug strings (when running auto-detection or Deep Scan) to suggest strict apps automatically.
+   - Only boolean detection flags and SDK names keyed by `(packageName, lastUpdateTime)` are cached in local `SharedPreferences`; this list and scan data are never sent off-device.
 5. **Local Preferences (`android:allowBackup="false"`):**
    - Your selected theme, Safe Launch allowlist, per-app modes, auto-off timer duration, and quick-tile flags are stored locally in private `SharedPreferences` with Android cloud backup disabled. Uninstalling the app deletes all local preferences immediately.
 6. **Device Diagnostics (user-initiated only):**
@@ -43,8 +43,9 @@
 3. **Chế độ tự tắt gỡ lỗi theo ứng dụng (`PACKAGE_USAGE_STATS` & `FOREGROUND_SERVICE_SPECIAL_USE`):**
    - Tắt mặc định. Chỉ khi bạn chủ động bật *"Tự động tắt khi mở app"* và cấp quyền Truy cập dữ liệu sử dụng, Vibe Debug mới kiểm tra cục bộ ứng dụng đang mở trên màn hình (tự nghỉ hoàn toàn khi tắt màn hình) để tắt gỡ lỗi khi vào app đã chọn và tự bật lại khi thoát.
    - Không dùng `AccessibilityService`, không lưu lịch sử sử dụng và không truyền bất kỳ dữ liệu nào ra ngoài thiết bị.
-4. **Danh sách ứng dụng đã cài (`ACTION_MAIN` / `CATEGORY_LAUNCHER`):**
-   - Chỉ được dùng cục bộ trong hộp thoại chọn app của tính năng *Tắt gỡ lỗi & Mở app* để bạn tự chọn ứng dụng cần bảo vệ; tuyệt đối không ghi ra ngoài hay gửi đi đâu.
+4. **Danh sách ứng dụng & quét nhận diện cục bộ (`ACTION_MAIN` / `CATEGORY_LAUNCHER`):**
+   - Chỉ được dùng cục bộ trong tính năng *Tắt gỡ lỗi & Mở app* để hiển thị các ứng dụng đã cài, đối chiếu với danh sách gợi ý và kiểm tra chữ ký RASP / chuỗi chống gỡ lỗi trong APK ngay trên máy (khi quét tự động hoặc Quét sâu).
+   - Chỉ lưu cờ nhận diện dạng cục bộ theo `(tên gói, thời gian cập nhật)` trong `SharedPreferences`; dữ liệu tuyệt đối không bao giờ được gửi ra ngoài thiết bị.
 5. **Lưu trữ cục bộ (`android:allowBackup="false"`):**
    - Giao diện, danh sách app, chế độ từng app và cài đặt hẹn giờ chỉ lưu trong `SharedPreferences` riêng của ứng dụng và đã tắt sao lưu đám mây; xoá app là xoá sạch dữ liệu ngay lập tức.
 6. **Thông tin chẩn đoán (chỉ khi bạn bấm):**

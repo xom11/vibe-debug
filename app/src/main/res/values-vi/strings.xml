@@ -161,8 +161,6 @@
 
     <string name="dialog_remove_widget_title">Xoá Widget ngoài màn hình chính</string>
     <string name="dialog_remove_widget_body">Nhấn giữ widget \"%1$s\" trên màn hình chính rồi chọn Xoá / Gỡ.</string>
-    <string name="dialog_remove_shortcut_title">Gỡ lối tắt ngoài màn hình chính</string>
-    <string name="dialog_remove_shortcut_body">Android chỉ cho phép gỡ biểu tượng đã ghim trực tiếp ngoài màn hình chính:\n\n1. Ra màn hình chính của máy.\n2. Nhấn giữ biểu tượng \"%1$s\" rồi chọn Gỡ / Xoá.</string>
     <string name="action_go_home">Ra màn hình chính</string>
     <string name="dialog_xiaomi_pin_title">Cần cấp quyền Lối tắt màn hình chính</string>
     <string name="dialog_xiaomi_pin_body">HyperOS / MIUI của Xiaomi mặc định chặn ứng dụng tự ghim widget và lối tắt ra màn hình chính.\n\n1. Bấm \"Mở quyền ứng dụng\" bên dưới.\n2. Vào \"Quyền khác\" → bật \"Lối tắt màn hình chính\" (Luôn cho phép).\n3. Quay lại đây và bấm Thêm một lần nữa.\n\nHoặc thêm thủ công: nhấn giữ màn hình chính → Tiện ích → Tiện ích Android → Vibe Debug.</string>
@@ -172,17 +170,18 @@
 
     <string name="section_safe_launch">Tắt gỡ lỗi &amp; Mở app</string>
     <string name="safe_launch_banner_title">Có ứng dụng chặn gỡ lỗi?</string>
-    <string name="safe_launch_desc">Thêm app ngân hàng, VNeID, ví, game… Bật chế độ tự động ở trên để bấm thẳng icon gốc vẫn tự tắt gỡ lỗi, hoặc mở qua lối tắt ghim.</string>
-    <string name="safe_launch_list_hint">Khi bật tự động, bấm icon gốc của app sẽ tự tắt gỡ lỗi; bạn cũng có thể bấm Mở ngay hoặc Ghim lối tắt.</string>
+    <string name="safe_launch_desc">Chọn app ngân hàng, VNeID, VssID, ví… Mở bằng icon gốc ngoài màn hình sẽ tự tắt Chế độ nhà phát triển.</string>
+    <string name="safe_launch_list_hint">Tự tắt Chế độ nhà phát triển khi mở icon gốc.</string>
     <string name="safe_launch_add_btn">Chọn ứng dụng</string>
-    <string name="safe_launch_edit_btn">Thêm / sửa ứng dụng</string>
-    <string name="safe_launch_open_now">Mở ngay</string>
-    <string name="safe_launch_pin">Ghim</string>
-    <string name="safe_launch_unpin">Gỡ ghim</string>
+    <string name="protected_apps_count_title">Ứng dụng bảo vệ (%1$d)</string>
+    <string name="protected_apps_show_more">Xem thêm %1$d app</string>
+    <string name="protected_apps_collapse">Thu gọn</string>
+    <string name="action_clear_all">Xoá tất cả</string>
+    <string name="action_undo">Hoàn tác</string>
+    <string name="feedback_app_removed">Đã gỡ %1$s</string>
+    <string name="feedback_apps_cleared">Đã xoá %1$d ứng dụng</string>
     <string name="cd_remove_app">Xoá %s</string>
-    <string name="safe_launch_mode_a_hint">Cần chế độ 1 chạm (tab Thiết lập) để tự động tắt. Hiện tại bấm Mở sẽ đi tới đầu trang Tuỳ chọn nhà phát triển để bạn tự tắt.</string>
-    <string name="safe_launch_pin_ok">Xác nhận trên hộp thoại để ghim \"%s\" ra màn hình chính.</string>
-    <string name="safe_launch_pin_unsupported">Màn hình chính hiện tại không hỗ trợ ghim lối tắt ứng dụng.</string>
+    <string name="safe_launch_mode_a_hint">Cần bật chế độ 1 chạm (tab Thiết lập) để tự động tắt Chế độ nhà phát triển khi mở app.</string>
 
     <string name="auto_rules_title">Tự động tắt khi mở app</string>
     <string name="auto_rules_sub_off">Tự nhận biết khi bấm mở app gốc trong danh sách bên dưới.</string>
@@ -196,8 +195,6 @@
     <string name="usage_dialog_title">Cấp quyền Truy cập dữ liệu sử dụng</string>
     <string name="usage_dialog_body">Vibe Debug chỉ dùng quyền này cục bộ trên máy để nhận biết lúc bạn mở hoặc thoát ứng dụng đã chọn, từ đó tự tắt gỡ lỗi và tự bật lại.\n\nỨng dụng không có quyền INTERNET — dữ liệu sử dụng tuyệt đối không được lưu lại hay gửi ra ngoài.</string>
     <string name="usage_dialog_open_settings">Mở Cài đặt</string>
-    <string name="rule_mode_dev_off">Tắt cả Dev Mode</string>
-    <string name="rule_mode_usb_off">Chỉ tắt USB/Wi-Fi</string>
 
     <string name="watcher_notif_channel_name">Tự tắt gỡ lỗi theo ứng dụng</string>
     <string name="watcher_notif_channel_desc">Thông báo im lặng hiển thị khi Vibe Debug đang canh tự động tắt gỡ lỗi cho app đã chọn.</string>
@@ -210,11 +207,33 @@
     <string name="watcher_notif_holding_stay_off_body">Gỡ lỗi đang tắt trong lúc bạn dùng ứng dụng này.</string>
     <string name="watcher_notif_action_stop">Dừng</string>
 
-    <string name="dialog_pick_app_title">Chọn app cần tắt gỡ lỗi khi mở</string>
+    <string name="dialog_pick_app_title">Chọn ứng dụng cần bảo vệ</string>
     <string name="hint_search_apps">Tìm theo tên hoặc tên gói…</string>
     <string name="loading_apps">Đang tải danh sách ứng dụng…</string>
     <string name="no_matching_apps">Không tìm thấy ứng dụng phù hợp.</string>
     <string name="badge_banking_suggested">Gợi ý</string>
+    <string name="badge_rasp_named">RASP · %1$s</string>
+    <string name="badge_checks_debug">Kiểm tra gỡ lỗi</string>
+    <string name="auto_detect_found_title">Phát hiện %1$d app có thể chặn gỡ lỗi</string>
+    <string name="auto_detect_preview_more">%1$s và %2$d app khác</string>
+    <string name="auto_detect_add_all">Thêm tất cả (%1$d)</string>
+    <string name="auto_detect_review_scan">Xem &amp; Quét sâu</string>
+    <string name="auto_detect_added_feedback">Đã thêm %1$d ứng dụng vào danh sách bảo vệ.</string>
+    <string name="picker_filter_all">Tất cả</string>
+    <string name="picker_filter_detected">Phát hiện (%1$d)</string>
+    <string name="picker_filter_selected">Đã chọn (%1$d)</string>
+    <string name="deep_scan_prompt">Quét sâu APK để tìm thêm app ẩn kiểm tra gỡ lỗi</string>
+    <string name="deep_scan_action">Quét sâu</string>
+    <string name="deep_scan_progress">Đang quét %1$d/%2$d · %3$s</string>
+    <string name="deep_scan_done">Đã quét xong · phát hiện %1$d app</string>
+    <string name="deep_scan_rescan">Quét lại</string>
+    <string name="detect_reason_gov_id">Định danh / Dịch vụ công</string>
+    <string name="detect_reason_banking">Ngân hàng</string>
+    <string name="detect_reason_ewallet">Ví điện tử / Thanh toán</string>
+    <string name="detect_reason_fintech">Chứng khoán / Tài chính</string>
+    <string name="detect_reason_enterprise">Doanh nghiệp / Xác thực</string>
+    <string name="detect_reason_dex_checks">Kiểm tra USB/Dev Mode trong mã</string>
+    <string name="detect_reason_domain">Tên gói ngân hàng/dịch vụ công</string>
     <string name="action_close">Đóng</string>
 
     <!-- Setup Tab -->

@@ -3,7 +3,7 @@
 ## 1. App Identity & Google Play Compliance
 
 - **Package Name:** `io.github.xom11.vibedebug`
-- **Version:** `2.2.4` (`versionCode = 9`)
+- **Version:** `2.3.0` (`versionCode = 10`)
 - **App Name:**
   - English (`res/values/strings.xml`): `Vibe Debug`
   - Vietnamese (`res/values-vi/strings.xml`): `Vibe Debug`
@@ -82,9 +82,9 @@ The app uses a responsive 3-tab layout (`HomeTab`, `ShortcutsTab`, `SetupTab`) s
 - **Turn Off Debug & Launch (`SafeLaunchHelper` + `SafeLaunchActivity` + `AppRuleEngine` + `AppWatcherService`):**
   - **Auto-Off App Watcher (`card_auto_app_rules`):** Optional local foreground-app watcher (`UsageStatsManager` + `specialUse` `ForegroundService`, paused completely while screen is off, no `AccessibilityService`) that automatically turns debugging off when opening any listed app via its normal launcher icon and restores the saved flags ~8s after leaving (grace window for OTP switching), with prominent Usage Access disclosure dialog before opening system Usage Access settings.
   - **Empty state:** Compact `SurfaceCard` explaining automatic & Clean Launch protection with a `"Choose apps"` button.
-  - **Populated state:** Concise hint above saved app cards (each offering per-app **Turn off Dev Mode** / **USB & Wi-Fi only** `SegmentedControl`, **Open now**, and **Pin / Remove shortcut** with 192×192 badged app icon with `#0E1113`/`#7EE2A8` ring), followed by `"Add / edit apps"`.
-  - Searchable launcher app picker loaded off the main thread (`Dispatchers.IO`), prioritizing common strict Vietnamese banking / digital ID apps (`VNeID`, `Vietcombank`, `VPBank`, `VietinBank`, `BIDV`, `Techcombank`, `MB`, `TPBank`, `ACB`, `MoMo`, `ZaloPay`, `Cake`, `Viettel Money`) with a generic `"Suggested"` badge while supporting any installed app (useful for banking, digital ID, e-wallet, and security-sensitive apps).
-  - `SafeLaunchActivity` validates the requested package against the user's saved `safeLaunchPackages` allowlist before applying the per-app `AppRuleMode` via `AppRuleEngine`, syncing `AppWatcherService`, and starting the app (Mode B), or directing to Developer Options top (Mode A).
+  - **Populated state:** Single unified compact `SurfaceCard` (`card_protected_apps`) with header count + quick `+ Add` button, slim single-line app rows (app icon, label, `package · SDK`, 1-tap `×` remove with Undo snackbar), automatic collapse past 6 apps (`Show N more` / `Show less`), and `Clear all` with Undo. All protected apps always default to `AppRuleMode.DEV_OFF` (disabling Developer Options + USB/Wireless debugging) when launched via their normal launcher icon.
+  - Searchable launcher app picker loaded off the main thread (`Dispatchers.IO`), combining a verified ~120-app catalog (including Vietnamese public services such as `VNeID`, `VssID` `com.bhxhapp`, `eTax Mobile`, `VNeTraffic`, `iHanoi`, `Hue-S`, `VETC`, `ePass`, 40+ Vietnamese banks, local e-wallets/securities, plus strict global banking/ID/enterprise apps) with the on-device `StrictAppDetector` auto-detection engine (instant APK ZIP RASP/Security-SDK fingerprinting, domain heuristics, and an optional user-triggered streaming DEX anti-debug scan cached locally per `(packageName, lastUpdateTime)`). Unadded high-confidence detections are surfaced in `ShortcutsTab` with 1-tap `Add all` or `Review / Scan` filtering (`All`, `Detected`, `Selected`).
+  - `SafeLaunchActivity` validates the requested package against the user's saved `safeLaunchPackages` allowlist before applying `AppRuleMode.DEV_OFF` via `AppRuleEngine`, syncing `AppWatcherService`, and starting the app (Mode B), or directing to Developer Options top (Mode A).
 
 ### Tab 3: Setup (`SetupTab`)
 - **1-Tap Mode Setup Checklist & OEM ADB Guide:**

@@ -1,17 +1,21 @@
 package io.github.xom11.vibedebug.ui
 
 import android.content.Context
+import android.content.res.Resources
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,22 +25,27 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -63,8 +72,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
 import io.github.xom11.vibedebug.R
-import io.github.xom11.vibedebug.data.AppRuleMode
 import io.github.xom11.vibedebug.model.DevState
+import io.github.xom11.vibedebug.rules.DetectionSource
+import io.github.xom11.vibedebug.rules.StrictAppAnalysis
+import io.github.xom11.vibedebug.rules.StrictAppCategory
 import io.github.xom11.vibedebug.shortcut.HomePinFallbackKind
 import io.github.xom11.vibedebug.shortcut.HomePinOutcome
 import io.github.xom11.vibedebug.shortcut.LaunchableApp
@@ -74,8 +85,19 @@ import io.github.xom11.vibedebug.shortcut.SafeLaunchHelper
 import io.github.xom11.vibedebug.shortcut.TileAddOutcome
 import io.github.xom11.vibedebug.ui.theme.AppTheme
 import io.github.xom11.vibedebug.ui.theme.MonoFont
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+private const val MAX_COLLAPSED_SAVED_APPS = 6
+
+private enum class AppPickerFilter {
+    ALL,
+    DETECTED,
+    SELECTED,
+}
 
 @Composable
 fun ShortcutsTab(
@@ -85,39 +107,61 @@ fun ShortcutsTab(
     autoAppRulesEnabled: Boolean = false,
     autoRestoreOnExit: Boolean = true,
     hasUsageAccess: Boolean = false,
-    appRuleModes: Map<String, AppRuleMode> = emptyMap(),
     quickSurfaceState: QuickSurfaceState = QuickSurfaceState(),
     homePinFallbackTick: Int = 0,
     homePinFallbackKind: HomePinFallbackKind = HomePinFallbackKind.XIAOMI_PERMISSION,
     onShowSnackbar: (String) -> Unit,
+    onShowActionSnackbar: (String, String, () -> Unit) -> Unit = { msg, _, _ -> onShowSnackbar(msg) },
     onShowManualTileDialog: (String) -> Unit,
     onAddUsbTile: ((TileAddOutcome) -> Unit) -> Unit,
     onAddWirelessTile: ((TileAddOutcome) -> Unit) -> Unit,
     onRemoveTile: (QuickTileType) -> String = { "" },
     onPinHomeWidget: () -> HomePinOutcome = { HomePinOutcome.UNSUPPORTED },
-    onWatchSafeLaunchPin: (String) -> Unit = {},
     onOpenHomeShortcutPermissions: () -> Unit = {},
-    onScheduleSurfaceRefresh: () -> Unit = {},
+    @Suppress("UNUSED_PARAMETER") onScheduleSurfaceRefresh: () -> Unit = {},
     onOpenHomeScreen: () -> Unit = {},
     onAddSafeLaunchPackage: (String) -> Unit,
+    onAddSafeLaunchPackages: (List<String>) -> Unit = { pkgs -> pkgs.forEach(onAddSafeLaunchPackage) },
     onRemoveSafeLaunchPackage: (String) -> Unit,
+    onClearSafeLaunchPackages: () -> Unit = {},
     onAutoAppRulesEnabledChanged: (Boolean) -> Unit = {},
     onAutoRestoreOnExitChanged: (Boolean) -> Unit = {},
-    onSetAppRuleMode: (String, AppRuleMode) -> Unit = { _, _ -> },
     onOpenUsageAccessSettings: () -> Unit = {},
-    onLaunchSafeApp: (packageName: String, label: String) -> Unit = { _, _ -> },
-    onOpenDeveloperOptionsTop: () -> Unit,
-    onRefreshState: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") onOpenDeveloperOptionsTop: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") onRefreshState: () -> Unit,
 ) {
     val palette = AppTheme.palette
     val context = LocalContext.current
     val resources = LocalResources.current
     val adaptive = LocalAdaptiveLayout.current
     var showAppPicker by rememberSaveable { mutableStateOf(false) }
+    var initialPickerFilter by rememberSaveable { mutableStateOf(AppPickerFilter.ALL) }
+    var expandAllSavedApps by rememberSaveable { mutableStateOf(false) }
+    var discoveredApps by remember { mutableStateOf<List<LaunchableApp>?>(null) }
     var showUsageDisclosure by rememberSaveable { mutableStateOf(false) }
     var activePinFallbackDialog by rememberSaveable { mutableStateOf<HomePinFallbackKind?>(null) }
     var removeWidgetDialogLabel by rememberSaveable { mutableStateOf<String?>(null) }
-    var removeShortcutDialogLabel by rememberSaveable { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        discoveredApps = withContext(Dispatchers.IO) {
+            SafeLaunchHelper.queryLaunchableApps(context)
+        }
+    }
+
+    LaunchedEffect(safeLaunchPackages.size <= MAX_COLLAPSED_SAVED_APPS) {
+        if (safeLaunchPackages.size <= MAX_COLLAPSED_SAVED_APPS) {
+            expandAllSavedApps = false
+        }
+    }
+
+    val discoveredByPkg = remember(discoveredApps) {
+        discoveredApps.orEmpty().associateBy { it.packageName }
+    }
+
+    val unaddedDetected = remember(discoveredApps, safeLaunchPackages) {
+        val savedSet = safeLaunchPackages.toHashSet()
+        discoveredApps.orEmpty().filter { it.analysis.isHighConfidence && it.packageName !in savedSet }
+    }
 
     LaunchedEffect(homePinFallbackTick) {
         if (homePinFallbackTick > 0) {
@@ -228,6 +272,24 @@ fun ShortcutsTab(
                     onRequestUsageAccess = { showUsageDisclosure = true },
                 )
 
+                if (unaddedDetected.isNotEmpty()) {
+                    StrictAppDiscoveryCard(
+                        detectedApps = unaddedDetected,
+                        onAddAll = {
+                            val pkgs = unaddedDetected.map { it.packageName }
+                            onAddSafeLaunchPackages(pkgs)
+                            onShowSnackbar(resources.getString(R.string.auto_detect_added_feedback, pkgs.size))
+                            if (canUseAutoRules && (autoAppRulesEnabled || safeLaunchPackages.isEmpty()) && !hasUsageAccess) {
+                                showUsageDisclosure = true
+                            }
+                        },
+                        onReviewAndScan = {
+                            initialPickerFilter = AppPickerFilter.DETECTED
+                            showAppPicker = true
+                        },
+                    )
+                }
+
                 if (safeLaunchPackages.isEmpty()) {
                     SurfaceCard(modifier = Modifier.testTag("card_safe_launch_empty")) {
                         Row(
@@ -261,7 +323,10 @@ fun ShortcutsTab(
                         Box(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 14.dp)) {
                             OutlineActionButton(
                                 text = stringResource(R.string.safe_launch_add_btn),
-                                onClick = { showAppPicker = true },
+                                onClick = {
+                                    initialPickerFilter = AppPickerFilter.ALL
+                                    showAppPicker = true
+                                },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .testTag("btn_add_safe_launch_app"),
@@ -274,51 +339,34 @@ fun ShortcutsTab(
                         }
                     }
                 } else {
-                    Text(
-                        text = stringResource(R.string.safe_launch_list_hint),
-                        fontSize = 12.sp,
-                        lineHeight = 17.sp,
-                        color = palette.muted,
-                    )
-                    safeLaunchPackages.forEach { pkg ->
-                        SafeLaunchAppCard(
-                            packageName = pkg,
-                            ruleMode = appRuleModes[pkg] ?: AppRuleMode.DEV_OFF,
-                            isShortcutPinned = pkg in quickSurfaceState.pinnedSafeLaunchPackages,
-                            onRuleModeChanged = { mode -> onSetAppRuleMode(pkg, mode) },
-                            onOpenNow = { label -> onLaunchSafeApp(pkg, label) },
-                            onPinShortcut = { label ->
-                                when (SafeLaunchHelper.requestPinSafeLaunchShortcutWithOutcome(context, pkg)) {
-                                    HomePinOutcome.REQUESTED -> {
-                                        onScheduleSurfaceRefresh()
-                                        onWatchSafeLaunchPin(pkg)
-                                        onShowSnackbar(resources.getString(R.string.safe_launch_pin_ok, label))
-                                    }
-                                    HomePinOutcome.NEEDS_OEM_PERMISSION -> {
-                                        activePinFallbackDialog = HomePinFallbackKind.XIAOMI_PERMISSION
-                                    }
-                                    HomePinOutcome.UNSUPPORTED -> {
-                                        onShowSnackbar(resources.getString(R.string.safe_launch_pin_unsupported))
-                                    }
-                                }
-                            },
-                            onUnpinShortcut = { label ->
-                                removeShortcutDialogLabel = label
-                            },
-                            onRemove = { onRemoveSafeLaunchPackage(pkg) },
-                        )
-                    }
-                    OutlineActionButton(
-                        text = stringResource(R.string.safe_launch_edit_btn),
-                        onClick = { showAppPicker = true },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("btn_add_safe_launch_app"),
-                        color = palette.mint,
-                        border = palette.mintBorder,
-                        fill = palette.mintBg,
-                        height = 46.dp,
-                        icon = R.drawable.ic_add,
+                    ProtectedAppsCard(
+                        safeLaunchPackages = safeLaunchPackages,
+                        discoveredByPkg = discoveredByPkg,
+                        expanded = expandAllSavedApps,
+                        onToggleExpand = { expandAllSavedApps = !expandAllSavedApps },
+                        onOpenAddPicker = {
+                            initialPickerFilter = AppPickerFilter.ALL
+                            showAppPicker = true
+                        },
+                        onRemovePackage = { pkg, label ->
+                            onRemoveSafeLaunchPackage(pkg)
+                            onShowActionSnackbar(
+                                resources.getString(R.string.feedback_app_removed, label),
+                                resources.getString(R.string.action_undo),
+                            ) {
+                                onAddSafeLaunchPackage(pkg)
+                            }
+                        },
+                        onClearAll = {
+                            val snapshot = safeLaunchPackages.toList()
+                            onClearSafeLaunchPackages()
+                            onShowActionSnackbar(
+                                resources.getString(R.string.feedback_apps_cleared, snapshot.size),
+                                resources.getString(R.string.action_undo),
+                            ) {
+                                onAddSafeLaunchPackages(snapshot)
+                            }
+                        },
                     )
                 }
             }
@@ -398,8 +446,17 @@ fun ShortcutsTab(
     if (showAppPicker) {
         SafeLaunchAppPickerDialog(
             savedPackages = safeLaunchPackages,
+            initialApps = discoveredApps,
+            initialFilter = initialPickerFilter,
+            onAppsUpdated = { discoveredApps = it },
             onTogglePackage = { pkg, currentlySaved ->
                 if (currentlySaved) onRemoveSafeLaunchPackage(pkg) else onAddSafeLaunchPackage(pkg)
+            },
+            onAddAllPackages = { pkgs ->
+                onAddSafeLaunchPackages(pkgs)
+                if (pkgs.isNotEmpty()) {
+                    onShowSnackbar(resources.getString(R.string.auto_detect_added_feedback, pkgs.size))
+                }
             },
             onDismiss = {
                 showAppPicker = false
@@ -419,18 +476,6 @@ fun ShortcutsTab(
                 onOpenHomeScreen()
             },
             onDismiss = { removeWidgetDialogLabel = null },
-        )
-    }
-
-    removeShortcutDialogLabel?.let { label ->
-        RemoveHomeSurfaceDialog(
-            title = stringResource(R.string.dialog_remove_shortcut_title),
-            body = stringResource(R.string.dialog_remove_shortcut_body, label),
-            onGoHome = {
-                removeShortcutDialogLabel = null
-                onOpenHomeScreen()
-            },
-            onDismiss = { removeShortcutDialogLabel = null },
         )
     }
 }
@@ -854,15 +899,121 @@ private fun PermissionDisclosureDialog(
 }
 
 @Composable
-private fun SafeLaunchAppCard(
+private fun ProtectedAppsCard(
+    safeLaunchPackages: List<String>,
+    discoveredByPkg: Map<String, LaunchableApp>,
+    expanded: Boolean,
+    onToggleExpand: () -> Unit,
+    onOpenAddPicker: () -> Unit,
+    onRemovePackage: (packageName: String, label: String) -> Unit,
+    onClearAll: () -> Unit,
+) {
+    val palette = AppTheme.palette
+    val hasMore = safeLaunchPackages.size > MAX_COLLAPSED_SAVED_APPS
+    val visiblePackages = if (expanded || !hasMore) {
+        safeLaunchPackages
+    } else {
+        safeLaunchPackages.take(MAX_COLLAPSED_SAVED_APPS)
+    }
+
+    SurfaceCard(modifier = Modifier.testTag("card_protected_apps")) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 14.dp, end = 12.dp, top = 12.dp, bottom = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = stringResource(R.string.protected_apps_count_title, safeLaunchPackages.size),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = palette.text,
+                )
+                Text(
+                    text = stringResource(R.string.safe_launch_list_hint),
+                    fontSize = 11.sp,
+                    lineHeight = 15.sp,
+                    color = palette.muted,
+                )
+            }
+            CompactPillButton(
+                label = stringResource(R.string.action_add_tile),
+                fg = palette.mint,
+                bg = palette.mintBg,
+                border = palette.mintBorder,
+                icon = R.drawable.ic_add,
+                modifier = Modifier.testTag("btn_add_safe_launch_app"),
+                onClick = onOpenAddPicker,
+            )
+        }
+
+        RowDivider()
+
+        visiblePackages.forEachIndexed { index, pkg ->
+            if (index > 0) {
+                RowDivider(Modifier.padding(start = 56.dp))
+            }
+            ProtectedAppRow(
+                packageName = pkg,
+                detectedSdk = discoveredByPkg[pkg]?.analysis?.detectedSdks?.firstOrNull(),
+                onRemove = { label -> onRemovePackage(pkg, label) },
+            )
+        }
+
+        if (hasMore || safeLaunchPackages.size > 1) {
+            RowDivider()
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (hasMore) {
+                    TextButton(
+                        onClick = onToggleExpand,
+                        modifier = Modifier.testTag("btn_toggle_expand_apps"),
+                    ) {
+                        Text(
+                            text = if (expanded) {
+                                stringResource(R.string.protected_apps_collapse)
+                            } else {
+                                stringResource(
+                                    R.string.protected_apps_show_more,
+                                    safeLaunchPackages.size - MAX_COLLAPSED_SAVED_APPS,
+                                )
+                            },
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = palette.mint,
+                        )
+                    }
+                }
+                Spacer(Modifier.weight(1f))
+                if (safeLaunchPackages.size > 1) {
+                    TextButton(
+                        onClick = onClearAll,
+                        modifier = Modifier.testTag("btn_clear_all_apps"),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.action_clear_all),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = palette.muted,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProtectedAppRow(
     packageName: String,
-    ruleMode: AppRuleMode,
-    isShortcutPinned: Boolean,
-    onRuleModeChanged: (AppRuleMode) -> Unit,
-    onOpenNow: (label: String) -> Unit,
-    onPinShortcut: (label: String) -> Unit,
-    onUnpinShortcut: (label: String) -> Unit,
-    onRemove: () -> Unit,
+    detectedSdk: String?,
+    onRemove: (label: String) -> Unit,
 ) {
     val palette = AppTheme.palette
     val context = LocalContext.current
@@ -875,93 +1026,131 @@ private fun SafeLaunchAppCard(
     }
     val label = appMeta.first
     val iconBitmap = appMeta.second
+    val metaLine = if (detectedSdk != null) "$packageName · $detectedSdk" else packageName
 
-    SurfaceCard(modifier = Modifier.testTag("card_safe_launch_$packageName")) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("card_safe_launch_$packageName")
+            .heightIn(min = 52.dp)
+            .padding(start = 14.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        AppIconBox(iconBitmap, size = 32.dp)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Text(
+                text = label,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = palette.text,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = metaLine,
+                fontFamily = MonoFont,
+                fontSize = 10.sp,
+                color = palette.muted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        IconAction(
+            icon = R.drawable.ic_close,
+            label = stringResource(R.string.cd_remove_app, label),
+            onClick = { onRemove(label) },
+            modifier = Modifier.testTag("btn_remove_app_$packageName"),
+            tint = palette.muted,
+        )
+    }
+}
+
+@Composable
+private fun StrictAppDiscoveryCard(
+    detectedApps: List<LaunchableApp>,
+    onAddAll: () -> Unit,
+    onReviewAndScan: () -> Unit,
+) {
+    val palette = AppTheme.palette
+    val previewNames = detectedApps.take(4).joinToString(", ") { it.label }
+    val previewLine = if (detectedApps.size > 4) {
+        stringResource(R.string.auto_detect_preview_more, previewNames, detectedApps.size - 4)
+    } else {
+        previewNames
+    }
+    val detectedSdks = remember(detectedApps) {
+        detectedApps.flatMap { it.analysis.detectedSdks }.distinct().take(3)
+    }
+    val subText = if (detectedSdks.isNotEmpty()) {
+        "$previewLine · RASP: ${detectedSdks.joinToString(", ")}"
+    } else {
+        previewLine
+    }
+
+    SurfaceCard(modifier = Modifier.testTag("card_auto_detect_strict")) {
         Row(
-            Modifier
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 14.dp, end = 4.dp, top = 10.dp, bottom = 6.dp),
+                .padding(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            AppIconBox(iconBitmap)
+            IconTile(
+                icon = R.drawable.ic_shortcut_shield,
+                bg = palette.mintDim,
+                fg = palette.mint,
+                size = 36.dp,
+            )
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    text = label,
-                    fontSize = 15.sp,
+                    text = stringResource(R.string.auto_detect_found_title, detectedApps.size),
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = palette.text,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = packageName,
-                    fontFamily = MonoFont,
-                    fontSize = 11.sp,
+                    text = subText,
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp,
                     color = palette.muted,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            IconAction(
-                icon = R.drawable.ic_close,
-                label = stringResource(R.string.cd_remove_app, label),
-                onClick = onRemove,
-                tint = palette.muted,
-            )
         }
-
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .padding(start = 14.dp, end = 14.dp, top = 2.dp, bottom = 6.dp),
-        ) {
-            SegmentedControl(
-                options = listOf(
-                    stringResource(R.string.rule_mode_dev_off),
-                    stringResource(R.string.rule_mode_usb_off),
-                ),
-                selectedIndex = if (ruleMode == AppRuleMode.DEV_OFF) 0 else 1,
-                onSelect = { index ->
-                    onRuleModeChanged(if (index == 0) AppRuleMode.DEV_OFF else AppRuleMode.USB_OFF)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("seg_rule_mode_$packageName"),
-                height = 34.dp,
-            )
-        }
-
         Row(
-            Modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .height(IntrinsicSize.Max)
-                .padding(start = 14.dp, end = 14.dp, bottom = 12.dp, top = 4.dp),
+                .padding(start = 14.dp, end = 14.dp, bottom = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             OutlineActionButton(
-                text = stringResource(R.string.safe_launch_open_now),
-                onClick = { onOpenNow(label) },
+                text = stringResource(R.string.auto_detect_add_all, detectedApps.size),
+                onClick = onAddAll,
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxHeight(),
+                    .fillMaxHeight()
+                    .testTag("btn_add_all_detected"),
                 color = palette.mint,
                 border = palette.mintBorder,
                 fill = palette.mintBg,
-                height = 42.dp,
-                icon = R.drawable.ic_open_external,
+                height = 38.dp,
+                icon = R.drawable.ic_add,
             )
             OutlineActionButton(
-                text = stringResource(if (isShortcutPinned) R.string.safe_launch_unpin else R.string.safe_launch_pin),
-                onClick = { if (isShortcutPinned) onUnpinShortcut(label) else onPinShortcut(label) },
+                text = stringResource(R.string.auto_detect_review_scan),
+                onClick = onReviewAndScan,
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxHeight(),
-                color = if (isShortcutPinned) palette.coral else palette.text,
-                border = if (isShortcutPinned) palette.coralBorder else palette.line,
-                fill = if (isShortcutPinned) palette.coralBg else Color.Transparent,
-                height = 42.dp,
-                icon = if (isShortcutPinned) R.drawable.ic_trash else R.drawable.ic_add,
+                    .fillMaxHeight()
+                    .testTag("btn_review_detected"),
+                color = palette.text,
+                border = palette.line,
+                fill = Color.Transparent,
+                height = 38.dp,
+                icon = R.drawable.ic_search,
             )
         }
     }
@@ -970,25 +1159,105 @@ private fun SafeLaunchAppCard(
 @Composable
 private fun SafeLaunchAppPickerDialog(
     savedPackages: List<String>,
+    initialApps: List<LaunchableApp>?,
+    initialFilter: AppPickerFilter,
+    onAppsUpdated: (List<LaunchableApp>) -> Unit,
     onTogglePackage: (String, Boolean) -> Unit,
+    onAddAllPackages: (List<String>) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val palette = AppTheme.palette
     val context = LocalContext.current
     val adaptive = LocalAdaptiveLayout.current
     var query by rememberSaveable { mutableStateOf("") }
-    var apps by remember { mutableStateOf<List<LaunchableApp>?>(null) }
+    var activeFilter by rememberSaveable(initialFilter) { mutableStateOf(initialFilter) }
+    var apps by remember { mutableStateOf(initialApps) }
+    var scanJob by remember { mutableStateOf<Job?>(null) }
+    var isScanning by remember { mutableStateOf(false) }
+    var scanDone by remember { mutableStateOf(false) }
+    var scanProgress by remember { mutableIntStateOf(0) }
+    var scanTotal by remember { mutableIntStateOf(0) }
+    var scanCurrentLabel by remember { mutableStateOf("") }
+    val scanScope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
-        apps = withContext(Dispatchers.IO) {
-            SafeLaunchHelper.queryLaunchableApps(context)
+    LaunchedEffect(initialApps) {
+        if (apps == null && initialApps != null) {
+            apps = initialApps
         }
     }
 
-    val filtered = remember(apps, query) {
+    LaunchedEffect(Unit) {
+        if (apps == null) {
+            val loaded = withContext(Dispatchers.IO) {
+                SafeLaunchHelper.queryLaunchableApps(context)
+            }
+            apps = loaded
+            onAppsUpdated(loaded)
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { scanJob?.cancel() }
+    }
+
+    val allApps = apps.orEmpty()
+    val savedSet = remember(savedPackages) { savedPackages.toHashSet() }
+    val detectedCount = remember(allApps) { allApps.count { it.analysis.isSuggested } }
+    val selectedCount = remember(allApps, savedSet) { allApps.count { it.packageName in savedSet } }
+    val canDeepScan = remember(allApps) {
+        allApps.any {
+            !it.isSystemOnly &&
+                !it.analysis.isHighConfidence &&
+                !it.analysis.deepScanned &&
+                it.apkPaths.isNotEmpty()
+        }
+    }
+    val unselectedHighDetected = remember(allApps, savedSet) {
+        allApps.filter { it.analysis.isHighConfidence && it.packageName !in savedSet }
+    }
+
+    val filtered = remember(apps, query, activeFilter, savedSet) {
         val q = query.trim().lowercase()
-        apps.orEmpty().filter {
-            q.isEmpty() || it.label.lowercase().contains(q) || it.packageName.lowercase().contains(q)
+        apps.orEmpty().filter { app ->
+            val matchesFilter = when (activeFilter) {
+                AppPickerFilter.ALL -> true
+                AppPickerFilter.DETECTED -> app.analysis.isSuggested
+                AppPickerFilter.SELECTED -> app.packageName in savedSet
+            }
+            matchesFilter && (q.isEmpty() || app.label.lowercase().contains(q) || app.packageName.lowercase().contains(q))
+        }
+    }
+
+    fun startDeepScan() {
+        if (isScanning || apps == null) return
+        scanJob = scanScope.launch {
+            isScanning = true
+            scanDone = false
+            scanProgress = 0
+            scanTotal = 0
+            scanCurrentLabel = ""
+            try {
+                val updated = SafeLaunchHelper.runDeepStrictScan(
+                    context = context,
+                    apps = apps.orEmpty(),
+                ) { scanned, total, label ->
+                    scanProgress = scanned
+                    scanTotal = total
+                    scanCurrentLabel = label
+                }
+                apps = updated
+                onAppsUpdated(updated)
+                scanDone = true
+            } catch (_: CancellationException) {
+                val reloaded = withContext(Dispatchers.IO) {
+                    SafeLaunchHelper.queryLaunchableApps(context)
+                }
+                apps = reloaded
+                onAppsUpdated(reloaded)
+            } finally {
+                isScanning = false
+                scanJob = null
+            }
         }
     }
 
@@ -1055,6 +1324,50 @@ private fun SafeLaunchAppPickerDialog(
                     ),
                 )
 
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    PickerFilterChip(
+                        label = stringResource(R.string.picker_filter_all),
+                        selected = activeFilter == AppPickerFilter.ALL,
+                        tag = "filter_apps_all",
+                        onClick = { activeFilter = AppPickerFilter.ALL },
+                    )
+                    PickerFilterChip(
+                        label = stringResource(R.string.picker_filter_detected, detectedCount),
+                        selected = activeFilter == AppPickerFilter.DETECTED,
+                        tag = "filter_apps_detected",
+                        onClick = { activeFilter = AppPickerFilter.DETECTED },
+                    )
+                    PickerFilterChip(
+                        label = stringResource(R.string.picker_filter_selected, selectedCount),
+                        selected = activeFilter == AppPickerFilter.SELECTED,
+                        tag = "filter_apps_selected",
+                        onClick = { activeFilter = AppPickerFilter.SELECTED },
+                    )
+                }
+
+                if (apps != null && (isScanning || canDeepScan || scanDone)) {
+                    DeepScanBar(
+                        isScanning = isScanning,
+                        scanDone = scanDone,
+                        canDeepScan = canDeepScan,
+                        scanProgress = scanProgress,
+                        scanTotal = scanTotal,
+                        scanCurrentLabel = scanCurrentLabel,
+                        detectedCount = detectedCount,
+                        unselectedHighCount = unselectedHighDetected.size,
+                        onStartScan = ::startDeepScan,
+                        onCancelScan = { scanJob?.cancel() },
+                        onAddAllDetected = {
+                            onAddAllPackages(unselectedHighDetected.map { it.packageName })
+                        },
+                    )
+                }
+
                 when {
                     apps == null -> {
                         Text(
@@ -1080,7 +1393,7 @@ private fun SafeLaunchAppPickerDialog(
                             verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
                             items(filtered, key = { it.packageName }) { app ->
-                                val selected = app.packageName in savedPackages
+                                val selected = app.packageName in savedSet
                                 PickerAppRow(
                                     app = app,
                                     selected = selected,
@@ -1105,6 +1418,222 @@ private fun SafeLaunchAppPickerDialog(
 }
 
 @Composable
+private fun PickerFilterChip(
+    label: String,
+    selected: Boolean,
+    tag: String,
+    onClick: () -> Unit,
+) {
+    val palette = AppTheme.palette
+    val shape = RoundedCornerShape(10.dp)
+    Box(
+        modifier = Modifier
+            .heightIn(min = 32.dp)
+            .testTag(tag)
+            .clip(shape)
+            .background(if (selected) palette.mintBg else palette.surface2)
+            .border(1.dp, if (selected) palette.mintBorder else palette.line, shape)
+            .clickable(role = Role.Tab, onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = if (selected) palette.mint else palette.soft,
+            maxLines = 1,
+            softWrap = false,
+        )
+    }
+}
+
+@Composable
+private fun DeepScanBar(
+    isScanning: Boolean,
+    scanDone: Boolean,
+    canDeepScan: Boolean,
+    scanProgress: Int,
+    scanTotal: Int,
+    scanCurrentLabel: String,
+    detectedCount: Int,
+    unselectedHighCount: Int,
+    onStartScan: () -> Unit,
+    onCancelScan: () -> Unit,
+    onAddAllDetected: () -> Unit,
+) {
+    val palette = AppTheme.palette
+    val shape = RoundedCornerShape(12.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("card_deep_scan_bar")
+            .clip(shape)
+            .background(palette.surface2)
+            .border(1.dp, palette.line, shape)
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        when {
+            isScanning -> {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        text = stringResource(
+                            R.string.deep_scan_progress,
+                            scanProgress,
+                            scanTotal.coerceAtLeast(1),
+                            scanCurrentLabel,
+                        ),
+                        modifier = Modifier.weight(1f),
+                        fontSize = 11.sp,
+                        color = palette.soft,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    CompactPillButton(
+                        label = stringResource(R.string.action_cancel),
+                        fg = palette.muted,
+                        bg = palette.surface,
+                        border = palette.line,
+                        onClick = onCancelScan,
+                    )
+                }
+                LinearProgressIndicator(
+                    progress = {
+                        if (scanTotal > 0) (scanProgress.toFloat() / scanTotal.toFloat()).coerceIn(0f, 1f) else 0f
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    color = palette.mint,
+                    trackColor = palette.line,
+                )
+            }
+            scanDone || !canDeepScan -> {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.deep_scan_done, detectedCount),
+                        modifier = Modifier.weight(1f),
+                        fontSize = 11.sp,
+                        color = palette.soft,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (unselectedHighCount > 0) {
+                        CompactPillButton(
+                            label = stringResource(R.string.auto_detect_add_all, unselectedHighCount),
+                            fg = palette.mint,
+                            bg = palette.mintBg,
+                            border = palette.mintBorder,
+                            onClick = onAddAllDetected,
+                        )
+                    } else if (canDeepScan) {
+                        CompactPillButton(
+                            label = stringResource(R.string.deep_scan_rescan),
+                            fg = palette.mint,
+                            bg = palette.mintBg,
+                            border = palette.mintBorder,
+                            modifier = Modifier.testTag("btn_deep_scan_apks"),
+                            onClick = onStartScan,
+                        )
+                    }
+                }
+            }
+            else -> {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.deep_scan_prompt),
+                        modifier = Modifier.weight(1f),
+                        fontSize = 11.sp,
+                        lineHeight = 15.sp,
+                        color = palette.muted,
+                    )
+                    CompactPillButton(
+                        label = stringResource(R.string.deep_scan_action),
+                        fg = palette.mint,
+                        bg = palette.mintBg,
+                        border = palette.mintBorder,
+                        modifier = Modifier.testTag("btn_deep_scan_apks"),
+                        onClick = onStartScan,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CompactPillButton(
+    label: String,
+    fg: Color,
+    bg: Color,
+    border: Color,
+    modifier: Modifier = Modifier,
+    @DrawableRes icon: Int? = null,
+    onClick: () -> Unit,
+) {
+    val shape = RoundedCornerShape(8.dp)
+    Row(
+        modifier = modifier
+            .heightIn(min = 30.dp)
+            .clip(shape)
+            .background(bg)
+            .border(1.dp, border, shape)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+    ) {
+        if (icon != null) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                modifier = Modifier.size(13.dp),
+                tint = fg,
+            )
+        }
+        Text(
+            text = label,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = fg,
+            maxLines = 1,
+            softWrap = false,
+        )
+    }
+}
+
+@Composable
+private fun DetectionBadgePill(
+    text: String,
+    fg: Color,
+    bg: Color,
+) {
+    Text(
+        text = text,
+        modifier = Modifier
+            .clip(RoundedCornerShape(5.dp))
+            .background(bg)
+            .padding(horizontal = 5.dp, vertical = 1.dp),
+        fontSize = 10.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = fg,
+        maxLines = 1,
+        softWrap = false,
+    )
+}
+
+@Composable
 private fun PickerAppRow(
     app: LaunchableApp,
     selected: Boolean,
@@ -1112,8 +1641,12 @@ private fun PickerAppRow(
 ) {
     val palette = AppTheme.palette
     val context = LocalContext.current
+    val resources = LocalResources.current
     val iconBitmap by produceState<ImageBitmap?>(null, app.packageName) {
         value = withContext(Dispatchers.IO) { loadAppIconBitmap(context, app.packageName) }
+    }
+    val reasonLine = remember(app.analysis, resources) {
+        if (app.analysis.isSuggested) formatDetectionReason(resources, app.analysis) else ""
     }
     val shape = RoundedCornerShape(12.dp)
     Row(
@@ -1142,19 +1675,28 @@ private fun PickerAppRow(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (app.isBankingSuggested) {
-                    Text(
-                        text = stringResource(R.string.badge_banking_suggested),
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(5.dp))
-                            .background(palette.mintDim)
-                            .padding(horizontal = 5.dp, vertical = 1.dp),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = palette.mint,
-                        maxLines = 1,
-                        softWrap = false,
-                    )
+                when {
+                    app.analysis.detectedSdks.isNotEmpty() -> {
+                        DetectionBadgePill(
+                            text = stringResource(R.string.badge_rasp_named, app.analysis.detectedSdks.first()),
+                            fg = palette.mint,
+                            bg = palette.mintDim,
+                        )
+                    }
+                    DetectionSource.CATALOG in app.analysis.sources -> {
+                        DetectionBadgePill(
+                            text = stringResource(R.string.badge_banking_suggested),
+                            fg = palette.mint,
+                            bg = palette.mintDim,
+                        )
+                    }
+                    app.analysis.isSuggested -> {
+                        DetectionBadgePill(
+                            text = stringResource(R.string.badge_checks_debug),
+                            fg = palette.amberText,
+                            bg = palette.amberBg,
+                        )
+                    }
                 }
             }
             Text(
@@ -1165,6 +1707,15 @@ private fun PickerAppRow(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+            if (reasonLine.isNotEmpty()) {
+                Text(
+                    text = reasonLine,
+                    fontSize = 10.sp,
+                    color = palette.soft,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
         Box(
             Modifier
@@ -1184,6 +1735,28 @@ private fun PickerAppRow(
             }
         }
     }
+}
+
+private fun formatDetectionReason(resources: Resources, analysis: StrictAppAnalysis): String {
+    val parts = ArrayList<String>(3)
+    when (analysis.category) {
+        StrictAppCategory.GOV_ID -> parts += resources.getString(R.string.detect_reason_gov_id)
+        StrictAppCategory.BANKING -> parts += resources.getString(R.string.detect_reason_banking)
+        StrictAppCategory.EWALLET -> parts += resources.getString(R.string.detect_reason_ewallet)
+        StrictAppCategory.SECURITIES_FINTECH -> parts += resources.getString(R.string.detect_reason_fintech)
+        StrictAppCategory.ENTERPRISE_AUTH -> parts += resources.getString(R.string.detect_reason_enterprise)
+        null -> Unit
+    }
+    val extraSdks = if (analysis.detectedSdks.size > 1) analysis.detectedSdks.drop(1) else emptyList()
+    if (extraSdks.isNotEmpty()) {
+        parts += extraSdks.joinToString(", ")
+    }
+    if (DetectionSource.DEX_ANTI_DEBUG in analysis.sources) {
+        parts += resources.getString(R.string.detect_reason_dex_checks)
+    } else if (DetectionSource.DOMAIN_HEURISTIC in analysis.sources && analysis.category == null) {
+        parts += resources.getString(R.string.detect_reason_domain)
+    }
+    return parts.joinToString(" · ")
 }
 
 @Composable

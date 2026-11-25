@@ -2,6 +2,8 @@ package io.github.xom11.vibedebug.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import io.github.xom11.vibedebug.rules.DexAntiDebugSignals
+import io.github.xom11.vibedebug.rules.StrictAppDetector
 
 /** User-selectable app theme preference. */
 enum class ThemePreference(val key: String) {
@@ -94,6 +96,111 @@ class AppPreferences(context: Context) {
         }
     }
 
+    /** Appends all valid, non-duplicate [packageNames] to the Safe Launch allowlist in a single write. */
+    fun addSafeLaunchPackages(packageNames: Collection<String>) {
+        if (packageNames.isEmpty()) return
+        val current = safeLaunchPackages
+        val currentSet = current.toHashSet()
+        val additions = packageNames
+            .map { it.replace("\r", "").replace("\n", "").trim() }
+            .filter { it.isNotEmpty() && currentSet.add(it) }
+        if (additions.isNotEmpty()) {
+            safeLaunchPackages = current + additions
+        }
+    }
+
+    /** Cached on-device DEX anti-debug scan output keyed by package name and update timestamp. */
+    data class CachedDexEntry(
+        val lastUpdateTime: Long,
+        val scannerVersion: Int,
+        val signals: DexAntiDebugSignals,
+    )
+
+    var lastDeepScanAtMs: Long
+        get() = prefs.getLong(KEY_LAST_DEEP_SCAN_AT_MS, 0L)
+        set(value) {
+            prefs.edit().putLong(KEY_LAST_DEEP_SCAN_AT_MS, value.coerceAtLeast(0L)).apply()
+        }
+
+    fun readDexScanCache(): Map<String, CachedDexEntry> {
+        val raw = prefs.getString(KEY_DEEP_SCAN_CACHE, null).orEmpty()
+        if (raw.isEmpty()) return emptyMap()
+        return buildMap {
+            raw.lineSequence().forEach { line ->
+                if (line.isBlank()) return@forEach
+                val parts = line.split('|')
+                if (parts.size < 4) return@forEach
+                val pkg = parts[0].trim()
+                val updateTime = parts[1].toLongOrNull() ?: return@forEach
+                val version = parts[2].toIntOrNull() ?: return@forEach
+                val mask = parts[3].toIntOrNull() ?: return@forEach
+                val sdks = if (parts.size >= 5 && parts[4].isNotBlank()) {
+                    parts[4].split(',').map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+                } else {
+                    emptySet()
+                }
+                if (pkg.isNotEmpty()) {
+                    put(
+                        pkg,
+                        CachedDexEntry(
+                            lastUpdateTime = updateTime,
+                            scannerVersion = version,
+                            signals = DexAntiDebugSignals(
+                                checksAdbEnabled = (mask and FLAG_DEX_ADB) != 0,
+                                checksDevSettings = (mask and FLAG_DEX_DEV) != 0,
+                                checksAdbWifi = (mask and FLAG_DEX_WIFI) != 0,
+                                raspClassSdks = sdks,
+                            ),
+                        ),
+                    )
+                }
+            }
+        }
+    }
+
+    fun getCachedDexSignals(
+        packageName: String,
+        lastUpdateTime: Long,
+        scannerVersion: Int = StrictAppDetector.SCANNER_VERSION,
+    ): DexAntiDebugSignals? {
+        val entry = readDexScanCache()[packageName.trim()] ?: return null
+        if (entry.lastUpdateTime != lastUpdateTime || entry.scannerVersion != scannerVersion) {
+            return null
+        }
+        return entry.signals
+    }
+
+    fun putAllCachedDexSignals(entries: Map<String, CachedDexEntry>) {
+        if (entries.isEmpty()) return
+        val merged = readDexScanCache().toMutableMap()
+        for ((rawPkg, entry) in entries) {
+            val pkg = rawPkg.replace("\r", "").replace("\n", "").replace("|", "").trim()
+            if (pkg.isNotEmpty()) {
+                merged[pkg] = entry
+            }
+        }
+        val cappedEntries = if (merged.size > MAX_DEX_CACHE_ENTRIES) {
+            merged.entries
+                .sortedByDescending { it.value.lastUpdateTime }
+                .take(MAX_DEX_CACHE_ENTRIES)
+        } else {
+            merged.entries.toList()
+        }
+        val serialized = cappedEntries.joinToString("\n") { (pkg, entry) ->
+            var mask = 0
+            if (entry.signals.checksAdbEnabled) mask = mask or FLAG_DEX_ADB
+            if (entry.signals.checksDevSettings) mask = mask or FLAG_DEX_DEV
+            if (entry.signals.checksAdbWifi) mask = mask or FLAG_DEX_WIFI
+            val sdkCsv = entry.signals.raspClassSdks
+                .map { it.replace("|", "").replace(",", "").replace("\n", "").trim() }
+                .filter { it.isNotEmpty() }
+                .sorted()
+                .joinToString(",")
+            "$pkg|${entry.lastUpdateTime}|${entry.scannerVersion}|$mask|$sdkCsv"
+        }
+        prefs.edit().putString(KEY_DEEP_SCAN_CACHE, serialized).apply()
+    }
+
     /** Removes [packageName] from the Safe Launch allowlist and cleans up its per-app rule mode. */
     fun removeSafeLaunchPackage(packageName: String) {
         val normalized = packageName.trim()
@@ -103,6 +210,12 @@ class AppPreferences(context: Context) {
         if (normalized in modes) {
             appRuleModes = modes - normalized
         }
+    }
+
+    /** Clears all protected packages and any saved per-app rule modes. */
+    fun clearSafeLaunchPackages() {
+        safeLaunchPackages = emptyList()
+        appRuleModes = emptyMap()
     }
 
     var autoAppRulesEnabled: Boolean
@@ -250,6 +363,12 @@ class AppPreferences(context: Context) {
         private const val KEY_HELD_RULE_USB = "held_rule_usb"
         private const val KEY_HELD_RULE_WIFI = "held_rule_wifi"
         private const val KEY_ADDED_QS_TILES = "added_qs_tiles"
+        private const val KEY_DEEP_SCAN_CACHE = "strict_app_dex_cache_v1"
+        private const val KEY_LAST_DEEP_SCAN_AT_MS = "strict_app_last_deep_scan_ms"
+        private const val FLAG_DEX_ADB = 1 shl 0
+        private const val FLAG_DEX_DEV = 1 shl 1
+        private const val FLAG_DEX_WIFI = 1 shl 2
+        private const val MAX_DEX_CACHE_ENTRIES = 400
         private const val PACKAGE_DELIMITER = "\n"
         private const val DEFAULT_AUTO_OFF_MINUTES = 30
         private val VALID_AUTO_OFF_MINUTES = setOf(15, 30, 60)

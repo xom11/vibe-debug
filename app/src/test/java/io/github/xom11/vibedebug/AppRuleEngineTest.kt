@@ -166,8 +166,8 @@ class AppRuleEngineTest {
     }
 
     @Test
-    fun `USB_OFF rule keeps developer options enabled while toggling USB and wireless debugging`() {
-        val gateway = FakeSettingsGateway(devOptions = true, adb = true, wirelessAdb = false)
+    fun `poll always disables Developer Options and debugging even if legacy USB_OFF mode is saved`() {
+        val gateway = FakeSettingsGateway(devOptions = true, adb = true, wirelessAdb = true)
         val controller = DevSettingsController(gateway)
         val detector = FakeForegroundDetector()
         val engine = AppRuleEngine(prefs, controller, detector)
@@ -179,19 +179,19 @@ class AppRuleEngineTest {
 
         detector.emit(200_000L, "com.VCB")
         assertTrue(engine.poll(nowMs = 200_100L))
-        assertTrue(gateway.devOptions)
+        assertFalse(gateway.devOptions)
         assertFalse(gateway.adb)
         assertFalse(gateway.wirelessAdb)
-        assertFalse(prefs.heldDevOptions)
+        assertTrue(prefs.heldDevOptions)
         assertTrue(prefs.heldUsbDebug)
-        assertFalse(prefs.heldWirelessDebug)
+        assertTrue(prefs.heldWirelessDebug)
 
         detector.emit(202_000L, "com.android.launcher")
         assertTrue(engine.poll(nowMs = 202_100L))
         assertTrue(engine.poll(nowMs = 210_200L))
         assertTrue(gateway.devOptions)
         assertTrue(gateway.adb)
-        assertFalse(gateway.wirelessAdb)
+        assertTrue(gateway.wirelessAdb)
     }
 
     @Test
@@ -297,12 +297,17 @@ class AppRuleEngineTest {
 
         reloaded.removeSafeLaunchPackage("com.vietinbank.ipay")
         assertEquals(AppRuleMode.DEV_OFF, AppPreferences(context).getAppRuleMode("com.vietinbank.ipay"))
+        reloaded.addSafeLaunchPackages(listOf("com.VCB", "com.bhxhapp"))
+        reloaded.setAppRuleMode("com.VCB", AppRuleMode.USB_OFF)
+        reloaded.clearSafeLaunchPackages()
+        assertTrue(AppPreferences(context).safeLaunchPackages.isEmpty())
+        assertTrue(AppPreferences(context).appRuleModes.isEmpty())
         reloaded.clearRuleHold()
         assertEquals("", AppPreferences(context).heldRulePackage)
     }
 
     @Test
-    fun `SafeLaunchHelper launchSafely respects per-app mode and records hold when auto-restore active`() {
+    fun `SafeLaunchHelper launchSafely always disables Developer Options and records hold when auto-restore active`() {
         val app = context as Application
         Shadows.shadowOf(app).grantPermissions(
             Manifest.permission.WRITE_SECURE_SETTINGS,
@@ -337,20 +342,9 @@ class AppRuleEngineTest {
 
         val result = SafeLaunchHelper.launchSafely(context, targetPkg)
         assertEquals(SafeLaunchResult.LaunchedClean, result)
-        assertEquals(1, Settings.Global.getInt(context.contentResolver, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0))
-        assertEquals(0, Settings.Global.getInt(context.contentResolver, Settings.Global.ADB_ENABLED, 1))
-        assertEquals(targetPkg, prefs.heldRulePackage)
-        assertFalse(prefs.heldDevOptions)
-        assertTrue(prefs.heldUsbDebug)
-
-        // Switching the rule to DEV_OFF cascades Developer Options off as well.
-        Settings.Global.putInt(context.contentResolver, Settings.Global.ADB_ENABLED, 1)
-        prefs.clearRuleHold()
-        prefs.setAppRuleMode(targetPkg, AppRuleMode.DEV_OFF)
-
-        assertEquals(SafeLaunchResult.LaunchedClean, SafeLaunchHelper.launchSafely(context, targetPkg))
         assertEquals(0, Settings.Global.getInt(context.contentResolver, Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 1))
         assertEquals(0, Settings.Global.getInt(context.contentResolver, Settings.Global.ADB_ENABLED, 1))
+        assertEquals(targetPkg, prefs.heldRulePackage)
         assertTrue(prefs.heldDevOptions)
         assertTrue(prefs.heldUsbDebug)
     }

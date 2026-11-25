@@ -1,0 +1,3 @@
+• Tự động phát hiện app chặn Chế độ nhà phát triển hoàn toàn trên máy (danh mục 121 app + quét SDK chống gỡ lỗi trong APK, không thêm quyền)
+• Giao diện danh sách app bảo vệ gọn nhẹ mới: thêm nhanh, xóa 1 chạm, xóa tất cả kèm Hoàn tác và thu gọn/mở rộng
+• Luôn tự động tắt Chế độ nhà phát triển khi mở app đã chọn từ icon ngoài màn hình chính

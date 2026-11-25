@@ -10,11 +10,12 @@ Key features:
   - Grant WRITE_SECURE_SETTINGS once via ADB or Shizuku (including the reinstall-with-grant command for ColorOS / OxygenOS 15–16+) to unlock instant 1-tap switching inside the app, across 2 focused Quick Settings tiles (USB Debug & Wireless Debug), and via 1 adaptive multi-size Home Screen widget (scaling from compact 1×1 / 2×1 icon controls to labeled 3×1 / 4×1 / 2×2 / 4×2 cards).
   - Optionally keeps the screen awake while USB Debugging is active and clearly warns you before turning on Wireless Debugging on mobile data (5G/4G) without Wi-Fi.
 
-• Clean Launch (Turn Off Debug & Launch):
-  - Pick banking, digital ID, e-wallet, enterprise, or security-sensitive apps that refuse to run while Developer Options is active. Launching them from Shortcuts or a badged 1×1 home shortcut turns off Developer Options cleanly first.
+• Turn Off Debug & Launch (Auto-Detect & Protected Apps):
+  - Automatically discovers installed banking, digital ID, e-wallet, or security-sensitive apps that block Developer Options—100% on-device using an offline catalog plus local APK security-SDK detection, with zero extra permissions.
+  - Manage everything in one compact Protected apps list (quick multi-select picker, 1-tap remove, and Clear all with Undo).
 
 • Auto Turn-Off for Selected Apps (optional, needs 1-Tap Mode):
-  - Enable "Auto-turn off when opening apps" and grant Usage Access, and opening one of your selected apps from its regular icon turns debugging off automatically. Choose per app whether to turn off all of Developer Options or only USB & Wireless Debugging, and whether debugging comes back on a few seconds after you leave.
+  - Enable "Auto-turn off when opening apps" and grant Usage Access: opening any protected app from its regular launcher icon automatically turns off Developer Options first, and can optionally restore debugging a few seconds after you leave.
   - Off by default. While enabled it runs as a visible foreground service with a persistent notification and a Stop button, pauses while the screen is off, and never uses Accessibility. Foreground app checks happen only on your device and are never stored.
 
 • Safety Auto-Off Timer:

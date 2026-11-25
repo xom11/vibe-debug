@@ -1,0 +1,3 @@
+• Auto-detect apps that block Developer Mode 100% on-device (121-app catalog + APK RASP/anti-debug scan, zero new permissions)
+• Redesigned compact Protected apps card with quick + Add, 1-tap remove, Clear all with Undo, and Show more/less
+• Protected apps now always turn off Developer Mode automatically when opened from their regular icon
