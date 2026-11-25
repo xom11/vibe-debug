@@ -16,9 +16,9 @@ Binaries:
   https://github.com/xom11/vibe-debug/releases/download/v%v/vibe-debug-%v.apk
 
 Builds:
-  - versionName: 2.2.4
-    versionCode: 9
-    commit: 5469843bdd9cf385569b7940cfb28288e04e9be5
+  - versionName: 2.3.0
+    versionCode: 10
+    commit: 57552071e1604b99de940a2e6dbd7a66904f5e1f
     subdir: app
     gradle:
       - yes
@@ -27,5 +27,5 @@ AllowedAPKSigningKeys: ec31e1dd2bbbe1d88d7bd8e3778d0323dd9e24e865ec74ab8f94da631
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
-CurrentVersion: 2.2.4
-CurrentVersionCode: 9
+CurrentVersion: 2.3.0
+CurrentVersionCode: 10
