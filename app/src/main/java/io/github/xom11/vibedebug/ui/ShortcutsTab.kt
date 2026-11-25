@@ -56,6 +56,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
@@ -987,6 +988,8 @@ private fun ProtectedAppsCard(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = palette.mint,
+                            maxLines = 1,
+                            softWrap = false,
                         )
                     }
                 }
@@ -1001,6 +1004,8 @@ private fun ProtectedAppsCard(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
                             color = palette.muted,
+                            maxLines = 1,
+                            softWrap = false,
                         )
                     }
                 }
@@ -1119,39 +1124,87 @@ private fun StrictAppDiscoveryCard(
                 )
             }
         }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(IntrinsicSize.Max)
-                .padding(start = 14.dp, end = 14.dp, bottom = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            OutlineActionButton(
-                text = stringResource(R.string.auto_detect_add_all, detectedApps.size),
-                onClick = onAddAll,
+        val stackButtons = LocalDensity.current.fontScale >= 1.25f
+        if (stackButtons) {
+            Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .testTag("btn_add_all_detected"),
-                color = palette.mint,
-                border = palette.mintBorder,
-                fill = palette.mintBg,
-                height = 38.dp,
-                icon = R.drawable.ic_add,
-            )
-            OutlineActionButton(
-                text = stringResource(R.string.auto_detect_review_scan),
-                onClick = onReviewAndScan,
+                    .fillMaxWidth()
+                    .padding(start = 14.dp, end = 14.dp, bottom = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                OutlineActionButton(
+                    text = stringResource(R.string.auto_detect_add_all, detectedApps.size),
+                    onClick = onAddAll,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("btn_add_all_detected"),
+                    color = palette.mint,
+                    border = palette.mintBorder,
+                    fill = palette.mintBg,
+                    height = 40.dp,
+                    icon = R.drawable.ic_add,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                OutlineActionButton(
+                    text = stringResource(R.string.auto_detect_review_scan),
+                    onClick = onReviewAndScan,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("btn_review_detected"),
+                    color = palette.text,
+                    border = palette.line,
+                    fill = Color.Transparent,
+                    height = 40.dp,
+                    icon = R.drawable.ic_search,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        } else {
+            Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .testTag("btn_review_detected"),
-                color = palette.text,
-                border = palette.line,
-                fill = Color.Transparent,
-                height = 38.dp,
-                icon = R.drawable.ic_search,
-            )
+                    .fillMaxWidth()
+                    .padding(start = 14.dp, end = 14.dp, bottom = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                OutlineActionButton(
+                    text = stringResource(R.string.auto_detect_add_all, detectedApps.size),
+                    onClick = onAddAll,
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("btn_add_all_detected"),
+                    color = palette.mint,
+                    border = palette.mintBorder,
+                    fill = palette.mintBg,
+                    height = 38.dp,
+                    icon = R.drawable.ic_add,
+                    fontSize = 12.sp,
+                    horizontalPadding = 8.dp,
+                    iconSize = 14.dp,
+                    iconSpacing = 5.dp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                OutlineActionButton(
+                    text = stringResource(R.string.auto_detect_review_scan),
+                    onClick = onReviewAndScan,
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("btn_review_detected"),
+                    color = palette.text,
+                    border = palette.line,
+                    fill = Color.Transparent,
+                    height = 38.dp,
+                    icon = R.drawable.ic_search,
+                    fontSize = 12.sp,
+                    horizontalPadding = 8.dp,
+                    iconSize = 14.dp,
+                    iconSpacing = 5.dp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }

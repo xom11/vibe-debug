@@ -68,6 +68,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
@@ -526,6 +527,12 @@ fun OutlineActionButton(
     fill: Color = Color.Transparent,
     height: Dp = 44.dp,
     @DrawableRes icon: Int? = null,
+    fontSize: TextUnit = 13.sp,
+    horizontalPadding: Dp = 12.dp,
+    iconSize: Dp = 16.dp,
+    iconSpacing: Dp = 6.dp,
+    maxLines: Int = Int.MAX_VALUE,
+    overflow: TextOverflow = TextOverflow.Clip,
 ) {
     val palette = AppTheme.palette
     val shape = RoundedCornerShape(12.dp)
@@ -536,24 +543,27 @@ fun OutlineActionButton(
             .background(fill)
             .border(1.dp, if (enabled) border else palette.divider, shape)
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(horizontal = horizontalPadding, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(iconSpacing, Alignment.CenterHorizontally),
     ) {
         if (icon != null) {
             Icon(
                 painter = painterResource(icon),
                 contentDescription = null,
-                modifier = Modifier.size(16.dp),
+                modifier = Modifier.size(iconSize),
                 tint = if (enabled) color else palette.muted,
             )
         }
         Text(
             text = text,
-            fontSize = 13.sp,
+            fontSize = fontSize,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
             color = if (enabled) color else palette.muted,
+            maxLines = maxLines,
+            softWrap = maxLines > 1,
+            overflow = overflow,
         )
     }
 }

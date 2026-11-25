@@ -216,8 +216,8 @@
     <string name="badge_checks_debug">Kiểm tra gỡ lỗi</string>
     <string name="auto_detect_found_title">Phát hiện %1$d app có thể chặn gỡ lỗi</string>
     <string name="auto_detect_preview_more">%1$s và %2$d app khác</string>
-    <string name="auto_detect_add_all">Thêm tất cả (%1$d)</string>
-    <string name="auto_detect_review_scan">Xem &amp; Quét sâu</string>
+    <string name="auto_detect_add_all">Thêm hết (%1$d)</string>
+    <string name="auto_detect_review_scan">Xem / Quét</string>
     <string name="auto_detect_added_feedback">Đã thêm %1$d ứng dụng vào danh sách bảo vệ.</string>
     <string name="picker_filter_all">Tất cả</string>
     <string name="picker_filter_detected">Phát hiện (%1$d)</string>
