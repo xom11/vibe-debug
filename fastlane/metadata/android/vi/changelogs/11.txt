@@ -1,0 +1,3 @@
+• Giữ nút thao tác ở thẻ phát hiện app gọn trên 1 dòng với màn hình hẹp (rút gọn nhãn thành "Thêm hết" và "Xem / Quét")
+• Tự động xếp dọc 2 nút khi bật cỡ chữ hệ thống lớn (từ 1.25x) để không bị cắt chữ
+• Ngăn xuống dòng ở các nút chân thẻ Ứng dụng bảo vệ (Xem thêm / Thu gọn và Xoá tất cả)

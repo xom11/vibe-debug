@@ -1,0 +1,3 @@
+• Kept auto-detected app action buttons on a single line cleanly on compact displays
+• Automatically stack discovery buttons vertically at large system font scales (1.25x+)
+• Prevented line wrapping in Protected apps footer actions (Show more/less and Clear all)
