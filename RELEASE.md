@@ -151,7 +151,9 @@ Vibe Debug lets users pick apps (e.g. banking or digital ID apps) that refuse to
 
 Nếu bị từ chối: phương án dự phòng là build riêng cho Play không có `AppWatcherService` (giữ lối tắt Clean Launch thủ công).
 
-> ✅ Đã nộp ngày 2026-11-25: video demo (OnePlus 12R, Android 16, 64 giây, đã làm mờ dữ liệu cá nhân, có chú thích tiếng Anh) ở chế độ **Unlisted**: <https://www.youtube.com/watch?v=YaoZqcMVnXE>. Bản v2.2.4 (`versionCode 9`) trên kênh *Thử nghiệm khép kín – Alpha* (178 quốc gia) cùng trang thông tin cửa hàng và các khai báo đã được gửi Google xem xét; danh sách tester chưa thêm.
+> ✅ Đã nộp ngày 2026-11-25: video demo (OnePlus 12R, Android 16, 64 giây, đã làm mờ dữ liệu cá nhân, có chú thích tiếng Anh) ở chế độ **Unlisted**: <https://www.youtube.com/watch?v=YaoZqcMVnXE>. Bản v2.2.4 (`versionCode 9`) trên kênh *Thử nghiệm khép kín – Alpha* (178 quốc gia) cùng trang thông tin cửa hàng và các khai báo đã được gửi Google xem xét, và **được duyệt, xuất bản cùng ngày**.
+>
+> ✅ Tester (2026-11-25): kênh Alpha dùng Google Group `apphive-testers@googlegroups.com` (chung nhóm AppHive với app khác của tài khoản), kênh phản hồi là <https://github.com/xom11/vibe-debug/issues>; thay đổi đã được gửi xem xét. Link tham gia: Android <https://play.google.com/store/apps/details?id=io.github.xom11.vibedebug>, web <https://play.google.com/apps/testing/io.github.xom11.vibedebug>.
 
 ### 4.7. Closed testing → Production
 
